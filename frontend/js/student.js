@@ -756,7 +756,7 @@ async function checkAndOpenFeedbackModal(moduleId, moduleName, courseId) {
             return;
         }
 
-        const apiBase = (typeof Auth !== 'undefined' && Auth.apiBase) ? Auth.apiBase : 'http://localhost:5001/api';
+        const apiBase = (typeof Auth !== 'undefined' && Auth.apiBase) ? Auth.apiBase : (typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api');
         const response = await fetch(`${apiBase}/feedback/check/${moduleId}`, {
             method: 'GET',
             headers: {

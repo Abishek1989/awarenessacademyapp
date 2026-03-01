@@ -17,7 +17,7 @@ const CONFIG = {
 };
 
 // Auto-detect environment
-if (window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1" && !window.location.hostname.includes("192.168.")) {
     // Production - use relative paths (same server serves frontend + backend)
     CONFIG.API_BASE_URL = '/api';
     CONFIG.CLIENT_URL = window.location.origin;

@@ -1,7 +1,7 @@
 const nodemailer = require('nodemailer');
-require('dotenv').config({ path: './backend/.env' });
+require('dotenv').config(); require('dotenv').config({ path: './backend/.env' });
 
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5000';
+const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5001';
 
 // Log SMTP configuration status
 console.log('📧 Email Service Configuration:');
@@ -270,7 +270,7 @@ exports.sendCoursePublishedNotification = async ({
                             </p>
                             
                             <div style="text-align: center;">
-                                <a href="http://localhost:5001" class="cta-button">
+                                <a href="${process.env.CLIENT_URL}" class="cta-button">
                                     🌟 Visit Our Website
                                 </a>
                             </div>
