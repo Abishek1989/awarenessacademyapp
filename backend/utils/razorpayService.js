@@ -9,15 +9,15 @@ require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 
 // Initialize Razorpay instance
 const razorpay = new Razorpay({
-    key_id: process.env.key_id,
-    key_secret: process.env.key_secret,
+    key_id: process.env.RAZORPAY_KEY_ID || process.env.key_id,
+    key_secret: process.env.RAZORPAY_KEY_SECRET || process.env.key_secret,
 });
 
 // Log Razorpay configuration status
 console.log('💳 Razorpay Configuration:');
-console.log('   Key ID:', process.env.key_id ? '✅ Configured' : '❌ NOT SET');
-console.log('   Key Secret:', process.env.key_secret ? '✅ Configured' : '❌ NOT SET');
-console.log('   Environment:', process.env.key_id?.includes('test') ? 'TEST' : 'LIVE');
+console.log('   Key ID:', process.env.RAZORPAY_KEY_ID || process.env.key_id ? '✅ Configured' : '❌ NOT SET');
+console.log('   Key Secret:', process.env.RAZORPAY_KEY_SECRET || process.env.key_secret ? '✅ Configured' : '❌ NOT SET');
+console.log('   Environment:', process.env.RAZORPAY_KEY_ID || process.env.key_id?.includes('test') ? 'TEST' : 'LIVE');
 
 /**
  * Create Razorpay Order
@@ -58,7 +58,7 @@ exports.createOrder = async (amount, currency = 'INR', receipt) => {
         return {
             success: true,
             order: order,
-            key_id: process.env.key_id
+            key_id: process.env.RAZORPAY_KEY_ID || process.env.key_id
         };
     } catch (error) {
         console.error('❌ Error creating Razorpay order:', error);
@@ -76,7 +76,7 @@ exports.verifyPayment = (orderId, paymentId, signature) => {
     try {
         const body = orderId + '|' + paymentId;
         const expectedSignature = crypto
-            .createHmac('sha256', process.env.key_secret)
+            .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET || process.env.key_secret)
             .update(body.toString())
             .digest('hex');
 

@@ -41,9 +41,9 @@ async function testRazorpay() {
 
         // Test 3: Check environment variables
         console.log('\n3️⃣ Validating environment variables...');
-        console.log('   Key ID:', process.env.key_id ? '✅ SET' : '❌ MISSING');
-        console.log('   Key Secret:', process.env.key_secret ? '✅ SET' : '❌ MISSING');
-        console.log('   Environment:', process.env.key_id?.includes('test') ? 'TEST' : 'LIVE');
+        console.log('   Key ID:', process.env.RAZORPAY_KEY_ID || process.env.key_id ? '✅ SET' : '❌ MISSING');
+        console.log('   Key Secret:', process.env.RAZORPAY_KEY_SECRET || process.env.key_secret ? '✅ SET' : '❌ MISSING');
+        console.log('   Environment:', process.env.RAZORPAY_KEY_ID || process.env.key_id?.includes('test') ? 'TEST' : 'LIVE');
 
         // Test 4: Amount validation
         console.log('\n4️⃣ Testing amount validation...');
