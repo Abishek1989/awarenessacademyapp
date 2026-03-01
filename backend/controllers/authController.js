@@ -333,7 +333,7 @@ exports.login = catchAsync(async (req, res, next) => {
 
     const token = jwt.sign(
         { id: user._id, role: user.role, name: user.name },
-        process.env.JWT_SECRET || 'innerspark_secret_key',
+        process.env.JWT_SECRET || process.env.JWT_SECRET || 'generate_a_secure_random_key_here',
         { expiresIn: '24h' }
     );
 
