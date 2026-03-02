@@ -1,31 +1,43 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
 const developerSettingsSchema = new Schema({
-    // Cost Monitoring Settings
-    vpsPlan: { type: String, default: 'KVM 2' },
-    vpsCost: { type: Number, default: 0 },
-    vpsInstances: { type: Number, default: 1 },
+  // Cost Monitoring Settings
+  vpsPlan: { type: String, default: "KVM 2" },
+  vpsCost: { type: Number, default: 0 },
+  vpsInstances: { type: Number, default: 1 },
 
-    mongoPlan: { type: String, default: 'M0 Sandbox' },
-    mongoCost: { type: Number, default: 0 },
-    mongoStoragePricePerGb: { type: Number, default: 0.25 }, // MongoDB Atlas storage overage pricing
-    mongoDataTransferPricePerGb: { type: Number, default: 0.12 }, // Data transfer out pricing
-    mongoBackupCost: { type: Number, default: 0 }, // Monthly backup cost
+  mongoPlan: { type: String, default: "M0 Sandbox" },
+  mongoCost: { type: Number, default: 0 },
+  mongoStoragePricePerGb: { type: Number, default: 0.25 }, // MongoDB Atlas storage overage pricing
+  mongoDataTransferPricePerGb: { type: Number, default: 0.12 }, // Data transfer out pricing
+  mongoBackupCost: { type: Number, default: 0 }, // Monthly backup cost
 
-    razorpayCommissionPercent: { type: Number, default: 2.0 },
+  razorpayCommissionPercent: { type: Number, default: 2.0 },
 
-    r2StoragePricePerGb: { type: Number, default: 0.015 },
-    r2BandwidthPricePerGb: { type: Number, default: 0.09 },
+  r2StoragePricePerGb: { type: Number, default: 0.015 },
+  r2BandwidthPricePerGb: { type: Number, default: 0.09 },
 
-    // Scaling & Load Control Settings
-    autoScaleEnabled: { type: Boolean, default: false },
-    maxInstancesAllowed: { type: Number, default: 3 },
-    scalingThresholdPercent: { type: Number, default: 80 },
+  // R2 Operational Limits & Trackers
+  r2MaxVideoSizeBytes: { type: Number, default: 5368709120 }, // Default: 5GB
+  r2ChunkSizeBytes: { type: Number, default: 52428800 }, // Default: 50MB
+  r2ClassACount: { type: Number, default: 0 },
+  r2ClassAWarning1: { type: Number, default: 500000 },
+  r2ClassAWarning2: { type: Number, default: 750000 },
+  r2ClassAStop: { type: Number, default: 900000 },
+  r2ClassBCount: { type: Number, default: 0 },
+  r2ClassBWarning1: { type: Number, default: 5000000 },
+  r2ClassBWarning2: { type: Number, default: 7500000 },
+  r2ClassBStop: { type: Number, default: 9000000 },
 
-    // Track modifications
-    lastUpdatedBy: { type: Schema.Types.ObjectId, ref: 'User' },
-    updatedAt: { type: Date, default: Date.now }
+  // Scaling & Load Control Settings
+  autoScaleEnabled: { type: Boolean, default: false },
+  maxInstancesAllowed: { type: Number, default: 3 },
+  scalingThresholdPercent: { type: Number, default: 80 },
+
+  // Track modifications
+  lastUpdatedBy: { type: Schema.Types.ObjectId, ref: "User" },
+  updatedAt: { type: Date, default: Date.now },
 });
 
-module.exports = mongoose.model('DeveloperSettings', developerSettingsSchema);
+module.exports = mongoose.model("DeveloperSettings", developerSettingsSchema);

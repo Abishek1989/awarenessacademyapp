@@ -1,65 +1,75 @@
-const nodemailer = require('nodemailer');
-require('dotenv').config(); require('dotenv').config({ path: './backend/.env' });
+const nodemailer = require("nodemailer");
+require("dotenv").config();
+require("dotenv").config({ path: "./backend/.env" });
 
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:5001';
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5001";
 
 // Log SMTP configuration status
-console.log('📧 Email Service Configuration:');
-console.log('   SMTP_HOST:', process.env.SMTP_HOST || 'smtp.gmail.com (default)');
-console.log('   SMTP_PORT:', process.env.SMTP_PORT || '587 (default)');
-console.log('   SMTP_USER:', process.env.SMTP_USER ? '✅ Configured' : '❌ NOT SET');
-console.log('   SMTP_PASS:', process.env.SMTP_PASS ? '✅ Configured' : '❌ NOT SET');
+console.log("📧 Email Service Configuration:");
+console.log(
+  "   SMTP_HOST:",
+  process.env.SMTP_HOST || "smtp.gmail.com (default)",
+);
+console.log("   SMTP_PORT:", process.env.SMTP_PORT || "587 (default)");
+console.log(
+  "   SMTP_USER:",
+  process.env.SMTP_USER ? "✅ Configured" : "❌ NOT SET",
+);
+console.log(
+  "   SMTP_PASS:",
+  process.env.SMTP_PASS ? "✅ Configured" : "❌ NOT SET",
+);
 
 // Create Reusable Transporter (SMTP via EmailJS)
 const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || 587),
-    secure: parseInt(process.env.SMTP_PORT) === 465,
-    auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-    },
+  host: process.env.SMTP_HOST || "smtp.gmail.com",
+  port: parseInt(process.env.SMTP_PORT || 587),
+  secure: parseInt(process.env.SMTP_PORT) === 465,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
+  },
 });
 
 /**
  * Send Verification Email
  */
 exports.sendVerificationEmail = async (email, token) => {
-    try {
-        const verifyLink = `${CLIENT_URL}/api/auth/verify-email?token=${token}`;
+  try {
+    const verifyLink = `${CLIENT_URL}/api/auth/verify-email?token=${token}`;
 
-        await transporter.sendMail({
-            from: `"InnerSpark Support" <${process.env.SMTP_USER}>`,
-            to: email,
-            subject: 'Verify your InnerSpark Account',
-            html: `
+    await transporter.sendMail({
+      from: `"InnerSpark Support" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "Verify your InnerSpark Account",
+      html: `
                 <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
                     <h2 style="color: #4a90e2;">Welcome to InnerSpark!</h2>
                     <p>Please click the button below to verify your email address:</p>
                     <a href="${verifyLink}" style="background-color: #4a90e2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email</a>
                     <p style="margin-top: 20px; font-size: 12px; color: #777;">If you didn't create an account, you can ignore this email.</p>
                 </div>
-            `
-        });
-        console.log(`✅ Verification email sent to ${email} (via SMTP)`);
-    } catch (error) {
-        console.error('❌ Error sending verification email:', error);
-        throw error;
-    }
+            `,
+    });
+    console.log(`✅ Verification email sent to ${email} (via SMTP)`);
+  } catch (error) {
+    console.error("❌ Error sending verification email:", error);
+    throw error;
+  }
 };
 
 /**
  * Send Password Reset Email
  */
 exports.sendPasswordResetEmail = async (email, token) => {
-    try {
-        const resetLink = `${CLIENT_URL}/reset-password.html?token=${token}`;
+  try {
+    const resetLink = `${CLIENT_URL}/reset-password.html?token=${token}`;
 
-        await transporter.sendMail({
-            from: `"InnerSpark Security" <${process.env.SMTP_USER}>`,
-            to: email,
-            subject: 'Reset your InnerSpark Password',
-            html: `
+    await transporter.sendMail({
+      from: `"InnerSpark Security" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "Reset your InnerSpark Password",
+      html: `
                 <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
                     <h2 style="color: #d9534f;">Password Reset Request</h2>
                     <p>You requested a password reset. Click the button below to set a new password:</p>
@@ -67,25 +77,25 @@ exports.sendPasswordResetEmail = async (email, token) => {
                     <p style="margin-top: 20px;">Or copy this link: <br> <a href="${resetLink}">${resetLink}</a></p>
                     <p style="margin-top: 20px; font-size: 12px; color: #777;">This link expires in 1 hour.</p>
                 </div>
-            `
-        });
-        console.log(`✅ Password reset email sent to ${email} (via SMTP)`);
-    } catch (error) {
-        console.error('❌ Error sending reset email:', error);
-        throw error; // Throw error so controller handles it
-    }
+            `,
+    });
+    console.log(`✅ Password reset email sent to ${email} (via SMTP)`);
+  } catch (error) {
+    console.error("❌ Error sending reset email:", error);
+    throw error; // Throw error so controller handles it
+  }
 };
 
 /**
  * Send OTP Email for Registration using SMTP (EmailJS)
  */
 exports.sendRegistrationOTP = async (email, otp, recipientName) => {
-    try {
-        const mailOptions = {
-            from: `"InnerSpark Registration" <${process.env.SMTP_USER}>`,
-            to: email,
-            subject: 'Verify Your Email - InnerSpark Registration',
-            html: `
+  try {
+    const mailOptions = {
+      from: `"InnerSpark Registration" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "Verify Your Email - InnerSpark Registration",
+      html: `
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -125,7 +135,7 @@ exports.sendRegistrationOTP = async (email, otp, recipientName) => {
                             <p>Your Journey to Inner Light Begins Here</p>
                         </div>
                         <div class="content">
-                            <div class="greeting">Hello ${recipientName || 'There'},</div>
+                            <div class="greeting">Hello ${recipientName || "There"},</div>
                             <p class="message">
                                 Welcome to <span class="brand">InnerSpark</span>! We're excited to have you join our community of seekers and learners.
                             </p>
@@ -137,7 +147,7 @@ exports.sendRegistrationOTP = async (email, otp, recipientName) => {
                                 <div class="otp-code">${otp}</div>
                                 <div class="validity">⏱ Valid for 10 minutes</div>
                             </div>
-                            
+
                             <div class="info-section">
                                 <div class="info-row">
                                     <span class="info-label">Recipient Email:</span>
@@ -148,7 +158,7 @@ exports.sendRegistrationOTP = async (email, otp, recipientName) => {
                                     <span class="info-value">Email Verification</span>
                                 </div>
                             </div>
-                            
+
                             <p class="message">
                                 Enter this code on the registration page to verify your email and proceed with creating your account.
                             </p>
@@ -169,34 +179,34 @@ exports.sendRegistrationOTP = async (email, otp, recipientName) => {
                     </div>
                 </body>
                 </html>
-            `
-        };
+            `,
+    };
 
-        await transporter.sendMail(mailOptions);
-        console.log(`✅ OTP email sent to ${email} via SMTP (${process.env.EMAILJS_SERVICE_ID})`);
-        return { success: true, email };
-    } catch (error) {
-        console.error('❌ Error sending OTP email:', error);
-        throw error;
-    }
+    await transporter.sendMail(mailOptions);
+    console.log(
+      `✅ OTP email sent to ${email} via SMTP (${process.env.EMAILJS_SERVICE_ID})`,
+    );
+    return { success: true, email };
+  } catch (error) {
+    console.error("❌ Error sending OTP email:", error);
+    throw error;
+  }
 };
 // Send Course Published Notification to Subscribers
 exports.sendCoursePublishedNotification = async ({
-    subscriberName,
-    subscriberEmail,
-    courseTitle,
-    courseCategory,
-    courseMentor,
-    coursePrice
+  subscriberName,
+  subscriberEmail,
+  courseTitle,
+  courseCategory,
+  courseMentor,
+  coursePrice,
 }) => {
-    try {
-
-
-        const mailOptions = {
-            from: `"InnerSpark" <${process.env.SMTP_USER}>`,
-            to: subscriberEmail,
-            subject: `🎉 ${courseTitle} is Now Available!`,
-            html: `
+  try {
+    const mailOptions = {
+      from: `"InnerSpark" <${process.env.SMTP_USER}>`,
+      to: subscriberEmail,
+      subject: `🎉 ${courseTitle} is Now Available!`,
+      html: `
                 <!DOCTYPE html>
                 <html>
                 <head>
@@ -246,7 +256,7 @@ exports.sendCoursePublishedNotification = async ({
                             <p class="message">
                                 We're excited to invite you to begin your transformative course with this newly published course.
                             </p>
-                            
+
                             <div class="course-box">
                                 <div class="course-title">📚 ${courseTitle}</div>
                                 <div class="course-details">
@@ -264,22 +274,22 @@ exports.sendCoursePublishedNotification = async ({
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <p class="message">
                                 This course is designed to guide you through an enlightening experience. Don't miss this opportunity to expand your knowledge and grow spiritually.
                             </p>
-                            
+
                             <div style="text-align: center;">
                                 <a href="${process.env.CLIENT_URL}" class="cta-button">
                                     🌟 Visit Our Website
                                 </a>
                             </div>
-                            
+
                             <div class="contact-box">
                                 <p>For further details or enrollment assistance, please:</p>
                                 <p class="contact-info">📧 Visit our website or contact our support team</p>
                             </div>
-                            
+
                             <p class="message" style="margin-top: 25px; font-size: 14px; color: #6B7280;">
                                 We look forward to seeing you in class!<br>
                                 With light and wisdom,<br>
@@ -299,78 +309,87 @@ exports.sendCoursePublishedNotification = async ({
                     </div>
                 </body>
                 </html>
-            `
-        };
+            `,
+    };
 
-        await transporter.sendMail(mailOptions);
-        console.log(`✅ Course notification sent to ${subscriberEmail}`);
-        return { success: true, email: subscriberEmail };
-    } catch (error) {
-        console.error(`❌ Error sending course notification to ${subscriberEmail}:`, error);
-        throw error;
-    }
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ Course notification sent to ${subscriberEmail}`);
+    return { success: true, email: subscriberEmail };
+  } catch (error) {
+    console.error(
+      `❌ Error sending course notification to ${subscriberEmail}:`,
+      error,
+    );
+    throw error;
+  }
 };
 
 /**
  * Generic Send Mail Function
  */
 exports.sendMail = async ({ to, subject, html }) => {
-    try {
-        console.log(`📤 Attempting to send email to ${to}...`);
+  try {
+    console.log(`📤 Attempting to send email to ${to}...`);
 
-        // Check if SMTP credentials are configured
-        if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
-            throw new Error('SMTP credentials not configured. Set SMTP_USER and SMTP_PASS in .env file');
-        }
-
-        await transporter.sendMail({
-            from: `"InnerSpark Security" <${process.env.SMTP_USER}>`,
-            to,
-            subject,
-            html
-        });
-        console.log(`✅ Email sent successfully to ${to}`);
-        return { success: true };
-    } catch (error) {
-        console.error(`❌ Error sending email to ${to}:`);
-        console.error('   Error code:', error.code);
-        console.error('   Error message:', error.message);
-        if (error.code === 'EAUTH') {
-            console.error('   → Authentication failed. Check SMTP_USER and SMTP_PASS credentials');
-        } else if (error.code === 'ECONNECTION') {
-            console.error('   → Connection failed. Check SMTP_HOST and network connection');
-        }
-        throw error;
+    // Check if SMTP credentials are configured
+    if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+      throw new Error(
+        "SMTP credentials not configured. Set SMTP_USER and SMTP_PASS in .env file",
+      );
     }
+
+    await transporter.sendMail({
+      from: `"InnerSpark Security" <${process.env.SMTP_USER}>`,
+      to,
+      subject,
+      html,
+    });
+    console.log(`✅ Email sent successfully to ${to}`);
+    return { success: true };
+  } catch (error) {
+    console.error(`❌ Error sending email to ${to}:`);
+    console.error("   Error code:", error.code);
+    console.error("   Error message:", error.message);
+    if (error.code === "EAUTH") {
+      console.error(
+        "   → Authentication failed. Check SMTP_USER and SMTP_PASS credentials",
+      );
+    } else if (error.code === "ECONNECTION") {
+      console.error(
+        "   → Connection failed. Check SMTP_HOST and network connection",
+      );
+    }
+    throw error;
+  }
 };
 
 /**
  * Send Payment Confirmation Email
  */
 exports.sendPaymentConfirmationEmail = async (email, paymentData) => {
-    try {
-        const { 
-            studentName, 
-            studentId, 
-            courseName, 
-            amount, 
-            transactionId, 
-            paymentId, 
-            paymentMethod, 
-            date 
-        } = paymentData;
+  try {
+    const {
+      studentName,
+      studentId,
+      courseName,
+      amount,
+      transactionId,
+      paymentId,
+      paymentMethod,
+      date,
+    } = paymentData;
 
-        const formattedDate = new Date(date).toLocaleString('en-IN', {
-            dateStyle: 'full',
-            timeStyle: 'long',
-            timeZone: 'Asia/Kolkata'
-        });
+    const formattedDate = new Date(date).toLocaleString("en-IN", {
+      dateStyle: "full",
+      timeStyle: "long",
+      timeZone: "Asia/Kolkata",
+    });
 
-        await transporter.sendMail({
-            from: `"InnerSpark Academy" <${process.env.SMTP_USER}>`,
-            to: email,
-            subject: '✅ Payment Successful - Course Enrollment Confirmed',
-            html: `
+    await transporter.sendMail({
+      from: `"InnerSpark Academy" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "✅ Payment Successful - Course Enrollment Confirmed",
+      html: `
                 <div style="font-family: 'Arial', sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                     <!-- Header -->
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; text-align: center; backdrop-filter: blur(10px);">
@@ -388,15 +407,15 @@ exports.sendPaymentConfirmationEmail = async (email, paymentData) => {
                     <!-- Content -->
                     <div style="padding: 30px; background: white; color: #333; margin: 0 20px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
                         <h2 style="color: #667eea; margin-Bottom: 20px; text-align: center;">Payment Successful!</h2>
-                        
+
                         <p style="font-size: 1.1rem; margin-bottom: 25px;">Dear <strong>${studentName}</strong>,</p>
-                        
+
                         <p style="margin-bottom: 25px;">Your payment has been successfully processed and you are now enrolled in the course. Here are your payment details:</p>
 
                         <!-- Payment Details Card -->
                         <div style="background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 5px solid #667eea;">
                             <h3 style="color: #667eea; margin-top: 0; margin-bottom: 20px;">Payment Details</h3>
-                            
+
                             <table style="width: 100%; border-collapse: collapse;">
                                 <tr style="border-bottom: 1px solid #dee2e6;">
                                     <td style="padding: 10px 15px 10px 0; font-weight: 600; color: #495057;">Student Name:</td>
@@ -404,7 +423,7 @@ exports.sendPaymentConfirmationEmail = async (email, paymentData) => {
                                 </tr>
                                 <tr style="border-bottom: 1px solid #dee2e6;">
                                     <td style="padding: 10px 15px 10px 0; font-weight: 600; color: #495057;">Student ID:</td>
-                                    <td style="padding: 10px 0; color: #212529;">${studentId || 'N/A'}</td>
+                                    <td style="padding: 10px 0; color: #212529;">${studentId || "N/A"}</td>
                                 </tr>
                                 <tr style="border-bottom: 1px solid #dee2e6;">
                                     <td style="padding: 10px 15px 10px 0; font-weight: 600; color: #495057;">Course Name:</td>
@@ -450,13 +469,13 @@ exports.sendPaymentConfirmationEmail = async (email, paymentData) => {
 
                         <!-- CTA Button -->
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="${CLIENT_URL}/frontend/html/student-dashboard.html" 
-                               style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                      color: white; 
-                                      text-decoration: none; 
-                                      padding: 15px 30px; 
-                                      border-radius: 25px; 
-                                      font-weight: 600; 
+                            <a href="${CLIENT_URL}/frontend/html/student-dashboard.html"
+                               style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                      color: white;
+                                      text-decoration: none;
+                                      padding: 15px 30px;
+                                      border-radius: 25px;
+                                      font-weight: 600;
                                       font-size: 1.1rem;
                                       display: inline-block;
                                       box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
@@ -474,41 +493,41 @@ exports.sendPaymentConfirmationEmail = async (email, paymentData) => {
                         <p style="margin: 0; font-size: 0.9rem;">© 2026 InnerSpark Academy. Empowering minds, transforming lives.</p>
                     </div>
                 </div>
-            `
-        });
-        
-        console.log(`✅ Payment confirmation email sent to ${email}`);
-    } catch (error) {
-        console.error('❌ Error sending payment confirmation email:', error);
-        throw error;
-    }
+            `,
+    });
+
+    console.log(`✅ Payment confirmation email sent to ${email}`);
+  } catch (error) {
+    console.error("❌ Error sending payment confirmation email:", error);
+    throw error;
+  }
 };
 
 /**
  * Send Payment Failure Email
  */
 exports.sendPaymentFailureEmail = async (email, paymentData) => {
-    try {
-        const { 
-            studentName, 
-            courseName, 
-            amount, 
-            transactionId, 
-            failureReason, 
-            date 
-        } = paymentData;
+  try {
+    const {
+      studentName,
+      courseName,
+      amount,
+      transactionId,
+      failureReason,
+      date,
+    } = paymentData;
 
-        const formattedDate = new Date(date).toLocaleString('en-IN', {
-            dateStyle: 'full',
-            timeStyle: 'long',
-            timeZone: 'Asia/Kolkata'
-        });
+    const formattedDate = new Date(date).toLocaleString("en-IN", {
+      dateStyle: "full",
+      timeStyle: "long",
+      timeZone: "Asia/Kolkata",
+    });
 
-        await transporter.sendMail({
-            from: `"InnerSpark Academy" <${process.env.SMTP_USER}>`,
-            to: email,
-            subject: '⚠️ Payment Failed - InnerSpark Academy',
-            html: `
+    await transporter.sendMail({
+      from: `"InnerSpark Academy" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: "⚠️ Payment Failed - InnerSpark Academy",
+      html: `
                 <div style="font-family: 'Arial', sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #ff6b6b 0%, #ffdde1 100%); color: white;">
                     <!-- Header -->
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; text-align: center; backdrop-filter: blur(10px);">
@@ -526,15 +545,15 @@ exports.sendPaymentFailureEmail = async (email, paymentData) => {
                     <!-- Content -->
                     <div style="padding: 30px; background: white; color: #333; margin: 0 20px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
                         <h2 style="color: #dc3545; margin-bottom: 20px; text-align: center;">Payment Failed</h2>
-                        
+
                         <p style="font-size: 1.1rem; margin-bottom: 25px;">Dear <strong>${studentName}</strong>,</p>
-                        
+
                         <p style="margin-bottom: 25px;">Unfortunately, your payment could not be processed. Please find the details below:</p>
 
                         <!-- Payment Details Card -->
                         <div style="background: #f8f9fa; padding: 25px; border-radius: 8px; margin: 25px 0; border-left: 5px solid #dc3545;">
                             <h3 style="color: #dc3545; margin-top: 0; margin-bottom: 20px;">Payment Details</h3>
-                            
+
                             <table style="width: 100%; border-collapse: collapse;">
                                 <tr style="border-bottom: 1px solid #dee2e6;">
                                     <td style="padding: 10px 15px 10px 0; font-weight: 600; color: #495057;">Student Name:</td>
@@ -580,13 +599,13 @@ exports.sendPaymentFailureEmail = async (email, paymentData) => {
 
                         <!-- CTA Button -->
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="${CLIENT_URL}/frontend/html/student-dashboard.html" 
-                               style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
-                                      color: white; 
-                                      text-decoration: none; 
-                                      padding: 15px 30px; 
-                                      border-radius: 25px; 
-                                      font-weight: 600; 
+                            <a href="${CLIENT_URL}/frontend/html/student-dashboard.html"
+                               style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                      color: white;
+                                      text-decoration: none;
+                                      padding: 15px 30px;
+                                      border-radius: 25px;
+                                      font-weight: 600;
                                       font-size: 1.1rem;
                                       display: inline-block;
                                       box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
@@ -604,12 +623,45 @@ exports.sendPaymentFailureEmail = async (email, paymentData) => {
                         <p style="margin: 0; font-size: 0.9rem;">© 2026 InnerSpark Academy. We're here to help you succeed.</p>
                     </div>
                 </div>
-            `
-        });
-        
-        console.log(`✅ Payment failure notification sent to ${email}`);
-    } catch (error) {
-        console.error('❌ Error sending payment failure email:', error);
-        throw error;
-    }
+            `,
+    });
+
+    console.log(`✅ Payment failure notification sent to ${email}`);
+  } catch (error) {
+    console.error("❌ Error sending payment failure email:", error);
+    throw error;
+  }
+};
+
+/**
+ * Send Admin Warning for R2 Operational Limits
+ */
+exports.sendAdminR2Warning = async (
+  adminEmail,
+  operationType,
+  currentCount,
+  threshold,
+) => {
+  try {
+    await transporter.sendMail({
+      from: `"InnerSpark System Alert" <${process.env.SMTP_USER}>`,
+      to: adminEmail,
+      subject: `⚠️ URGENT: R2 ${operationType} Limit Warning`,
+      html: `
+                <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+                    <h2 style="color: #d9534f;">⚠️ R2 Operational Limit Warning</h2>
+                    <p>This is an automated system alert from InnerSpark.</p>
+                    <p>The Cloudflare R2 <strong>${operationType}</strong> operations have crossed the warning threshold.</p>
+                    <ul>
+                        <li><strong>Current Count:</strong> ${currentCount.toLocaleString()}</li>
+                        <li><strong>Threshold Reached:</strong> ${threshold.toLocaleString()}</li>
+                    </ul>
+                    <p>Please log in to the Developer Settings panel to review the current usage. If operations reach the hard stop limit, the system will block further ${operationType === "Class A" ? "uploads" : "reads"} to prevent billing overages.</p>
+                </div>
+            `,
+    });
+    console.log(`✅ Admin R2 warning email sent to ${adminEmail}`);
+  } catch (error) {
+    console.error("❌ Error sending admin R2 warning email:", error);
+  }
 };

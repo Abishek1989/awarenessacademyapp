@@ -9,291 +9,317 @@
 let quillEditor = null;
 let courseId = null;
 let moduleId = null;
-let selectedContentType = 'rich-content';
+let selectedContentType = "rich-content";
 let uploadedFile = null;
 let uploadedFileMetadata = null;
 
-document.addEventListener('DOMContentLoaded', async () => {
-    // Check Auth
-    const authData = Auth.checkAuth(['Staff', 'Admin']);
-    if (!authData) return;
+document.addEventListener("DOMContentLoaded", async () => {
+  // Check Auth
+  const authData = Auth.checkAuth(["Staff", "Admin"]);
+  if (!authData) return;
 
-    // Parse URL Params
-    const urlParams = new URLSearchParams(window.location.search);
-    courseId = urlParams.get('courseId');
-    moduleId = urlParams.get('moduleId');
+  // Parse URL Params
+  const urlParams = new URLSearchParams(window.location.search);
+  courseId = urlParams.get("courseId");
+  moduleId = urlParams.get("moduleId");
 
-    // Validate parameters
-    if (!courseId && !moduleId) {
-        UI.error('Missing course information');
-        setTimeout(() => window.location.href = 'staff-dashboard.html', 2000);
-        return;
-    }
+  // Validate parameters
+  if (!courseId && !moduleId) {
+    UI.error("Missing course information");
+    setTimeout(() => (window.location.href = "staff-dashboard.html"), 2000);
+    return;
+  }
 
-    // Check if moduleId is valid (not 'undefined', 'null', or empty)
-    if (moduleId && (moduleId === 'undefined' || moduleId === 'null' || moduleId.trim() === '')) {
-        console.error('Invalid moduleId:', moduleId);
-        moduleId = null;
-    }
+  // Check if moduleId is valid (not 'undefined', 'null', or empty)
+  if (
+    moduleId &&
+    (moduleId === "undefined" || moduleId === "null" || moduleId.trim() === "")
+  ) {
+    console.error("Invalid moduleId:", moduleId);
+    moduleId = null;
+  }
 
-    // Check if courseId is valid
-    if (courseId && (courseId === 'undefined' || courseId === 'null' || courseId.trim() === '')) {
-        console.error('Invalid courseId:', courseId);
-        courseId = null;
-    }
+  // Check if courseId is valid
+  if (
+    courseId &&
+    (courseId === "undefined" || courseId === "null" || courseId.trim() === "")
+  ) {
+    console.error("Invalid courseId:", courseId);
+    courseId = null;
+  }
 
-    // After validation, check if we have at least one valid ID
-    if (!courseId && !moduleId) {
-        UI.error('Invalid course or module information');
-        setTimeout(() => window.location.href = 'staff-dashboard.html', 2000);
-        return;
-    }
+  // After validation, check if we have at least one valid ID
+  if (!courseId && !moduleId) {
+    UI.error("Invalid course or module information");
+    setTimeout(() => (window.location.href = "staff-dashboard.html"), 2000);
+    return;
+  }
 
-    // Initialize Content Type Selector
-    initializeContentTypeSelector();
+  // Initialize Content Type Selector
+  initializeContentTypeSelector();
 
-    // Initialize Rich Content Editor
-    initializeEditor();
+  // Initialize Rich Content Editor
+  initializeEditor();
 
-    // Initialize File Uploads
-    initializeFileUploads();
+  // Initialize File Uploads
+  initializeFileUploads();
 
-    // Set Back Link
-    const backLink = document.getElementById('backLink');
-    if (courseId) {
-        backLink.href = `module-manager.html?courseId=${courseId}`;
-    } else {
-        backLink.href = 'staff-dashboard.html';
-    }
+  // Set Back Link
+  const backLink = document.getElementById("backLink");
+  if (courseId) {
+    backLink.href = `module-manager.html?courseId=${courseId}`;
+  } else {
+    backLink.href = "staff-dashboard.html";
+  }
 
-    // Load Data if editing
-    if (moduleId) {
-        document.getElementById('pageTitle').textContent = 'Edit Module';
-        await loadModuleData(moduleId);
-    } else {
-        document.getElementById('pageTitle').textContent = 'Add New Module';
-    }
+  // Load Data if editing
+  if (moduleId) {
+    document.getElementById("pageTitle").textContent = "Edit Module";
+    await loadModuleData(moduleId);
+  } else {
+    document.getElementById("pageTitle").textContent = "Add New Module";
+  }
 
-    // Customize UI for Staff
-    if (authData.role === 'Staff') {
-        document.getElementById('saveBtn').innerHTML = '<i class="fas fa-paper-plane"></i> Submit for Approval';
-    }
+  // Customize UI for Staff
+  if (authData.role === "Staff") {
+    document.getElementById("saveBtn").innerHTML =
+      '<i class="fas fa-paper-plane"></i> Submit for Approval';
+  }
 
-    // Save Listener
-    document.getElementById('saveBtn').addEventListener('click', saveModule);
+  // Save Listener
+  document.getElementById("saveBtn").addEventListener("click", saveModule);
 });
 
 /**
  * Initialize content type selector
  */
 function initializeContentTypeSelector() {
-    const options = document.querySelectorAll('.content-type-option');
+  const options = document.querySelectorAll(".content-type-option");
 
-    options.forEach(option => {
-        option.addEventListener('click', () => {
-            // Don't allow changing if editing existing module
-            if (moduleId) {
-                UI.error('Cannot change content type when editing existing module');
-                return;
-            }
+  options.forEach((option) => {
+    option.addEventListener("click", () => {
+      // Don't allow changing if editing existing module
+      if (moduleId) {
+        UI.error("Cannot change content type when editing existing module");
+        return;
+      }
 
-            // Remove active from all
-            options.forEach(opt => opt.classList.remove('active'));
+      // Remove active from all
+      options.forEach((opt) => opt.classList.remove("active"));
 
-            // Add active to clicked
-            option.classList.add('active');
+      // Add active to clicked
+      option.classList.add("active");
 
-            // Update selected type
-            selectedContentType = option.dataset.type;
+      // Update selected type
+      selectedContentType = option.dataset.type;
 
-            // Show/hide appropriate sections
-            updateContentSections();
-        });
+      // Show/hide appropriate sections
+      updateContentSections();
     });
+  });
 }
 
 /**
  * Update visible content sections based on selected type
  */
 function updateContentSections() {
-    const sections = {
-        'rich-content': document.getElementById('richContentSection'),
-        'video': document.getElementById('videoSection'),
-        'pdf': document.getElementById('pdfSection')
-    };
+  const sections = {
+    "rich-content": document.getElementById("richContentSection"),
+    video: document.getElementById("videoSection"),
+    pdf: document.getElementById("pdfSection"),
+  };
 
-    // Hide all sections
-    Object.values(sections).forEach(section => section.classList.remove('active'));
+  // Hide all sections
+  Object.values(sections).forEach((section) =>
+    section.classList.remove("active"),
+  );
 
-    // Show selected section
-    sections[selectedContentType].classList.add('active');
+  // Show selected section
+  sections[selectedContentType].classList.add("active");
 }
 
 /**
  * Initialize Quill rich text editor
  */
 function initializeEditor() {
-    Quill.register('modules/blotFormatter', QuillBlotFormatter.default);
+  Quill.register("modules/blotFormatter", QuillBlotFormatter.default);
 
-    quillEditor = new Quill('#editor-container', {
-        theme: 'snow',
-        modules: {
-            blotFormatter: {},
-            toolbar: {
-                container: [
-                    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-                    [{ 'font': [] }],
-                    [{ 'size': ['small', false, 'large', 'huge'] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ 'color': [] }, { 'background': [] }],
-                    [{ 'script': 'sub' }, { 'script': 'super' }],
-                    [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-                    [{ 'indent': '-1' }, { 'indent': '+1' }],
-                    [{ 'direction': 'rtl' }],
-                    [{ 'align': [] }],
-                    ['blockquote', 'code-block'],
-                    ['link', 'image', 'video'],
-                    ['clean']
-                ],
-                handlers: {
-                    image: function () { selectLocalImage(); },
-                    video: function () { selectLocalVideo(); }
-                }
-            }
+  quillEditor = new Quill("#editor-container", {
+    theme: "snow",
+    modules: {
+      blotFormatter: {},
+      toolbar: {
+        container: [
+          [{ header: [1, 2, 3, 4, 5, 6, false] }],
+          [{ font: [] }],
+          [{ size: ["small", false, "large", "huge"] }],
+          ["bold", "italic", "underline", "strike"],
+          [{ color: [] }, { background: [] }],
+          [{ script: "sub" }, { script: "super" }],
+          [{ list: "ordered" }, { list: "bullet" }],
+          [{ indent: "-1" }, { indent: "+1" }],
+          [{ direction: "rtl" }],
+          [{ align: [] }],
+          ["blockquote", "code-block"],
+          ["link", "image", "video"],
+          ["clean"],
+        ],
+        handlers: {
+          image: function () {
+            selectLocalImage();
+          },
+          video: function () {
+            selectLocalVideo();
+          },
         },
-        placeholder: 'Compose your module content here...'
-    });
+      },
+    },
+    placeholder: "Compose your module content here...",
+  });
 }
 
 /**
  * Image upload for Quill editor
  */
 function selectLocalImage() {
-    const input = document.createElement('input');
-    input.setAttribute('type', 'file');
-    input.setAttribute('accept', 'image/*');
-    input.click();
-    input.onchange = async () => {
-        if (input.files[0]) await uploadContentFile(input.files[0], 'image');
-    };
+  const input = document.createElement("input");
+  input.setAttribute("type", "file");
+  input.setAttribute("accept", "image/*");
+  input.click();
+  input.onchange = async () => {
+    if (input.files[0]) await uploadContentFile(input.files[0], "image");
+  };
 }
 
 /**
  * Video embed for Quill editor
  */
 function selectLocalVideo() {
-    const input = document.createElement('input');
-    input.setAttribute('type', 'file');
-    input.setAttribute('accept', 'video/*');
-    input.click();
-    input.onchange = async () => {
-        if (input.files[0]) await uploadContentFile(input.files[0], 'video');
-    };
+  const input = document.createElement("input");
+  input.setAttribute("type", "file");
+  input.setAttribute("accept", "video/*");
+  input.click();
+  input.onchange = async () => {
+    if (input.files[0]) await uploadContentFile(input.files[0], "video");
+  };
 }
 
 /**
  * Upload content files for Quill editor (images/videos embedded in rich content)
  */
 async function uploadContentFile(file, type) {
-    const formData = new FormData();
-    formData.append('file', file);
+  const formData = new FormData();
+  formData.append("file", file);
 
-    try {
-        UI.showLoader();
-        const res = await fetch(`${Auth.apiBase}/uploads/content`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-            body: formData
-        });
+  try {
+    UI.showLoader();
+    const res = await fetch(`${Auth.apiBase}/uploads/content`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+      body: formData,
+    });
 
-        if (!res.ok) throw new Error('Upload failed');
-        const data = await res.json();
-        const range = quillEditor.getSelection(true);
-        quillEditor.insertEmbed(range.index, type, data.url);
-    } catch (err) {
-        console.error('Upload error:', err);
-        UI.error('Failed to upload file');
-    } finally {
-        UI.hideLoader();
-    }
+    if (!res.ok) throw new Error("Upload failed");
+    const data = await res.json();
+    const range = quillEditor.getSelection(true);
+    quillEditor.insertEmbed(range.index, type, data.url);
+  } catch (err) {
+    console.error("Upload error:", err);
+    UI.error("Failed to upload file");
+  } finally {
+    UI.hideLoader();
+  }
 }
 
 /**
  * Initialize file upload handlers for video and PDF
  */
 function initializeFileUploads() {
-    // Video Upload
-    const videoZone = document.getElementById('videoUploadZone');
-    const videoInput = document.getElementById('videoFileInput');
+  // Video Upload
+  const videoZone = document.getElementById("videoUploadZone");
+  const videoInput = document.getElementById("videoFileInput");
 
-    videoZone.addEventListener('click', () => videoInput.click());
-    videoInput.addEventListener('change', (e) => handleVideoUpload(e.target.files[0]));
+  videoZone.addEventListener("click", () => videoInput.click());
+  videoInput.addEventListener("change", (e) =>
+    handleVideoUpload(e.target.files[0]),
+  );
 
-    // Drag and drop for video
-    videoZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        videoZone.classList.add('dragover');
-    });
-    videoZone.addEventListener('dragleave', () => {
-        videoZone.classList.remove('dragover');
-    });
-    videoZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        videoZone.classList.remove('dragover');
-        if (e.dataTransfer.files[0]) {
-            handleVideoUpload(e.dataTransfer.files[0]);
-        }
-    });
+  // Drag and drop for video
+  videoZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    videoZone.classList.add("dragover");
+  });
+  videoZone.addEventListener("dragleave", () => {
+    videoZone.classList.remove("dragover");
+  });
+  videoZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    videoZone.classList.remove("dragover");
+    if (e.dataTransfer.files[0]) {
+      handleVideoUpload(e.dataTransfer.files[0]);
+    }
+  });
 
-    // PDF Upload
-    const pdfZone = document.getElementById('pdfUploadZone');
-    const pdfInput = document.getElementById('pdfFileInput');
+  // PDF Upload
+  const pdfZone = document.getElementById("pdfUploadZone");
+  const pdfInput = document.getElementById("pdfFileInput");
 
-    pdfZone.addEventListener('click', () => pdfInput.click());
-    pdfInput.addEventListener('change', (e) => handlePDFUpload(e.target.files[0]));
+  pdfZone.addEventListener("click", () => pdfInput.click());
+  pdfInput.addEventListener("change", (e) =>
+    handlePDFUpload(e.target.files[0]),
+  );
 
-    // Drag and drop for PDF
-    pdfZone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        pdfZone.classList.add('dragover');
-    });
-    pdfZone.addEventListener('dragleave', () => {
-        pdfZone.classList.remove('dragover');
-    });
-    pdfZone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        pdfZone.classList.remove('dragover');
-        if (e.dataTransfer.files[0]) {
-            handlePDFUpload(e.dataTransfer.files[0]);
-        }
-    });
+  // Drag and drop for PDF
+  pdfZone.addEventListener("dragover", (e) => {
+    e.preventDefault();
+    pdfZone.classList.add("dragover");
+  });
+  pdfZone.addEventListener("dragleave", () => {
+    pdfZone.classList.remove("dragover");
+  });
+  pdfZone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    pdfZone.classList.remove("dragover");
+    if (e.dataTransfer.files[0]) {
+      handlePDFUpload(e.dataTransfer.files[0]);
+    }
+  });
 }
 
 /**
- * Handle video file upload
+ * Handle video file upload using Cloudflare R2 Client-Side Multipart Upload
  */
 async function handleVideoUpload(file) {
-    if (!file) return;
+  if (!file) return;
 
-    // Validation
-    const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];
-    if (!allowedTypes.includes(file.type)) {
-        UI.error('Invalid file type. Only MP4, WebM, MOV, AVI, and MKV videos are allowed.');
-        return;
-    }
+  // Validation
+  const allowedTypes = [
+    "video/mp4",
+    "video/webm",
+    "video/quicktime",
+    "video/x-msvideo",
+    "video/x-matroska",
+  ];
+  if (!allowedTypes.includes(file.type)) {
+    UI.error(
+      "Invalid file type. Only MP4, WebM, MOV, AVI, and MKV videos are allowed.",
+    );
+    return;
+  }
 
-    const maxSize = 500 * 1024 * 1024; // 500MB
-    if (file.size > maxSize) {
-        UI.error('File too large. Maximum size is 500MB.');
-        return;
-    }
+  // Default max size (will be overridden by backend but acts as early check)
+  const maxSize = 5 * 1024 * 1024 * 1024; // 5GB limit locally
+  if (file.size > maxSize) {
+    UI.error("File too large. Maximum size is 5GB.");
+    return;
+  }
 
-    // Show progress
-    const progressContainer = document.getElementById('videoProgressContainer');
-    progressContainer.innerHTML = `
+  // Show progress
+  const progressContainer = document.getElementById("videoProgressContainer");
+  progressContainer.innerHTML = `
         <div class="upload-progress uploading">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <span><i class="fas fa-upload"></i> Uploading video...</span>
+                <span id="videoProgressStatus"><i class="fas fa-spinner fa-spin"></i> Initializing upload...</span>
                 <span id="videoProgressPercent">0%</span>
             </div>
             <div class="progress-bar-container">
@@ -301,96 +327,168 @@ async function handleVideoUpload(file) {
             </div>
             <div class="progress-info">
                 <span id="videoProgressSize">-</span>
-                <span id="videoProgressSpeed">-</span>
             </div>
         </div>
     `;
 
-    // Validate courseId exists
-    if (!courseId) {
-        UI.error('Course ID is missing. Please refresh the page.');
-        progressContainer.innerHTML = '';
-        return;
+  try {
+    // Step 1: Initialize Upload (Estimate Chunks)
+    const estimatedChunkSize = 50 * 1024 * 1024; // Estimate 50MB
+    const chunksCount = Math.ceil(file.size / estimatedChunkSize);
+
+    const initRes = await fetch(`${Auth.apiBase}/uploads/video/init`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({
+        filename: file.name,
+        contentType: file.type,
+        fileSize: file.size,
+        chunksCount: chunksCount,
+      }),
+    });
+
+    if (!initRes.ok) {
+      const errData = await initRes.json();
+      throw new Error(
+        errData.message || "Failed to initialize upload. Limit may be reached.",
+      );
     }
 
-    const formData = new FormData();
-    // IMPORTANT: Append courseId BEFORE file so it's available in req.body during multer processing
-    formData.append('courseId', courseId);
-    formData.append('video', file);
+    const initData = await initRes.json();
+    const { uploadId, key, chunkSize } = initData;
+    const actualChunkSize = chunkSize || estimatedChunkSize;
+    const actualChunksCount = Math.ceil(file.size / actualChunkSize);
 
-    try {
-        const xhr = new XMLHttpRequest();
+    document.getElementById("videoProgressStatus").innerHTML =
+      '<i class="fas fa-upload"></i> Requesting direct links...';
 
-        // Progress tracking
-        xhr.upload.addEventListener('progress', (e) => {
-            if (e.lengthComputable) {
-                const percentComplete = (e.loaded / e.total) * 100;
-                document.getElementById('videoProgressBar').style.width = percentComplete + '%';
-                document.getElementById('videoProgressPercent').textContent = Math.round(percentComplete) + '%';
-                document.getElementById('videoProgressSize').textContent =
-                    `${formatFileSize(e.loaded)} / ${formatFileSize(e.total)}`;
-            }
-        });
+    // Step 2: Request Presigned URLs for all parts
+    const parts = Array.from({ length: actualChunksCount }, (_, i) => i + 1);
 
-        xhr.addEventListener('load', () => {
-            if (xhr.status === 200) {
-                const response = JSON.parse(xhr.responseText);
-                uploadedFile = response.fileUrl;
-                uploadedFileMetadata = response.fileMetadata;
+    const signRes = await fetch(`${Auth.apiBase}/uploads/video/sign`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({ key, uploadId, parts }),
+    });
 
-                progressContainer.innerHTML = `
-                    <div class="upload-progress success">
-                        <i class="fas fa-check-circle"></i> Upload complete!
-                    </div>
-                `;
+    if (!signRes.ok) throw new Error("Failed to sign upload parts.");
+    const signData = await signRes.json();
+    const signedUrls = signData.signedUrls;
 
-                showVideoPreview(file, response);
-                UI.success('Video uploaded successfully');
-            } else {
-                throw new Error('Upload failed');
-            }
-        });
+    document.getElementById("videoProgressStatus").innerHTML =
+      '<i class="fas fa-upload"></i> Uploading direct to Cloudflare R2...';
 
-        xhr.addEventListener('error', () => {
-            throw new Error('Upload failed');
-        });
+    // Step 3: Upload Parts Directly to R2
+    const uploadedParts = [];
+    let totalUploaded = 0;
 
-        xhr.open('POST', `${Auth.apiBase}/uploads/video`);
-        xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`);
-        xhr.send(formData);
+    for (let i = 0; i < actualChunksCount; i++) {
+      const start = i * actualChunkSize;
+      const end = Math.min(start + actualChunkSize, file.size);
+      const chunk = file.slice(start, end);
+      const partNumber = i + 1;
+      const signedUrlObj = signedUrls.find((s) => s.partNumber === partNumber);
 
-    } catch (err) {
-        console.error('Upload error:', err);
-        progressContainer.innerHTML = `
-            <div class="upload-progress error">
-                <i class="fas fa-exclamation-circle"></i> Upload failed. Please try again.
+      if (!signedUrlObj)
+        throw new Error(`Missing presigned URL for part ${partNumber}`);
+
+      const uploadChunkRes = await fetch(signedUrlObj.url, {
+        method: "PUT",
+        body: chunk,
+      });
+
+      if (!uploadChunkRes.ok)
+        throw new Error(`Failed to upload part ${partNumber}`);
+
+      // S3 requires the ETag wrapped in quotes
+      const etag = uploadChunkRes.headers.get("ETag");
+      uploadedParts.push({
+        PartNumber: partNumber,
+        ETag: etag,
+      });
+
+      totalUploaded += chunk.size;
+      const percentComplete = (totalUploaded / file.size) * 100;
+
+      document.getElementById("videoProgressBar").style.width =
+        percentComplete + "%";
+      document.getElementById("videoProgressPercent").textContent =
+        Math.round(percentComplete) + "%";
+      document.getElementById("videoProgressSize").textContent =
+        `${formatFileSize(totalUploaded)} / ${formatFileSize(file.size)}`;
+    }
+
+    document.getElementById("videoProgressStatus").innerHTML =
+      '<i class="fas fa-spinner fa-spin"></i> Finalizing file...';
+
+    // Step 4: Complete Upload
+    const completeRes = await fetch(`${Auth.apiBase}/uploads/video/complete`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${localStorage.getItem("token")}`,
+      },
+      body: JSON.stringify({ key, uploadId, parts: uploadedParts }),
+    });
+
+    if (!completeRes.ok) throw new Error("Failed to finalize upload.");
+    const completeData = await completeRes.json();
+
+    // Successful Finish
+    uploadedFile = completeData.fileUrl;
+    uploadedFileMetadata = {
+      originalName: file.name,
+      fileSize: file.size,
+      mimeType: file.type,
+      uploadedAt: new Date(),
+    };
+
+    progressContainer.innerHTML = `
+            <div class="upload-progress success">
+                <i class="fas fa-check-circle"></i> Upload complete!
             </div>
         `;
-        UI.error('Failed to upload video');
-    }
+
+    showVideoPreview(file, { fileMetadata: uploadedFileMetadata });
+    UI.success("Video uploaded securely to R2");
+  } catch (err) {
+    console.error("Upload error:", err);
+    progressContainer.innerHTML = `
+            <div class="upload-progress error">
+                <i class="fas fa-exclamation-circle"></i> Upload failed: ${err.message}
+            </div>
+        `;
+    UI.error(err.message || "Failed to upload video");
+  }
 }
 
 /**
  * Handle PDF file upload
  */
 async function handlePDFUpload(file) {
-    if (!file) return;
+  if (!file) return;
 
-    // Validation
-    if (file.type !== 'application/pdf') {
-        UI.error('Invalid file type. Only PDF files are allowed.');
-        return;
-    }
+  // Validation
+  if (file.type !== "application/pdf") {
+    UI.error("Invalid file type. Only PDF files are allowed.");
+    return;
+  }
 
-    const maxSize = 50 * 1024 * 1024; // 50MB
-    if (file.size > maxSize) {
-        UI.error('File too large. Maximum size is 50MB.');
-        return;
-    }
+  const maxSize = 50 * 1024 * 1024; // 50MB
+  if (file.size > maxSize) {
+    UI.error("File too large. Maximum size is 50MB.");
+    return;
+  }
 
-    // Show progress
-    const progressContainer = document.getElementById('pdfProgressContainer');
-    progressContainer.innerHTML = `
+  // Show progress
+  const progressContainer = document.getElementById("pdfProgressContainer");
+  progressContainer.innerHTML = `
         <div class="upload-progress uploading">
             <div style="display: flex; justify-content: space-between; align-items: center;">
                 <span><i class="fas fa-upload"></i> Uploading PDF...</span>
@@ -405,78 +503,82 @@ async function handlePDFUpload(file) {
         </div>
     `;
 
-    // Validate courseId exists
-    if (!courseId) {
-        UI.error('Course ID is missing. Please refresh the page.');
-        progressContainer.innerHTML = '';
-        return;
-    }
+  // Validate courseId exists
+  if (!courseId) {
+    UI.error("Course ID is missing. Please refresh the page.");
+    progressContainer.innerHTML = "";
+    return;
+  }
 
-    const formData = new FormData();
-    // IMPORTANT: Append courseId BEFORE file so it's available in req.body during multer processing
-    formData.append('courseId', courseId);
-    formData.append('pdf', file);
+  const formData = new FormData();
+  // IMPORTANT: Append courseId BEFORE file so it's available in req.body during multer processing
+  formData.append("courseId", courseId);
+  formData.append("pdf", file);
 
-    try {
-        const xhr = new XMLHttpRequest();
+  try {
+    const xhr = new XMLHttpRequest();
 
-        // Progress tracking
-        xhr.upload.addEventListener('progress', (e) => {
-            if (e.lengthComputable) {
-                const percentComplete = (e.loaded / e.total) * 100;
-                document.getElementById('pdfProgressBar').style.width = percentComplete + '%';
-                document.getElementById('pdfProgressPercent').textContent = Math.round(percentComplete) + '%';
-                document.getElementById('pdfProgressSize').textContent =
-                    `${formatFileSize(e.loaded)} / ${formatFileSize(e.total)}`;
-            }
-        });
+    // Progress tracking
+    xhr.upload.addEventListener("progress", (e) => {
+      if (e.lengthComputable) {
+        const percentComplete = (e.loaded / e.total) * 100;
+        document.getElementById("pdfProgressBar").style.width =
+          percentComplete + "%";
+        document.getElementById("pdfProgressPercent").textContent =
+          Math.round(percentComplete) + "%";
+        document.getElementById("pdfProgressSize").textContent =
+          `${formatFileSize(e.loaded)} / ${formatFileSize(e.total)}`;
+      }
+    });
 
-        xhr.addEventListener('load', () => {
-            if (xhr.status === 200) {
-                const response = JSON.parse(xhr.responseText);
-                uploadedFile = response.fileUrl;
-                uploadedFileMetadata = response.fileMetadata;
+    xhr.addEventListener("load", () => {
+      if (xhr.status === 200) {
+        const response = JSON.parse(xhr.responseText);
+        uploadedFile = response.fileUrl;
+        uploadedFileMetadata = response.fileMetadata;
 
-                progressContainer.innerHTML = `
+        progressContainer.innerHTML = `
                     <div class="upload-progress success">
                         <i class="fas fa-check-circle"></i> Upload complete!
                     </div>
                 `;
 
-                showPDFPreview(file, response);
-                UI.success('PDF uploaded successfully');
-            } else {
-                throw new Error('Upload failed');
-            }
-        });
+        showPDFPreview(file, response);
+        UI.success("PDF uploaded successfully");
+      } else {
+        throw new Error("Upload failed");
+      }
+    });
 
-        xhr.addEventListener('error', () => {
-            throw new Error('Upload failed');
-        });
+    xhr.addEventListener("error", () => {
+      throw new Error("Upload failed");
+    });
 
-        xhr.open('POST', `${Auth.apiBase}/uploads/pdf`);
-        xhr.setRequestHeader('Authorization', `Bearer ${localStorage.getItem('token')}`);
-        xhr.send(formData);
-
-    } catch (err) {
-        console.error('Upload error:', err);
-        progressContainer.innerHTML = `
+    xhr.open("POST", `${Auth.apiBase}/uploads/pdf`);
+    xhr.setRequestHeader(
+      "Authorization",
+      `Bearer ${localStorage.getItem("token")}`,
+    );
+    xhr.send(formData);
+  } catch (err) {
+    console.error("Upload error:", err);
+    progressContainer.innerHTML = `
             <div class="upload-progress error">
                 <i class="fas fa-exclamation-circle"></i> Upload failed. Please try again.
             </div>
         `;
-        UI.error('Failed to upload PDF');
-    }
+    UI.error("Failed to upload PDF");
+  }
 }
 
 /**
  * Show video preview after upload
  */
 function showVideoPreview(file, response) {
-    const container = document.getElementById('videoPreviewContainer');
-    const videoUrl = URL.createObjectURL(file);
+  const container = document.getElementById("videoPreviewContainer");
+  const videoUrl = URL.createObjectURL(file);
 
-    container.innerHTML = `
+  container.innerHTML = `
         <div class="file-preview">
             <div class="file-preview-header">
                 <div class="file-preview-info">
@@ -504,9 +606,9 @@ function showVideoPreview(file, response) {
  * Show PDF preview after upload
  */
 function showPDFPreview(file, response) {
-    const container = document.getElementById('pdfPreviewContainer');
+  const container = document.getElementById("pdfPreviewContainer");
 
-    container.innerHTML = `
+  container.innerHTML = `
         <div class="file-preview">
             <div class="file-preview-header">
                 <div class="file-preview-info">
@@ -536,74 +638,75 @@ function showPDFPreview(file, response) {
  * Remove uploaded file
  */
 window.removeUploadedFile = function (type) {
-    uploadedFile = null;
-    uploadedFileMetadata = null;
+  uploadedFile = null;
+  uploadedFileMetadata = null;
 
-    if (type === 'video') {
-        document.getElementById('videoPreviewContainer').innerHTML = '';
-        document.getElementById('videoProgressContainer').innerHTML = '';
-        document.getElementById('videoFileInput').value = '';
-    } else if (type === 'pdf') {
-        document.getElementById('pdfPreviewContainer').innerHTML = '';
-        document.getElementById('pdfProgressContainer').innerHTML = '';
-        document.getElementById('pdfFileInput').value = '';
-    }
+  if (type === "video") {
+    document.getElementById("videoPreviewContainer").innerHTML = "";
+    document.getElementById("videoProgressContainer").innerHTML = "";
+    document.getElementById("videoFileInput").value = "";
+  } else if (type === "pdf") {
+    document.getElementById("pdfPreviewContainer").innerHTML = "";
+    document.getElementById("pdfProgressContainer").innerHTML = "";
+    document.getElementById("pdfFileInput").value = "";
+  }
 };
 
 /**
  * Format file size
  */
 function formatFileSize(bytes) {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+  if (bytes === 0) return "0 Bytes";
+  const k = 1024;
+  const sizes = ["Bytes", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + " " + sizes[i];
 }
 
 /**
  * Load module data for editing
  */
 async function loadModuleData(id) {
-    try {
-        UI.showLoader();
-        const res = await fetch(`${Auth.apiBase}/modules/${id}`, {
-            headers: Auth.getHeaders()
-        });
+  try {
+    UI.showLoader();
+    const res = await fetch(`${Auth.apiBase}/modules/${id}`, {
+      headers: Auth.getHeaders(),
+    });
 
-        if (!res.ok) throw new Error('Failed to load module');
+    if (!res.ok) throw new Error("Failed to load module");
 
-        const data = await res.json();
-        const module = data.module || data;
+    const data = await res.json();
+    const module = data.module || data;
 
-        // Fill basic fields
-        document.getElementById('moduleTitle').value = module.title;
-        document.getElementById('moduleDescription').value = module.description || '';
-        document.getElementById('moduleDuration').value = module.duration || 10;
+    // Fill basic fields
+    document.getElementById("moduleTitle").value = module.title;
+    document.getElementById("moduleDescription").value =
+      module.description || "";
+    document.getElementById("moduleDuration").value = module.duration || 10;
 
-        // Set content type
-        selectedContentType = module.contentType || 'rich-content';
+    // Set content type
+    selectedContentType = module.contentType || "rich-content";
 
-        // Update UI to show correct content type
-        document.querySelectorAll('.content-type-option').forEach(opt => {
-            opt.classList.remove('active');
-            if (opt.dataset.type === selectedContentType) {
-                opt.classList.add('active');
-            }
-            // Disable all options when editing
-            opt.classList.add('disabled');
-        });
+    // Update UI to show correct content type
+    document.querySelectorAll(".content-type-option").forEach((opt) => {
+      opt.classList.remove("active");
+      if (opt.dataset.type === selectedContentType) {
+        opt.classList.add("active");
+      }
+      // Disable all options when editing
+      opt.classList.add("disabled");
+    });
 
-        updateContentSections();
+    updateContentSections();
 
-        // Load content based on type
-        if (selectedContentType === 'rich-content') {
-            quillEditor.root.innerHTML = module.content || '';
-        } else if (selectedContentType === 'video' && module.fileUrl) {
-            uploadedFile = module.fileUrl;
-            uploadedFileMetadata = module.fileMetadata;
-            // Show existing file info
-            document.getElementById('videoPreviewContainer').innerHTML = `
+    // Load content based on type
+    if (selectedContentType === "rich-content") {
+      quillEditor.root.innerHTML = module.content || "";
+    } else if (selectedContentType === "video" && module.fileUrl) {
+      uploadedFile = module.fileUrl;
+      uploadedFileMetadata = module.fileMetadata;
+      // Show existing file info
+      document.getElementById("videoPreviewContainer").innerHTML = `
                 <div class="file-preview">
                     <div class="file-preview-header">
                         <div class="file-preview-info">
@@ -621,11 +724,11 @@ async function loadModuleData(id) {
                     </p>
                 </div>
             `;
-        } else if (selectedContentType === 'pdf' && module.fileUrl) {
-            uploadedFile = module.fileUrl;
-            uploadedFileMetadata = module.fileMetadata;
-            // Show existing file info
-            document.getElementById('pdfPreviewContainer').innerHTML = `
+    } else if (selectedContentType === "pdf" && module.fileUrl) {
+      uploadedFile = module.fileUrl;
+      uploadedFileMetadata = module.fileMetadata;
+      // Show existing file info
+      document.getElementById("pdfPreviewContainer").innerHTML = `
                 <div class="file-preview">
                     <div class="file-preview-header">
                         <div class="file-preview-info">
@@ -643,98 +746,102 @@ async function loadModuleData(id) {
                     </p>
                 </div>
             `;
-        }
-
-        // Update courseId if needed
-        if (!courseId && module.courseId) {
-            courseId = module.courseId;
-            document.getElementById('backLink').href = `module-manager.html?courseId=${courseId}`;
-        }
-
-    } catch (err) {
-        console.error('Load error:', err);
-        UI.error('Error loading module');
-    } finally {
-        UI.hideLoader();
     }
+
+    // Update courseId if needed
+    if (!courseId && module.courseId) {
+      courseId = module.courseId;
+      document.getElementById("backLink").href =
+        `module-manager.html?courseId=${courseId}`;
+    }
+  } catch (err) {
+    console.error("Load error:", err);
+    UI.error("Error loading module");
+  } finally {
+    UI.hideLoader();
+  }
 }
 
 /**
  * Save module
  */
 async function saveModule() {
-    const title = document.getElementById('moduleTitle').value.trim();
-    const description = document.getElementById('moduleDescription').value.trim();
-    const duration = parseInt(document.getElementById('moduleDuration').value) || 10;
+  const title = document.getElementById("moduleTitle").value.trim();
+  const description = document.getElementById("moduleDescription").value.trim();
+  const duration =
+    parseInt(document.getElementById("moduleDuration").value) || 10;
 
-    // Validation
-    if (!title) {
-        UI.error('Module Title is required');
-        return;
+  // Validation
+  if (!title) {
+    UI.error("Module Title is required");
+    return;
+  }
+
+  if (duration < 1) {
+    UI.error("Duration must be at least 1 minute");
+    return;
+  }
+
+  // Build payload based on content type
+  const payload = {
+    title,
+    description,
+    duration,
+    contentType: selectedContentType,
+  };
+
+  if (selectedContentType === "rich-content") {
+    payload.content = quillEditor.root.innerHTML;
+  } else if (selectedContentType === "video" || selectedContentType === "pdf") {
+    if (!uploadedFile) {
+      UI.error(
+        `Please upload a ${selectedContentType === "video" ? "video" : "PDF"} file`,
+      );
+      return;
+    }
+    payload.fileUrl = uploadedFile;
+    payload.fileMetadata = uploadedFileMetadata;
+  }
+
+  let url, method;
+
+  if (moduleId) {
+    url = `${Auth.apiBase}/modules/${moduleId}`;
+    method = "PUT";
+  } else {
+    url = `${Auth.apiBase}/courses/${courseId}/modules`;
+    method = "POST";
+    payload.courseId = courseId;
+  }
+
+  try {
+    UI.showLoader();
+    const res = await fetch(url, {
+      method: method,
+      headers: {
+        ...Auth.getHeaders(),
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.message || "Save failed");
     }
 
-    if (duration < 1) {
-        UI.error('Duration must be at least 1 minute');
-        return;
-    }
+    UI.success(
+      "Module submitted for approval! It will be reviewed by an admin.",
+    );
 
-    // Build payload based on content type
-    const payload = {
-        title,
-        description,
-        duration,
-        contentType: selectedContentType
-    };
-
-    if (selectedContentType === 'rich-content') {
-        payload.content = quillEditor.root.innerHTML;
-    } else if (selectedContentType === 'video' || selectedContentType === 'pdf') {
-        if (!uploadedFile) {
-            UI.error(`Please upload a ${selectedContentType === 'video' ? 'video' : 'PDF'} file`);
-            return;
-        }
-        payload.fileUrl = uploadedFile;
-        payload.fileMetadata = uploadedFileMetadata;
-    }
-
-    let url, method;
-
-    if (moduleId) {
-        url = `${Auth.apiBase}/modules/${moduleId}`;
-        method = 'PUT';
-    } else {
-        url = `${Auth.apiBase}/courses/${courseId}/modules`;
-        method = 'POST';
-        payload.courseId = courseId;
-    }
-
-    try {
-        UI.showLoader();
-        const res = await fetch(url, {
-            method: method,
-            headers: {
-                ...Auth.getHeaders(),
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(payload)
-        });
-
-        if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.message || 'Save failed');
-        }
-
-        UI.success('Module submitted for approval! It will be reviewed by an admin.');
-
-        // Redirect back after short delay
-        setTimeout(() => {
-            window.location.href = `module-manager.html?courseId=${courseId}`;
-        }, 1500);
-
-    } catch (err) {
-        console.error('Save error:', err);
-        UI.error('Failed to save module: ' + err.message);
-    } finally {
-        UI.hideLoader();
-    }
+    // Redirect back after short delay
+    setTimeout(() => {
+      window.location.href = `module-manager.html?courseId=${courseId}`;
+    }, 1500);
+  } catch (err) {
+    console.error("Save error:", err);
+    UI.error("Failed to save module: " + err.message);
+  } finally {
+    UI.hideLoader();
+  }
 }
