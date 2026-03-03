@@ -1,29 +1,77 @@
-const { Schedule, Course } = require('../models/index');
+const { Schedule, Course, Membership } = require('../models/index');
 
 // Create a Schedule (Staff)
 exports.createSchedule = async (req, res) => {
     try {
-        const { courseID, title, startTime, duration, meetingLink } = req.body;
+        console.log('Creating schedule with data:', req.body);
+        console.log('User creating schedule:', req.user);
+        
+        const { courseID, membershipID, title, startTime, duration, meetingLink } = req.body;
 
+        // Clean up empty string values
+        const cleanCourseID = courseID && courseID.trim() !== '' ? courseID.trim() : null;
+        const cleanMembershipID = membershipID && membershipID.trim() !== '' ? membershipID.trim() : null;
+
+        // Validate that either courseID or membershipID is provided
+        if (!cleanCourseID && !cleanMembershipID) {
+            return res.status(400).json({ message: 'Either courseID or membershipID must be provided' });
+        }
+
+        // Validate required fields
+        if (!title || !startTime) {
+            return res.status(400).json({ message: 'Title and startTime are required' });
+        }
+
+        // Ensure duration is a number
+        const durationMinutes = typeof duration === 'string' ? parseInt(duration, 10) : (duration || 60);
+        
         // Calculate endTime from startTime + duration (in minutes)
         const start = new Date(startTime);
-        const end = new Date(start.getTime() + (duration || 60) * 60000); // Default 60 mins
+        const end = new Date(start.getTime() + durationMinutes * 60000);
 
-        const newSchedule = new Schedule({
-            courseID,
+        console.log('Calculated times:', { start, end, durationMinutes });
+
+        const scheduleData = {
             staffID: req.user.id,
             title,
             startTime: start,
             endTime: end,
-            expectedDuration: duration || 60,
+            expectedDuration: durationMinutes,
             meetingLink,
             type: 'Live', // Default to Live for live class scheduling
             approvalStatus: 'Approved' // Auto-approve all live classes
-        });
+        };
 
+        // Only add courseID or membershipID if they are provided
+        if (cleanCourseID) {
+            scheduleData.courseID = cleanCourseID;
+        }
+        if (cleanMembershipID) {
+            scheduleData.membershipID = cleanMembershipID;
+        }
+
+        console.log('Schedule data to save:', scheduleData);
+
+        const newSchedule = new Schedule(scheduleData);
+        
+        // Validate the document before saving
+        const validationError = newSchedule.validateSync();
+        if (validationError) {
+            console.error('Validation error:', validationError);
+            return res.status(400).json({ 
+                message: 'Validation failed', 
+                error: validationError.message || 'Invalid schedule data'
+            });
+        }
+        
         await newSchedule.save();
+        
+        console.log('Schedule created successfully:', newSchedule);
+        
         res.status(201).json({ message: 'Schedule created successfully', schedule: newSchedule });
     } catch (err) {
+        console.error('Error creating schedule:', err);
+        console.error('Stack trace:', err.stack);
         res.status(500).json({ message: 'Failed to create schedule', error: err.message });
     }
 };
@@ -49,26 +97,64 @@ exports.getCourseSchedules = async (req, res) => {
     }
 };
 
+// Get Schedules for a Membership (Shared)
+exports.getMembershipSchedules = async (req, res) => {
+    try {
+        const schedules = await Schedule.find({ membershipID: req.params.membershipID })
+            .populate('staffID', 'name')
+            .sort({ startTime: 1 });
+        
+        // Hide meeting link from students
+        if (req.user.role === 'Student') {
+            const sanitizedSchedules = schedules.map(schedule => {
+                const scheduleObj = schedule.toObject();
+                delete scheduleObj.meetingLink;
+                return scheduleObj;
+            });
+            return res.status(200).json(sanitizedSchedules);
+        }
+        
+        res.status(200).json(schedules);
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to fetch membership schedules', error: err.message });
+    }
+};
+
 // Get All Schedules for Student/Staff
 exports.getMyTimetable = async (req, res) => {
     try {
-        const { User, Course } = require('../models/index');
+        const { User, Course, Membership } = require('../models/index');
         const user = await User.findById(req.user.id);
 
         let courseIDs = [];
+        let membershipIDs = [];
+        
         if (user.role === 'Student') {
-            courseIDs = user.enrolledCourses;
+            courseIDs = user.enrolledCourses || [];
+            membershipIDs = user.enrolledMemberships || [];
         } else if (user.role === 'Staff') {
             const myCourses = await Course.find({ mentors: req.user.id });
             courseIDs = myCourses.map(c => c._id);
+            
+            const myMemberships = await Membership.find({ mentors: req.user.id });
+            membershipIDs = myMemberships.map(m => m._id);
         } else if (user.role === 'Admin') {
             const allCourses = await Course.find();
             courseIDs = allCourses.map(c => c._id);
+            
+            const allMemberships = await Membership.find();
+            membershipIDs = allMemberships.map(m => m._id);
         }
 
         const schedules = await Schedule.find({
-            courseID: { $in: courseIDs }
-        }).populate('courseID', 'title').populate('staffID', 'name').sort({ startTime: 1 });
+            $or: [
+                { courseID: { $in: courseIDs } },
+                { membershipID: { $in: membershipIDs } }
+            ]
+        }).populate('courseID', 'title')
+          .populate('membershipID', 'packageName')
+          .populate('staffID', 'name')
+          .sort({ startTime: 1 });
 
         // Hide meeting link from students
         if (user.role === 'Student') {

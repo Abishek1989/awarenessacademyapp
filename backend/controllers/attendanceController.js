@@ -1,10 +1,15 @@
-const { Attendance, Course, User, Schedule } = require('../models/index');
+const { Attendance, Course, User, Schedule, Membership } = require('../models/index');
 
 // Mark Attendance (Join Live)
 exports.markAttendance = async (req, res) => {
     try {
-        const { courseID, scheduleID } = req.body;
+        const { courseID, membershipID, scheduleID } = req.body;
         const studentID = req.user.id;
+
+        // Validate that either courseID or membershipID is provided
+        if (!courseID && !membershipID) {
+            return res.status(400).json({ message: 'Either courseID or membershipID must be provided' });
+        }
 
         // Check if already marked
         const existing = await Attendance.findOne({ studentID, scheduleID });
@@ -21,6 +26,7 @@ exports.markAttendance = async (req, res) => {
         const newRecord = new Attendance({
             studentID,
             courseID,
+            membershipID,
             scheduleID,
             status: 'Present'
         });
@@ -43,7 +49,9 @@ exports.markAttendance = async (req, res) => {
 // Get Attendance History
 exports.getMyAttendance = async (req, res) => {
     try {
-        const records = await Attendance.find({ studentID: req.user.id }).populate('courseID', 'title');
+        const records = await Attendance.find({ studentID: req.user.id })
+            .populate('courseID', 'title')
+            .populate('membershipID', 'packageName');
         res.status(200).json(records);
     } catch (err) {
         res.status(500).json({ message: 'Fetch failed', error: err.message });

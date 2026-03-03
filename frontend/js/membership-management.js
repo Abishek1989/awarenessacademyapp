@@ -684,6 +684,9 @@ function openAddMembershipModal() {
         cb.checked = false;
     });
     
+    // Load staff members for assignment
+    loadStaffMembers();
+    
     // Clear validation errors (with null checks)
     const packageNameError = document.getElementById('packageNameError');
     const priceError = document.getElementById('priceError');
@@ -718,6 +721,10 @@ function editMembership(id) {
     document.getElementById('offeredPrice').value = membership.offeredPrice;
     document.getElementById('offerEndsAt').value = formatDateTimeForInput(membership.offerEndsAt);
     document.getElementById('startDate').value = formatDateTimeForInput(membership.duration.startDate);
+    
+    // Load staff members with pre-selected assigned staff
+    const assignedStaffIds = membership.mentors ? membership.mentors.map(m => m._id || m) : [];
+    loadStaffMembers(assignedStaffIds);
     document.getElementById('endDate').value = formatDateTimeForInput(membership.duration.endDate);
     document.getElementById('isMostPopular').checked = membership.isMostPopular;
     
@@ -1100,6 +1107,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 classTime: classTimeString,
                 isMostPopular: document.getElementById('isMostPopular').checked
             };
+            
+            // Add assigned staff IDs from checkboxes
+            const assignedStaffContainer = document.getElementById('assignedStaffContainer');
+            if (assignedStaffContainer) {
+                const checkedBoxes = assignedStaffContainer.querySelectorAll('input[type="checkbox"]:checked');
+                const selectedStaffIds = Array.from(checkedBoxes).map(checkbox => checkbox.value);
+                if (selectedStaffIds.length > 0) {
+                    formData.mentors = selectedStaffIds;
+                }
+            }
 
             try {
                 const apiBase = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api';
@@ -1237,3 +1254,65 @@ function showNotification(message, type) {
 // Load memberships when switching to membership section
 // This should be called by the main switchSection function
 window.loadMembershipsSection = loadMemberships;
+
+// Load staff members for assignment
+async function loadStaffMembers(selectedStaffIds = []) {
+    const assignedStaffContainer = document.getElementById('assignedStaffContainer');
+    if (!assignedStaffContainer) return;
+    
+    try {
+        const apiBase = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api';
+        const response = await fetch(`${apiBase}/admin/users?role=Staff`, {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        const staffData = await response.json();
+        
+        assignedStaffContainer.innerHTML = '';
+        
+        if (Array.isArray(staffData) && staffData.length > 0) {
+            staffData.forEach(staff => {
+                const checkboxDiv = document.createElement('div');
+                checkboxDiv.style.cssText = 'display: flex; align-items: center; padding: 8px; margin-bottom: 6px; border-radius: 6px; transition: background-color 0.2s; cursor: pointer;';
+                checkboxDiv.addEventListener('mouseenter', () => checkboxDiv.style.backgroundColor = '#f8f9fa');
+                checkboxDiv.addEventListener('mouseleave', () => checkboxDiv.style.backgroundColor = 'transparent');
+                
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.id = `staff_${staff._id}`;
+                checkbox.value = staff._id;
+                checkbox.name = 'assignedStaff';
+                checkbox.style.cssText = 'margin-right: 10px; width: 16px; height: 16px; accent-color: #3B82F6; cursor: pointer;';
+                
+                // Check if this staff is in selectedStaffIds
+                if (selectedStaffIds.includes(staff._id)) {
+                    checkbox.checked = true;
+                }
+                
+                const label = document.createElement('label');
+                label.setAttribute('for', `staff_${staff._id}`);
+                label.textContent = `${staff.name} (${staff.email})`;
+                label.style.cssText = 'cursor: pointer; font-size: 0.9rem; color: #444; flex: 1;';
+                
+                checkboxDiv.appendChild(checkbox);
+                checkboxDiv.appendChild(label);
+                
+                // Make the entire div clickable
+                checkboxDiv.addEventListener('click', (e) => {
+                    if (e.target.type !== 'checkbox') {
+                        checkbox.checked = !checkbox.checked;
+                    }
+                });
+                
+                assignedStaffContainer.appendChild(checkboxDiv);
+            });
+        } else {
+            assignedStaffContainer.innerHTML = '<div style="text-align: center; color: #666; padding: 20px;"><i class="fas fa-users-slash"></i> No staff members available</div>';
+        }
+    } catch (error) {
+        console.error('Error loading staff members:', error);
+        assignedStaffContainer.innerHTML = '<div style="text-align: center; color: #dc3545; padding: 20px;"><i class="fas fa-exclamation-triangle"></i> Error loading staff members</div>';
+    }
+}

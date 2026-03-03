@@ -589,12 +589,27 @@ exports.getEnrolledStudents = async (req, res) => {
 // Get Staff Courses
 exports.getStaffCourses = async (req, res) => {
     try {
+        const mongoose = require('mongoose');
+        const staffId = req.user.id;
+        
+        console.log('Staff requesting courses:', staffId);
+        console.log('Staff ID type:', typeof staffId);
+        
+        // Convert to ObjectId if it's a string
+        const staffObjectId = mongoose.Types.ObjectId.isValid(staffId) ? 
+            new mongoose.Types.ObjectId(staffId) : staffId;
+        
         const courses = await Course.find({
-            mentors: { $in: [req.user.id] },
+            mentors: { $in: [staffId, staffObjectId] }, // Try both string and ObjectId
             status: { $ne: 'Archived' } // Exclude archived courses
         });
+        
+        console.log('Found courses for staff:', courses.length);
+        console.log('Course details:', courses.map(c => ({ id: c._id, title: c.title, mentors: c.mentors })));
+        
         res.status(200).json(courses);
     } catch (err) {
+        console.error('Error fetching staff courses:', err);
         res.status(500).json({ message: 'Failed to fetch courses', error: err.message });
     }
 };

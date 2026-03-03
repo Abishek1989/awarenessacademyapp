@@ -9,6 +9,9 @@ router.post('/', authorize(['Staff', 'Admin']), scheduleController.createSchedul
 // Get course specific schedules
 router.get('/course/:courseID', authorize(['Student', 'Staff', 'Admin']), scheduleController.getCourseSchedules);
 
+// Get membership specific schedules
+router.get('/membership/:membershipID', authorize(['Student', 'Staff', 'Admin']), scheduleController.getMembershipSchedules);
+
 // Get my timetable (Student or Staff)
 router.get('/my-timetable', authorize(['Student', 'Staff', 'Admin']), scheduleController.getMyTimetable);
 

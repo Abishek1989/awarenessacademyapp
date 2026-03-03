@@ -2226,8 +2226,20 @@
             <h2 style="font-family: var(--font-heading); color: var(--color-saffron);">Schedule Live Flow</h2>
             <form id="scheduleForm">
                 <div class="form-group">
+                    <label>Select Type</label>
+                    <select id="scheduleType" class="form-control" onchange="toggleScheduleTypeOptions()" required>
+                        <option value="">-- Choose Course or Membership --</option>
+                        <option value="course">Course</option>
+                        <option value="membership">Membership Package</option>
+                    </select>
+                </div>
+                <div class="form-group" id="courseSelectGroup" style="display: none;">
                     <label>Select Course</label>
-                    <select name="courseID" id="scheduleCourseSelect" class="form-control" required></select>
+                    <select name="courseID" id="scheduleCourseSelect" class="form-control"></select>
+                </div>
+                <div class="form-group" id="membershipSelectGroup" style="display: none;">
+                    <label>Select Membership Package</label>
+                    <select name="membershipID" id="scheduleMembershipSelect" class="form-control"></select>
                 </div>
                 <div class="form-group">
                     <label>Session Title</label>
@@ -2245,10 +2257,10 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label>Live Link (Jitsi Room Name)</label>
+                    <label>Live Link (Meeting URL)</label>
                     <input type="text" name="meetingLink" class="form-control"
-                        placeholder="e.g. AWARENESS ACADEMY-Yoga-101">
-                    <small style="color: var(--color-text-secondary);">Students will join this room at the scheduled
+                        placeholder="e.g. https://meet.google.com/xyz or Zoom link">
+                    <small style="color: var(--color-text-secondary);">Students will use this link to join at the scheduled
                         time.</small>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 30px;">
@@ -2398,6 +2410,300 @@
                 }
             });
         });
+
+        // === SCHEDULE MANAGEMENT FOR COURSES & MEMBERSHIPS ===
+        
+        // Toggle between course and membership selection
+        function toggleScheduleTypeOptions() {
+            const type = document.getElementById('scheduleType').value;
+            const courseGroup = document.getElementById('courseSelectGroup');
+            const membershipGroup = document.getElementById('membershipSelectGroup');
+            const courseSelect = document.getElementById('scheduleCourseSelect');
+            const membershipSelect = document.getElementById('scheduleMembershipSelect');
+            
+            if (type === 'course') {
+                courseGroup.style.display = 'block';
+                membershipGroup.style.display = 'none';
+                courseSelect.required = true;
+                membershipSelect.required = false;
+                membershipSelect.value = '';
+                
+                // Ensure courses are loaded
+                if (courseSelect.children.length <= 1) {
+                    loadStaffCoursesAndMemberships();
+                }
+            } else if (type === 'membership') {
+                courseGroup.style.display = 'none';
+                membershipGroup.style.display = 'block';
+                courseSelect.required = false;
+                membershipSelect.required = true;
+                courseSelect.value = '';
+                
+                // Ensure memberships are loaded
+                if (membershipSelect.children.length <= 1) {
+                    loadStaffCoursesAndMemberships();
+                }
+            } else {
+                courseGroup.style.display = 'none';
+                membershipGroup.style.display = 'none';
+                courseSelect.required = false;
+                membershipSelect.required = false;
+                courseSelect.value = '';
+                membershipSelect.value = '';
+            }
+        }
+
+        // Open Schedule Modal
+        function openScheduleModal() {
+            document.getElementById('scheduleModal').style.display = 'flex';
+            loadStaffCoursesAndMemberships();
+        }
+
+        // Close Schedule Modal
+        document.getElementById('closeScheduleModal').addEventListener('click', function() {
+            document.getElementById('scheduleModal').style.display = 'none';
+            document.getElementById('scheduleForm').reset();
+            toggleScheduleTypeOptions(); // Reset dropdowns
+        });
+
+        // Load Courses and Memberships for Staff
+        async function loadStaffCoursesAndMemberships() {
+            const token = localStorage.getItem('token');
+            const apiBase = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api';
+
+            try {
+                // Load courses assigned to this staff member
+                const coursesResponse = await fetch(`${apiBase}/staff/courses`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                let coursesData = [];
+                if (coursesResponse.ok) {
+                    coursesData = await coursesResponse.json();
+                    console.log('Courses API response:', coursesData);
+                } else {
+                    console.error('Failed to fetch courses:', coursesResponse.status);
+                    const errorText = await coursesResponse.text();
+                    console.error('Error response:', errorText);
+                }
+                
+                const courseSelect = document.getElementById('scheduleCourseSelect');
+                courseSelect.innerHTML = '<option value="">-- Select Course --</option>';
+                
+                if (Array.isArray(coursesData) && coursesData.length > 0) {
+                    coursesData.forEach(course => {
+                        courseSelect.innerHTML += `<option value="${course._id}">${course.title}</option>`;
+                    });
+                    console.log('Added course options:', coursesData.length);
+                } else {
+                    courseSelect.innerHTML += '<option value="" disabled>No courses assigned to you</option>';
+                    console.log('No courses found or API failed');
+                }
+
+                // Load memberships assigned to this staff member
+                const membershipsResponse = await fetch(`${apiBase}/memberships/staff/my-memberships`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                let membershipsData = {};
+                if (membershipsResponse.ok) {
+                    membershipsData = await membershipsResponse.json();
+                    console.log('Memberships API response:', membershipsData);
+                } else {
+                    console.error('Failed to fetch memberships:', membershipsResponse.status);
+                    const errorText = await membershipsResponse.text();
+                    console.error('Error response:', errorText);
+                }
+                
+                const membershipSelect = document.getElementById('scheduleMembershipSelect');
+                membershipSelect.innerHTML = '<option value="">-- Select Membership --</option>';
+                
+                if (membershipsData.success && membershipsData.memberships && membershipsData.memberships.length > 0) {
+                    membershipsData.memberships.forEach(membership => {
+                        membershipSelect.innerHTML += `<option value="${membership._id}">${membership.packageName}</option>`;
+                    });
+                    console.log('Added membership options:', membershipsData.memberships.length);
+                } else {
+                    membershipSelect.innerHTML += '<option value="" disabled>No membership packages assigned to you</option>';
+                    console.log('No memberships found or API failed');
+                }
+                
+                console.log('Loaded courses:', Array.isArray(coursesData) ? coursesData.length : 0);
+                console.log('Loaded memberships:', membershipsData.memberships ? membershipsData.memberships.length : 0);
+                
+            } catch (error) {
+                console.error('Error loading courses/memberships:', error);
+                
+                // Add error options to dropdowns
+                const courseSelect = document.getElementById('scheduleCourseSelect');
+                const membershipSelect = document.getElementById('scheduleMembershipSelect');
+                
+                courseSelect.innerHTML = '<option value="">-- Select Course --</option><option value="" disabled>Error loading courses</option>';
+                membershipSelect.innerHTML = '<option value="">-- Select Membership --</option><option value="" disabled>Error loading memberships</option>';
+            }
+        }
+
+        // Submit Schedule Form
+        document.getElementById('scheduleForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const token = localStorage.getItem('token');
+            const apiBase = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api';
+            const formData = new FormData(e.target);
+            
+            const scheduleData = {
+                title: formData.get('title'),
+                startTime: formData.get('startTime'),
+                duration: parseInt(formData.get('duration')),
+                meetingLink: formData.get('meetingLink')
+            };
+
+            // Add either courseID or membershipID based on selection
+            const courseID = formData.get('courseID');
+            const membershipID = formData.get('membershipID');
+            
+            // Only include non-empty values
+            if (courseID && courseID.trim() !== '') {
+                scheduleData.courseID = courseID.trim();
+            }
+            if (membershipID && membershipID.trim() !== '') {
+                scheduleData.membershipID = membershipID.trim();
+            }
+            
+            // Validate that at least one is selected
+            if (!scheduleData.courseID && !scheduleData.membershipID) {
+                alert('Please select either a course or membership package');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${apiBase}/schedules`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify(scheduleData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert('Schedule created successfully!');
+                    document.getElementById('scheduleModal').style.display = 'none';
+                    document.getElementById('scheduleForm').reset();
+                    toggleScheduleTypeOptions();
+                    loadSchedules(); // Reload the schedule list
+                } else {
+                    alert(result.message || 'Failed to create schedule');
+                }
+            } catch (error) {
+                console.error('Error creating schedule:', error);
+                alert('Failed to create schedule. Please try again.');
+            }
+        });
+
+        // Load Schedules for Staff
+        async function loadSchedules() {
+            const token = localStorage.getItem('token');
+            const apiBase = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api';
+            const scheduleList = document.getElementById('scheduleList');
+            
+            scheduleList.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">Loading schedules...</p>';
+
+            try {
+                const response = await fetch(`${apiBase}/schedules/my-timetable`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                const schedules = await response.json();
+
+                if (schedules.length === 0) {
+                    scheduleList.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px; color: #666;">
+                            <i class="fas fa-calendar-times" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i>
+                            <p>No schedules created yet. Click "Schedule New Flow" to get started.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Sort by start time
+                schedules.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
+
+                let html = '<div style="display: grid; gap: 15px;">';
+                
+                schedules.forEach(schedule => {
+                    const startTime = new Date(schedule.startTime);
+                    const endTime = new Date(schedule.endTime);
+                    const packageName = schedule.courseID?.title || schedule.membershipID?.packageName || 'Unknown';
+                    const packageType = schedule.courseID ? 'Course' : 'Membership';
+                    const isUpcoming = startTime > new Date();
+                    const isPast = endTime < new Date();
+                    
+                    html += `
+                        <div class="glass-card" style="padding: 20px; border-left: 4px solid ${isUpcoming ? 'var(--color-golden)' : '#95a5a6'}; ${isPast ? 'opacity: 0.7;' : ''}">
+                            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
+                                <div style="flex: 1;">
+                                    <h4 style="margin: 0 0 8px 0; color: var(--color-primary);">${schedule.title}</h4>
+                                    <p style="margin: 0 0 5px 0; color: var(--color-saffron); font-size: 0.9rem;">
+                                        <i class="fas fa-${packageType === 'Course' ? 'book' : 'star'}"></i> ${packageName}
+                                    </p>
+                                </div>
+                                <span style="background: ${isPast ? '#95a5a6' : isUpcoming ? '#3B82F6' : '#10B981'}; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">
+                                    ${isPast ? 'Completed' : isUpcoming ? 'Scheduled' : 'Live'}
+                                </span>
+                            </div>
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; font-size: 0.9rem; color: #666;">
+                                <div>
+                                    <i class="fas fa-calendar" style="color: var(--color-saffron); margin-right: 5px;"></i>
+                                    ${startTime.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                </div>
+                                <div>
+                                    <i class="fas fa-clock" style="color: var(--color-saffron); margin-right: 5px;"></i>
+                                    ${startTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                </div>
+                                <div>
+                                    <i class="fas fa-hourglass-half" style="color: var(--color-saffron); margin-right: 5px;"></i>
+                                    ${schedule.expectedDuration} min
+                                </div>
+                            </div>
+                            ${schedule.meetingLink ? `
+                                <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #e0e0e0;">
+                                    <a href="${schedule.meetingLink}" target="_blank" class="btn-primary" style="display: inline-block; padding: 10px 20px; text-decoration: none;">
+                                        <i class="fas fa-video"></i> Open Meeting Link
+                                    </a>
+                                </div>
+                            ` : ''}
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+                scheduleList.innerHTML = html;
+
+            } catch (error) {
+                console.error('Error loading schedules:', error);
+                scheduleList.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px; color: #e74c3c;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                        <p>Failed to load schedules. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load schedules when live section is shown
+        const originalSwitchSection = window.switchSection;
+        window.switchSection = function(section) {
+            if (typeof originalSwitchSection === 'function') {
+                originalSwitchSection(section);
+            }
+            
+            if (section === 'live') {
+                loadSchedules();
+            }
+        };
     </script>
 </body>
 

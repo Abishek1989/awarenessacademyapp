@@ -822,11 +822,12 @@ exports.getUsers = async (req, res) => {
 
         let users = await User.find(filter)
             .populate({ path: 'enrolledCourses', select: 'title _id' })
+            .populate({ path: 'enrolledMemberships', select: 'packageName _id' })
             .select('-password')
             .sort({ createdAt: -1 })
             .lean();
 
-        const { Payment, Course } = require('../models/index');
+        const { Payment, Course, Membership } = require('../models/index');
         for (let u of users) {
             if (u.role === 'Student') {
                 u.registeredCoursesCount = Array.isArray(u.enrolledCourses) ? u.enrolledCourses.length : 0;
@@ -871,8 +872,12 @@ exports.getUsers = async (req, res) => {
                 u.paymentBreakdown = courseWisePayments;
             } else if (u.role === 'Staff') {
                 const mappedCourses = await Course.find({ mentors: u._id }).select('title _id').lean();
+                const mappedMemberships = await Membership.find({ mentors: u._id }).select('packageName _id').lean();
                 u.mappedCoursesCount = mappedCourses.length;
+                u.mappedMembershipsCount = mappedMemberships.length;
+                u.totalMappedCount = mappedCourses.length + mappedMemberships.length;
                 u.enrolledCourses = mappedCourses; // Mapped for uniformity in modal parser
+                u.enrolledMemberships = mappedMemberships; // Add memberships
             }
         }
 

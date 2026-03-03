@@ -357,6 +357,9 @@ exports.getProfile = catchAsync(async (req, res, next) => {
     const user = await User.findById(req.user.id).select('-password -verificationToken -resetPasswordToken -resetPasswordExpires -registrationOTP -registrationOTPExpires -registrationOTPAttempts');
     if (!user) return next(new AppError('User not found', 404));
 
+    console.log('Profile request for user:', req.user.id);
+    console.log('User enrolled memberships:', user.enrolledMemberships);
+
     res.status(200).json({
         status: 'success',
         data: user // Return all user fields except sensitive ones

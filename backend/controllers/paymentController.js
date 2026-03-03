@@ -323,6 +323,7 @@ exports.getMyPayments = async (req, res) => {
     try {
         const payments = await Payment.find({ studentID: req.user.id })
             .populate('courseID', 'title thumbnail category')
+            .populate('membershipID', 'packageName originalPrice offeredPrice')
             .sort({ date: -1 });
 
         res.status(200).json(payments);
@@ -345,6 +346,7 @@ exports.getPaymentDetails = async (req, res) => {
             studentID: req.user.id 
         })
         .populate('courseID', 'title thumbnail category')
+        .populate('membershipID', 'packageName originalPrice offeredPrice')
         .populate('studentID', 'name email studentID');
 
         if (!payment) {
@@ -428,3 +430,271 @@ function getPaymentMethodFromRazorpay(method) {
     
     return methodMap[method] || 'Card';
 }
+
+/**
+ * Create Order for Membership or Course
+ * POST /api/payments/create-order
+ */
+exports.createOrder = async (req, res) => {
+    try {
+        const { amount, packageName, packageType, packageId } = req.body;
+        const studentId = req.user.id;
+
+        if (!amount || !packageName || !packageType || !packageId) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'Missing required fields' 
+            });
+        }
+
+        // Validate package exists
+        let packageModel;
+        if (packageType === 'membership') {
+            const { Membership } = require('../models/index');
+            packageModel = await Membership.findById(packageId);
+        } else if (packageType === 'course') {
+            packageModel = await Course.findById(packageId);
+        } else {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid package type'
+            });
+        }
+
+        if (!packageModel) {
+            return res.status(404).json({
+                success: false,
+                message: `${packageType} not found`
+            });
+        }
+
+        // Get user details
+        const user = await User.findById(studentId);
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        // Validate amount (minimum ₹1.00)
+        if (amount < 1) {
+            return res.status(400).json({ 
+                success: false,
+                message: 'Invalid payment amount. Minimum amount is ₹1.00' 
+            });
+        }
+
+        // Round amount to 2 decimal places
+        const finalAmount = Math.round(amount * 100) / 100;
+
+        // Generate receipt ID
+        const receiptId = razorpayService.generateReceiptId(studentId, packageId);
+        
+        // Create Razorpay order
+        const orderResult = await razorpayService.createOrder(
+            finalAmount,
+            'INR',
+            receiptId
+        );
+
+        if (!orderResult.success) {
+            return res.status(500).json({ 
+                success: false,
+                message: 'Failed to create payment order',
+                error: orderResult.error 
+            });
+        }
+
+        // Generate internal transaction ID
+        const transactionId = `TXN-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+
+        // Create payment record
+        const payment = new Payment({
+            razorpayOrderId: orderResult.order.id,
+            transactionID: transactionId,
+            studentID: studentId,
+            courseID: packageType === 'course' ? packageId : null,
+            membershipID: packageType === 'membership' ? packageId : null,
+            amount: finalAmount,
+            originalAmount: finalAmount,
+            currency: 'INR',
+            paymentMethod: 'Card',
+            status: 'initiated',
+            receiptId: receiptId,
+            ipAddress: req.ip,
+            userAgent: req.get('User-Agent'),
+            notes: `${packageType}: ${packageName}`
+        });
+
+        await payment.save();
+
+        res.status(200).json({
+            success: true,
+            order: {
+                id: orderResult.order.id,
+                amount: orderResult.order.amount,
+                currency: orderResult.order.currency
+            },
+            razorpayKeyId: orderResult.key_id,
+            transactionId: transactionId,
+            userDetails: {
+                name: user.name,
+                email: user.email,
+                phone: user.phone
+            }
+        });
+
+    } catch (err) {
+        console.error('Create order error:', err);
+        res.status(500).json({ 
+            success: false,
+            message: 'Failed to create order', 
+            error: err.message 
+        });
+    }
+};
+
+/**
+ * Verify Payment for Membership or Course
+ * POST /api/payments/verify
+ */
+exports.verifyPaymentGeneric = async (req, res) => {
+    try {
+        const { 
+            razorpay_order_id, 
+            razorpay_payment_id, 
+            razorpay_signature,
+            packageType,
+            packageId
+        } = req.body;
+
+        if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+            return res.status(400).json({
+                success: false,
+                message: 'Missing payment verification details'
+            });
+        }
+
+        // Find payment record
+        const payment = await Payment.findOne({ razorpayOrderId: razorpay_order_id })
+            .populate('studentID');
+
+        if (!payment) {
+            return res.status(404).json({
+                success: false,
+                message: 'Payment record not found'
+            });
+        }
+
+        // Verify payment signature
+        const verificationResult = razorpayService.verifyPayment(
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature
+        );
+
+        if (!verificationResult.success || !verificationResult.verified) {
+            payment.status = 'failed';
+            payment.failureReason = verificationResult.error || 'Signature verification failed';
+            await payment.save();
+
+            return res.status(400).json({ 
+                success: false,
+                message: 'Payment verification failed',
+                verified: false 
+            });
+        }
+
+        // Get payment details from Razorpay
+        const paymentDetails = await razorpayService.getPaymentDetails(razorpay_payment_id);
+        
+        if (paymentDetails.success) {
+            const razorpayPayment = paymentDetails.payment;
+            
+            // Update payment record
+            payment.razorpayPaymentId = razorpay_payment_id;
+            payment.razorpaySignature = razorpay_signature;
+            payment.status = 'completed';
+            payment.completedAt = new Date();
+            payment.paymentMethod = getPaymentMethodFromRazorpay(razorpayPayment.method);
+            await payment.save();
+
+            // Handle enrollment based on package type
+            if (packageType === 'course' && packageId) {
+                // Create course enrollment
+                const existingEnrollment = await Enrollment.findOne({
+                    studentID: payment.studentID._id,
+                    courseID: packageId,
+                    status: 'Active'
+                });
+
+                if (!existingEnrollment) {
+                    const enrollment = new Enrollment({
+                        studentID: payment.studentID._id,
+                        courseID: packageId,
+                        enrollmentDate: new Date(),
+                        status: 'Active'
+                    });
+                    await enrollment.save();
+                }
+            } else if (packageType === 'membership' && packageId) {
+                // Add membership to user's enrolled memberships
+                const user = await User.findById(payment.studentID._id);
+                if (user) {
+                    if (!user.enrolledMemberships) {
+                        user.enrolledMemberships = [];
+                    }
+                    // Check if already enrolled (comparing ObjectId toString)
+                    const alreadyEnrolled = user.enrolledMemberships.some(
+                        id => id.toString() === packageId.toString()
+                    );
+                    if (!alreadyEnrolled) {
+                        user.enrolledMemberships.push(packageId);
+                        await user.save();
+                        console.log(`Added membership ${packageId} to user ${user._id}`);
+                    } else {
+                        console.log(`User ${user._id} already enrolled in membership ${packageId}`);
+                    }
+                }
+            }
+
+            // Send confirmation email
+            try {
+                await emailService.sendPaymentSuccessEmail({
+                    studentEmail: payment.studentID.email,
+                    studentName: payment.studentID.name,
+                    orderType: packageType || 'purchase',
+                    amount: payment.amount
+                });
+            } catch (emailError) {
+                console.error('Email sending failed:', emailError);
+            }
+
+            return res.json({
+                success: true,
+                verified: true,
+                payment: {
+                    id: payment._id,
+                    transactionId: payment.transactionID,
+                    amount: payment.amount,
+                    status: payment.status,
+                    completedAt: payment.completedAt
+                }
+            });
+        }
+
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to fetch payment details from Razorpay'
+        });
+
+    } catch (err) {
+        console.error('Payment verification error:', err);
+        res.status(500).json({ 
+            success: false,
+            message: 'Payment verification failed', 
+            error: err.message 
+        });
+    }
+};

@@ -390,8 +390,8 @@
                         const analytics = data.data;
 
                         // Update spending metrics with actual data (using correct element IDs)
-                        document.getElementById('totalSpent').textContent = `₹${analytics.totalSpent || 0}`;
-                        document.getElementById('avgTransaction').textContent = `₹${analytics.averageTransaction || 0}`;
+                        document.getElementById('totalSpent').textContent = `₹${(analytics.totalSpent || 0).toFixed(2)}`;
+                        document.getElementById('avgTransaction').textContent = `₹${(analytics.averageTransaction || 0).toFixed(2)}`;
                         document.getElementById('totalPayments').textContent = analytics.totalPayments || 0;
                         document.getElementById('failedAttempts').textContent = analytics.failedAttempts || 0;
 
@@ -427,8 +427,8 @@
 
         function loadMockPaymentData() {
             // Mock payment analytics data
-            document.getElementById('totalSpent').textContent = `₹${Math.floor(Math.random() * 50000) + 5000}`;
-            document.getElementById('avgTransaction').textContent = `₹${Math.floor(Math.random() * 3000) + 1000}`;
+            document.getElementById('totalSpent').textContent = `₹${(Math.floor(Math.random() * 50000) + 5000).toFixed(2)}`;
+            document.getElementById('avgTransaction').textContent = `₹${(Math.floor(Math.random() * 3000) + 1000).toFixed(2)}`;
             document.getElementById('totalPayments').textContent = Math.floor(Math.random() * 15) + 3;
             document.getElementById('failedAttempts').textContent = Math.floor(Math.random() * 3);
         }
@@ -514,7 +514,7 @@
             position: sticky;
             top: 0;
             height: 100vh;
-            overflow-y: hidden;
+            overflow-y: auto;
         }
 
         .sidebar:hover {
@@ -2818,6 +2818,8 @@
             <ul class="nav-menu">
                 <li class="nav-item"><a href="#" class="nav-link active" onclick="switchSection('course')"><i
                             class="fas fa-graduation-cap"></i><span class="link-text">My Courses</span></a></li>
+                <li class="nav-item"><a href="#" class="nav-link" onclick="switchSection('membership')"><i
+                            class="fas fa-id-card"></i><span class="link-text">Memberships</span></a></li>
                 <li class="nav-item"><a href="#" class="nav-link" onclick="switchSection('marketplace')"><i
                             class="fas fa-book-open"></i><span class="link-text">Marketplace</span></a></li>
                 <li class="nav-item"><a href="#" class="nav-link" onclick="switchSection('timetable')"><i
@@ -2841,9 +2843,9 @@
                 <i class="fas fa-graduation-cap"></i>
                 <span>Courses</span>
             </a>
-            <a href="#" class="bottom-nav-item" onclick="switchSection('analytics')">
-                <i class="fas fa-chart-pie"></i>
-                <span>Analytics</span>
+            <a href="#" class="bottom-nav-item" onclick="switchSection('membership')">
+                <i class="fas fa-id-card"></i>
+                <span>Members</span>
             </a>
             <a href="#" class="bottom-nav-item" onclick="switchSection('marketplace')">
                 <i class="fas fa-book-open"></i>
@@ -3413,6 +3415,205 @@
                             </div>
                         </form>
                     </div>
+                </div>
+
+                <!-- Membership Section -->
+                <div id="membershipSection" style="display: none;">
+                    <div class="section-header">
+                        <h2 style="display: flex; align-items: center; gap: 10px; color: var(--color-primary);">
+                            <i class="fas fa-id-card" style="color: var(--color-saffron);"></i>
+                            Membership Packages
+                        </h2>
+                    </div>
+
+                    <!-- Membership Grid -->
+                    <div id="membershipGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 25px; margin-top: 30px;">
+                        <!-- Loading state -->
+                        <div class="loading-state" id="membershipLoading" style="grid-column: 1/-1; text-align: center; padding: 60px 20px;">
+                            <i class="fas fa-spinner fa-spin" style="font-size: 3rem; color: var(--color-saffron); margin-bottom: 15px; display: block;"></i>
+                            <p style="color: #666;">Loading membership packages...</p>
+                        </div>
+                    </div>
+
+                    <style>
+                        .membership-package-card {
+                            background: white;
+                            border-radius: 16px;
+                            overflow: hidden;
+                            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+                            transition: all 0.3s ease;
+                            border: 2px solid transparent;
+                            position: relative;
+                        }
+
+                        .membership-package-card:hover {
+                            transform: translateY(-5px);
+                            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+                            border-color: var(--color-saffron);
+                        }
+
+                        .membership-package-card.most-popular {
+                            border-color: var(--color-saffron);
+                        }
+
+                        .membership-package-card.most-popular::before {
+                            content: '⭐ MOST POPULAR';
+                            position: absolute;
+                            top: 15px;
+                            right: -30px;
+                            background: linear-gradient(135deg, var(--color-saffron), var(--color-golden));
+                            color: white;
+                            padding: 5px 40px;
+                            font-size: 0.7rem;
+                            font-weight: 700;
+                            letter-spacing: 0.5px;
+                            transform: rotate(45deg);
+                            box-shadow: 0 3px 10px rgba(255, 138, 0, 0.4);
+                            z-index: 1;
+                        }
+
+                        .membership-card-header {
+                            background: linear-gradient(135deg, var(--color-saffron-light), var(--color-golden-light));
+                            padding: 25px 20px;
+                            text-align: center;
+                        }
+
+                        .membership-card-header h3 {
+                            color: var(--color-primary);
+                            font-size: 1.5rem;
+                            margin-bottom: 15px;
+                            font-weight: 700;
+                        }
+
+                        .membership-pricing {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 12px;
+                            margin-bottom: 10px;
+                        }
+
+                        .membership-original-price {
+                            text-decoration: line-through;
+                            color: #999;
+                            font-size: 1.1rem;
+                        }
+
+                        .membership-offered-price {
+                            font-size: 2rem;
+                            font-weight: 700;
+                            color: var(--color-saffron);
+                        }
+
+                        .membership-offer-expires {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 6px;
+                            font-size: 0.85rem;
+                            color: #e74c3c;
+                            font-weight: 600;
+                        }
+
+                        .membership-card-body {
+                            padding: 25px 20px;
+                        }
+
+                       .membership-features {
+                            list-style: none;
+                            padding: 0;
+                            margin: 0 0 20px 0;
+                        }
+
+                        .membership-features li {
+                            display: flex;
+                            align-items: start;
+                            gap: 10px;
+                            margin-bottom: 12px;
+                            color: #555;
+                            font-size: 0.95rem;
+                            line-height: 1.6;
+                        }
+
+                        .membership-features li i {
+                            color: var(--color-saffron);
+                            margin-top: 3px;
+                            flex-shrink: 0;
+                        }
+
+                        .membership-duration {
+                            background: #f8f5f0;
+                            padding: 15px;
+                            border-radius: 10px;
+                            margin-bottom: 15px;
+                            font-size: 0.9rem;
+                        }
+
+                        .membership-duration strong {
+                            color: var(--color-primary);
+                            display: block;
+                            margin-bottom: 5px;
+                        }
+
+                        .membership-class-time {
+                            background: linear-gradient(135deg, var(--color-saffron-light), var(--color-golden-light));
+                            padding: 12px;
+                            border-radius: 8px;
+                            text-align: center;
+                            font-weight: 500;
+                            font-size: 0.9rem;
+                            margin-bottom: 20px;
+                        }
+
+                        .membership-enroll-btn {
+                            width: 100%;
+                            padding: 14px;
+                            background: linear-gradient(135deg, var(--color-saffron), var(--color-golden));
+                            color: white;
+                            border: none;
+                            border-radius: 10px;
+                            font-size: 1rem;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.3s ease;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            gap: 8px;
+                        }
+
+                        .membership-enroll-btn:hover {
+                            transform: scale(1.02);
+                            box-shadow: 0 5px 20px rgba(255, 138, 0, 0.4);
+                        }
+
+                        .membership-enroll-btn:disabled {
+                            opacity: 0.5;
+                            cursor: not-allowed;
+                        }
+
+                        .membership-empty-state {
+                            grid-column: 1/-1;
+                            text-align: center;
+                            padding: 80px 20px;
+                        }
+
+                        .membership-empty-state i {
+                            font-size: 4rem;
+                            color: #ddd;
+                            margin-bottom: 20px;
+                            display: block;
+                        }
+
+                        .membership-empty-state h3 {
+                            color: #666;
+                            margin-bottom: 10px;
+                        }
+
+                        .membership-empty-state p {
+                            color: #999;
+                        }
+                    </style>
                 </div>
 
                 <!-- Marketplace Section -->
@@ -4269,36 +4470,109 @@
             }
         });
 
+        // Helper function to get currently visible section
+        function getCurrentSection() {
+            var sections = ['course', 'membership', 'analytics', 'marketplace', 'payments', 'tickets', 'profile', 'certificates', 'timetable'];
+            for (var i = 0; i < sections.length; i++) {
+                var el = document.getElementById(sections[i] + 'Section');
+                if (el && el.style.display !== 'none') {
+                    return sections[i];
+                }
+            }
+            return null;
+        }
+
         // === BOTTOM NAV ACTIVE STATE SYNC ===
         // Patch switchSection to also update bottom-nav active highlights
         document.addEventListener('DOMContentLoaded', function () {
             var originalSwitchSection = window.switchSection;
             if (typeof originalSwitchSection === 'function') {
                 window.switchSection = function (section) {
+                    // Remember previous section to stop timers if leaving timetable
+                    var previousSection = getCurrentSection();
+                    
                     originalSwitchSection(section);
                     syncBottomNavActive(section);
                     syncSidebarNavActive(section);
+                    
+                    // Load memberships when membership section is opened
+                    if (section === 'membership' && !window.membershipsLoaded) {
+                        loadMembershipPackages();
+                    }
+                    
+                    // Load timetable and start timers when timetable section is opened
+                    if (section === 'timetable') {
+                        loadTimetable();
+                        startTimerUpdates();
+                    }
+                    
+                    // Stop timers when leaving timetable section
+                    if (previousSection === 'timetable' && section !== 'timetable') {
+                        stopTimerUpdates();
+                    }
                 };
             }
 
             // Also sync on first load based on which section is visible
             setTimeout(function () {
-                var sections = ['course', 'analytics', 'marketplace', 'payments', 'tickets', 'profile', 'certificates', 'timetable'];
+                var sections = ['course', 'membership', 'analytics', 'marketplace', 'payments', 'tickets', 'profile', 'certificates', 'timetable'];
                 for (var i = 0; i < sections.length; i++) {
                     var el = document.getElementById(sections[i] + 'Section');
                     if (el && el.style.display !== 'none') {
                         syncBottomNavActive(sections[i]);
                         syncSidebarNavActive(sections[i]);
+                        
+                        // Start countdown timers if timetable is visible on load
+                        if (sections[i] === 'timetable') {
+                            startTimerUpdates();
+                        }
                         break;
                     }
                 }
             }, 500);
+            
+            // Check for pending membership from membership.html
+            var pendingMembershipId = sessionStorage.getItem('pendingMembershipId');
+            if (pendingMembershipId && window.location.search.includes('tab=marketplace')) {
+                sessionStorage.removeItem('pendingMembershipId');
+                sessionStorage.removeItem('pendingMembershipName');
+                // Switch to marketplace tab
+                if (typeof window.switchSection === 'function') {
+                    window.switchSection('marketplace');
+                }
+            }
+            
+            // Check for timetable tab in URL and start timers
+            if (window.location.search.includes('tab=timetable')) {
+                if (typeof window.switchSection === 'function') {
+                    window.switchSection('timetable');
+                }
+            }
+            
+            // Cleanup timers when page is about to unload
+            window.addEventListener('beforeunload', function () {
+                stopTimerUpdates();
+            });
+            
+            // Also cleanup on visibility change (when tab becomes hidden)
+            document.addEventListener('visibilitychange', function () {
+                if (document.hidden) {
+                    stopTimerUpdates();
+                } else {
+                    // Restart timers if timetable section is visible when tab becomes active
+                    var currentSection = getCurrentSection();
+                    if (currentSection === 'timetable') {
+                        startTimerUpdates();
+                    }
+                }
+            });
         });
 
         function syncBottomNavActive(section) {
             // Map section names to bottom-nav onclick values
             var sectionMap = {
                 'course': 'course',
+                'membership': 'membership',
                 'analytics': 'analytics',
                 'marketplace': 'marketplace',
                 'payments': 'payments',
@@ -4329,6 +4603,679 @@
                 }
             });
         }
+
+        // Load Membership Packages
+        async function loadMembershipPackages() {
+            const membershipGrid = document.getElementById('membershipGrid');
+            const loadingState = document.getElementById('membershipLoading');
+            
+            if (!membershipGrid || !loadingState) return;
+
+            try {
+                const apiBase = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api';
+                const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+                
+                // Fetch memberships and user profile in parallel
+                const [membershipsResponse, profileResponse] = await Promise.all([
+                    fetch(`${apiBase}/memberships/all`),
+                    fetch(`${apiBase}/auth/profile`, {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    })
+                ]);
+                
+                const membershipsData = await membershipsResponse.json();
+                const profileData = await profileResponse.json();
+                
+                console.log('Profile data:', profileData);
+                console.log('Memberships data:', membershipsData);
+                
+                // Get enrolled membership IDs
+                const enrolledMembershipIds = profileData.status === 'success' && profileData.data?.enrolledMemberships 
+                    ? profileData.data.enrolledMemberships.map(id => id.toString()) 
+                    : [];
+                    
+                console.log('Enrolled membership IDs:', enrolledMembershipIds);
+
+                loadingState.style.display = 'none';
+
+                if (membershipsData.success && membershipsData.memberships.length > 0) {
+                    membershipGrid.innerHTML = membershipsData.memberships.map(membership => {
+                        const originalPrice = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(membership.originalPrice);
+                        const offeredPrice = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(membership.offeredPrice);
+                        const startDate = new Date(membership.duration.startDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+                        const endDate = new Date(membership.duration.endDate).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+                        const offerEnds = new Date(membership.offerEndsAt);
+                        const programEndDate = new Date(membership.duration.endDate);
+                        const now = new Date();
+                        const daysRemaining = Math.ceil((offerEnds - now) / (1000 * 60 * 60 * 24));
+                        const timeRemaining = daysRemaining > 0 ? `${daysRemaining} day${daysRemaining > 1 ? 's' : ''} remaining` : 'Offer Expired';
+                        const isOfferExpired = now > offerEnds;
+                        const isProgramExpired = now > programEndDate;
+                        const displayPrice = isOfferExpired ? membership.originalPrice : membership.offeredPrice;
+                        const isEnrolled = enrolledMembershipIds.includes(membership._id.toString());
+                        
+                        console.log(`Checking membership ${membership.packageName} (${membership._id}):`, {
+                            membershipId: membership._id.toString(),
+                            enrolledIds: enrolledMembershipIds,
+                            isEnrolled: isEnrolled
+                        });
+
+                        return `
+                            <div class="membership-package-card ${membership.isMostPopular ? 'most-popular' : ''}" style="${isProgramExpired ? 'opacity: 0.5; filter: blur(0.5px); pointer-events: none;' : ''}">
+                                ${isProgramExpired ? '<div style="position: absolute; top: 20px; right: 20px; background: #ef4444; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; z-index: 10;"><i class="fas fa-ban"></i> Not Available</div>' : ''}
+                                <div class="membership-card-header">
+                                    <h3>${membership.packageName}</h3>
+                                    <div class="membership-pricing">
+                                        ${isOfferExpired ? `
+                                            <span class="membership-offered-price">${originalPrice}</span>
+                                        ` : `
+                                            <span class="membership-original-price">${originalPrice}</span>
+                                            <span class="membership-offered-price">${offeredPrice}</span>
+                                        `}
+                                    </div>
+                                    ${!isOfferExpired ? `
+                                    <div class="membership-offer-expires">
+                                        <i class="fas fa-clock"></i>
+                                        <span>${timeRemaining}</span>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                                <div class="membership-card-body">
+                                    ${membership.features && membership.features.length > 0 ? `
+                                    <ul class="membership-features">
+                                        ${membership.features.map(feature => `
+                                            <li><i class="fas fa-check-circle"></i> <span>${feature}</span></li>
+                                        `).join('')}
+                                    </ul>
+                                    ` : ''}
+                                    
+                                    <div class="membership-duration">
+                                        <strong><i class="fas fa-calendar-alt"></i> Program Duration</strong>
+                                        <div style="color: #666; margin-top: 5px;">
+                                            <strong>Start:</strong> ${startDate}<br>
+                                            <strong>End:</strong> ${endDate}
+                                        </div>
+                                    </div>
+                                    
+                                    ${membership.classTime ? `
+                                    <div class="membership-class-time">
+                                        <i class="fas fa-clock"></i> ${membership.classTime}
+                                    </div>
+                                    ` : ''}
+                                    
+                                    ${isProgramExpired ? `
+                                    <button class="membership-enroll-btn" disabled style="background: #6b7280; cursor: not-allowed;">
+                                        <i class="fas fa-ban"></i> Not Available Now
+                                    </button>
+                                    ` : isEnrolled ? `
+                                    <button class="membership-enroll-btn" disabled style="background: #10b981; cursor: not-allowed;">
+                                        <i class="fas fa-check-circle"></i> Already Enrolled
+                                    </button>
+                                    ` : `
+                                    <button class="membership-enroll-btn" onclick="enrollInMembershipPackage('${membership._id}', '${membership.packageName}', ${displayPrice})">
+                                        <i class="fas fa-shopping-cart"></i> Enroll Now
+                                    </button>
+                                    `}
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    window.membershipsLoaded = true;
+                } else {
+                    membershipGrid.innerHTML = `
+                        <div class="membership-empty-state">
+                            <i class="fas fa-box-open"></i>
+                            <h3>No Membership Packages Available</h3>
+                            <p>Check back later for new membership options</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading memberships:', error);
+                loadingState.style.display = 'none';
+                membershipGrid.innerHTML = `
+                    <div class="membership-empty-state">
+                        <i class="fas fa-exclamation-triangle" style="color: #e74c3c;"></i>
+                        <h3>Error Loading Memberships</h3>
+                        <p>Please try again later</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Enroll in Membership Package
+        async function enrollInMembershipPackage(membershipId, packageName, amount) {
+            if (!confirm(`Enroll in "${packageName}" for ${new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(amount)}?`)) {
+                return;
+            }
+
+            try {
+                const token = localStorage.getItem('token');
+                const apiBase = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api';
+
+                // Create Razorpay order
+                const orderResponse = await fetch(`${apiBase}/payments/create-order`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        amount: amount,
+                        packageName: packageName,
+                        packageType: 'membership',
+                        packageId: membershipId
+                    })
+                });
+
+                const orderData = await orderResponse.json();
+
+                if (!orderData.success) {
+                    throw new Error(orderData.message || 'Failed to create order');
+                }
+
+                // Initialize Razorpay payment
+                const options = {
+                    key: orderData.razorpayKeyId,
+                    amount: orderData.order.amount,
+                    currency: 'INR',
+                    name: 'Awareness Academy',
+                    description: packageName,
+                    order_id: orderData.order.id,
+                    handler: async function (response) {
+                        try {
+                            // Verify payment
+                            const verifyResponse = await fetch(`${apiBase}/payments/verify`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Authorization': `Bearer ${token}`
+                                },
+                                body: JSON.stringify({
+                                    razorpay_order_id: response.razorpay_order_id,
+                                    razorpay_payment_id: response.razorpay_payment_id,
+                                    razorpay_signature: response.razorpay_signature,
+                                    packageType: 'membership',
+                                    packageId: membershipId
+                                })
+                            });
+
+                            const verifyData = await verifyResponse.json();
+
+                            if (verifyData.success) {
+                                alert(`Successfully enrolled in ${packageName}!`);
+                                // Reload membership list to update enrollment status
+                                if (typeof loadMembershipPackages === 'function') {
+                                    await loadMembershipPackages();
+                                }
+                                // Reload user data or switch to payments section
+                                if (typeof window.switchSection === 'function') {
+                                    window.switchSection('payments');
+                                }
+                                if (typeof window.loadPaymentHistory === 'function') {
+                                    window.loadPaymentHistory();
+                                }
+                            } else {
+                                alert('Payment verification failed. Please contact support.');
+                            }
+                        } catch (error) {
+                            console.error('Error verifying payment:', error);
+                            alert('Error verifying payment. Please contact support.');
+                        }
+                    },
+                    prefill: {
+                        name: orderData.userDetails?.name || '',
+                        email: orderData.userDetails?.email || '',
+                        contact: orderData.userDetails?.phone || ''
+                    },
+                    theme: {
+                        color: '#ff9933'
+                    }
+                };
+
+                const razorpay = new Razorpay(options);
+                razorpay.open();
+
+            } catch (error) {
+                console.error('Error enrolling in membership:', error);
+                alert(error.message || 'Failed to initiate payment. Please try again.');
+            }
+        }
+
+        // Load Timetable (Live Classes for Courses & Memberships)
+        async function loadTimetable() {
+            const timetableGrid = document.getElementById('timetableGrid');
+            timetableGrid.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">Loading live classes...</p>';
+
+            try {
+                const apiBase = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api';
+                const token = localStorage.getItem('token');
+
+                const response = await fetch(`${apiBase}/schedules/my-timetable`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to load timetable');
+                }
+
+                const schedules = await response.json();
+
+                if (schedules.length === 0) {
+                    timetableGrid.innerHTML = `
+                        <div style="text-align: center; padding: 60px 20px;">
+                            <i class="fas fa-calendar-times" style="font-size: 4rem; color: #ccc; margin-bottom: 20px;"></i>
+                            <h3 style="color: #666; margin-bottom: 10px;">No Live Classes Scheduled</h3>
+                            <p style="color: #999;">Your live class schedule will appear here once classes are scheduled.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Group schedules by current status
+                const now = new Date();
+                const upcomingSchedules = [];
+                const ongoingSchedules = [];
+                const completedSchedules = [];
+                
+                schedules.forEach(schedule => {
+                    const startTime = new Date(schedule.startTime);
+                    const endTime = new Date(schedule.endTime);
+                    
+                    if (now < startTime) {
+                        upcomingSchedules.push(schedule);
+                    } else if (now >= startTime && now <= endTime) {
+                        ongoingSchedules.push(schedule);
+                    } else {
+                        completedSchedules.push(schedule);
+                    }
+                });
+
+                let html = '';
+
+                // Show ongoing classes first (most important)
+                if (ongoingSchedules.length > 0) {
+                    html += '<h3 style="margin: 20px 0 15px 0; color: #10B981;"><i class="fas fa-circle" style="animation: pulse 2s infinite; margin-right: 8px;"></i> Live Classes</h3>';
+                    ongoingSchedules.forEach(schedule => {
+                        html += generateTimetableCard(schedule, 'ongoing');
+                    });
+                }
+
+                // Then upcoming classes
+                if (upcomingSchedules.length > 0) {
+                    html += '<h3 style="margin: 30px 0 15px 0; color: #333;"><i class="fas fa-calendar-check"></i> Upcoming Classes</h3>';
+                    upcomingSchedules.forEach(schedule => {
+                        html += generateTimetableCard(schedule, 'upcoming');
+                    });
+                }
+
+                // Finally completed classes
+                if (completedSchedules.length > 0) {
+                    html += '<h3 style="margin: 30px 0 15px 0; color: #666;"><i class="fas fa-history"></i> Completed Classes</h3>';
+                    completedSchedules.forEach(schedule => {
+                        html += generateTimetableCard(schedule, 'completed');
+                    });
+                }
+
+                timetableGrid.innerHTML = html;
+                
+                // Start timer updates for countdown functionality
+                startTimerUpdates();
+
+            } catch (error) {
+                console.error('Error loading timetable:', error);
+                timetableGrid.innerHTML = `
+                    <div style="text-align: center; padding: 60px 20px; color: #e74c3c;">
+                        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; margin-bottom: 15px;"></i>
+                        <p>Failed to load timetable. Please try again.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Generate Timetable Card HTML
+        function generateTimetableCard(schedule, statusType) {
+            const startTime = new Date(schedule.startTime);
+            const endTime = new Date(schedule.endTime);
+            const now = new Date();
+            const packageName = schedule.courseID?.title || schedule.membershipID?.packageName || 'Unknown';
+            const packageType = schedule.courseID ? 'Course' : 'Membership';
+            const instructor = schedule.staffID?.name || 'Instructor';
+            
+            let statusBadge = '';
+            let actionButton = '';
+            let cardOpacity = '';
+            
+            if (statusType === 'completed') {
+                statusBadge = '<span style="background: #95a5a6; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">Completed</span>';
+                actionButton = '<span style="color: #95a5a6; font-size: 0.9rem;">Class Ended</span>';
+                cardOpacity = 'opacity: 0.7;';
+            } else if (statusType === 'ongoing') {
+                statusBadge = '<span class="ongoing-badge" style="color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;"><i class="fas fa-circle" style="font-size: 0.6rem; margin-right: 5px;"></i>Ongoing</span>';
+                actionButton = `<button class="btn-primary join-live-button" onclick="joinLiveClass('${schedule._id}', '${schedule.courseID?._id || ''}', '${schedule.membershipID?._id || ''}')" style="color: white; padding: 12px 24px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer;"><i class="fas fa-video"></i> Join Live Class</button>`;
+            } else if (statusType === 'upcoming') {
+                const timeUntilMs = startTime - now;
+                const timeUntil = Math.floor(timeUntilMs / 60000); // minutes
+                
+                if (timeUntil <= 15 && timeUntil >= 0) {
+                    statusBadge = '<span class="starting-soon-badge" style="color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">Starting Soon</span>';
+                    actionButton = `<button class="btn-primary" onclick="joinLiveClass('${schedule._id}', '${schedule.courseID?._id || ''}', '${schedule.membershipID?._id || ''}')" style="background: #F59E0B; color: white; padding: 10px 20px; font-weight: 600; border: none; border-radius: 8px; cursor: pointer;"><i class="fas fa-video"></i> Join Class</button>`;
+                } else {
+                    statusBadge = '<span style="background: #3B82F6; color: white; padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600;">Scheduled</span>';
+                    if (timeUntil > 60) {
+                        actionButton = `<div style="color: #666; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;">
+                            <i class="fas fa-clock" style="color: var(--color-saffron);"></i>
+                            <span class="countdown-timer" data-start-time="${startTime.getTime()}" style="font-weight: 600; color: #333;">Loading...</span>
+                        </div>`;
+                    } else {
+                        actionButton = `<div style="color: #F59E0B; font-size: 0.9rem; display: flex; align-items: center; gap: 8px; font-weight: 600;">
+                            <i class="fas fa-stopwatch" style="animation: pulse 1s infinite;"></i>
+                            <span class="countdown-timer countdown-urgent" data-start-time="${startTime.getTime()}">Loading...</span>
+                        </div>`;
+                    }
+                }
+            }
+
+            // Add special border color and styling for different states
+            let borderColor = 'var(--color-saffron)';
+            let cardClass = 'glass-card';
+            let cardExtraStyle = '';
+            
+            if (statusType === 'ongoing') {
+                borderColor = '#10B981';
+                cardClass = 'glass-card live-class-card';
+                cardExtraStyle = 'transform: translateY(-1px);';
+            } else if (statusType === 'completed') {
+                borderColor = '#95a5a6';
+            }
+            
+            return `
+                <div class="${cardClass}" style="padding: 20px; border-left: 4px solid ${borderColor}; ${cardOpacity} ${cardExtraStyle}">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <div style="flex: 1; min-width: 200px;">
+                            <h4 style="margin: 0 0 8px 0; color: var(--color-primary); font-size: 1.1rem;">${schedule.title}</h4>
+                            <p style="margin: 0 0 5px 0; color: var(--color-saffron); font-size: 0.9rem; font-weight: 600;">
+                                <i class="fas fa-${packageType === 'Course' ? 'book' : 'star'}"></i> ${packageName}
+                            </p>
+                            <p style="margin: 0; color: var(--color-text-secondary); font-size: 0.85rem;">
+                                <i class="fas fa-user"></i> ${instructor}
+                            </p>
+                        </div>
+                        ${statusBadge}
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 15px; font-size: 0.9rem; color: #666;">
+                        <div>
+                            <i class="fas fa-calendar" style="color: var(--color-saffron); margin-right: 5px;"></i>
+                            ${startTime.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        </div>
+                        <div>
+                            <i class="fas fa-clock" style="color: var(--color-saffron); margin-right: 5px;"></i>
+                            ${startTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })} - ${endTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                        </div>
+                        <div>
+                            <i class="fas fa-hourglass-half" style="color: var(--color-saffron); margin-right: 5px;"></i>
+                            ${schedule.expectedDuration || 60} min
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: flex-end; align-items: center;">
+                        ${actionButton}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Join Live Class
+        async function joinLiveClass(scheduleID, courseID, membershipID) {
+            try {
+                const apiBase = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api';
+                const token = localStorage.getItem('token');
+
+                const response = await fetch(`${apiBase}/attendance/mark`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        scheduleID,
+                        courseID: courseID || undefined,
+                        membershipID: membershipID || undefined
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.meetingLink) {
+                    // Open meeting link in new tab
+                    window.open(data.meetingLink, '_blank');
+                    
+                    // Show success message
+                    if (!data.alreadyJoined) {
+                        alert('Attendance marked! Opening live class...');
+                    }
+                    
+                    // Reload timetable to update status
+                    setTimeout(() => loadTimetable(), 1000);
+                } else {
+                    alert(data.message || 'Meeting link not available yet');
+                }
+
+            } catch (error) {
+                console.error('Error joining live class:', error);
+                alert('Failed to join live class. Please try again.');
+            }
+        }
+
+        // Update countdown timers for live classes and check for status changes
+        function updateCountdownTimers() {
+            const timers = document.querySelectorAll('.countdown-timer');
+            const now = new Date().getTime();
+            let statusChanged = false;
+            let classStartingSoon = false;
+            
+            timers.forEach(timer => {
+                const startTime = parseInt(timer.getAttribute('data-start-time'));
+                const timeDiff = startTime - now;
+                
+                if (timeDiff <= 0) {
+                    timer.textContent = 'Class Starting!';
+                    timer.style.color = '#10B981';
+                    timer.style.fontWeight = 'bold';
+                    statusChanged = true;
+                } else {
+                    const days = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((timeDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+                    
+                    let timeText = '';
+                    
+                    if (days > 0) {
+                        timeText = `Starts in: ${days}d ${hours}h ${minutes}m`;
+                    } else if (hours > 0) {
+                        timeText = `Starts in: ${hours}h ${minutes}m ${seconds}s`;
+                    } else if (minutes > 0) {
+                        timeText = `Starts in: ${minutes}m ${seconds}s`;
+                        // Check if class is starting within 5 minutes for notification
+                        if (minutes <= 5) {
+                            classStartingSoon = true;
+                            timer.style.color = '#F59E0B';
+                            timer.style.fontWeight = 'bold';
+                        }
+                    } else {
+                        timeText = `Starts in: ${seconds}s`;
+                        classStartingSoon = true;
+                        timer.style.color = '#F59E0B';
+                        timer.style.fontWeight = 'bold';
+                    }
+                    
+                    timer.textContent = timeText;
+                }
+            });
+            
+            // Show notification for classes starting soon (only once per minute)
+            if (classStartingSoon && !window.notificationShown) {
+                const currentMinute = Math.floor(now / 60000);
+                if (!window.lastNotificationMinute || window.lastNotificationMinute !== currentMinute) {
+                    showClassStartingNotification();
+                    window.lastNotificationMinute = currentMinute;
+                }
+            }
+            
+            // Check for classes ending (every 30 seconds to avoid too frequent calls)
+            if (!window.lastStatusCheck || now - window.lastStatusCheck > 30000) {
+                checkForEndedClasses();
+                window.lastStatusCheck = now;
+            }
+            
+            // Reload timetable if any class status changed
+            if (statusChanged) {
+                setTimeout(() => {
+                    console.log('Class status changed, refreshing timetable...');
+                    loadTimetable();
+                }, 3000);
+            }
+        }
+        
+        // Show subtle notification for classes starting soon
+        function showClassStartingNotification() {
+            const existingNotification = document.querySelector('.class-starting-notification');
+            if (existingNotification) {
+                existingNotification.remove();
+            }
+            
+            const notification = document.createElement('div');
+            notification.className = 'class-starting-notification';
+            notification.innerHTML = `
+                <div style="position: fixed; top: 20px; right: 20px; background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; padding: 15px 20px; border-radius: 10px; box-shadow: 0 8px 25px rgba(245, 158, 11, 0.3); z-index: 10000; font-weight: 600; display: flex; align-items: center; gap: 10px; animation: slideInRight 0.3s ease-out;">
+                    <i class="fas fa-bell" style="animation: pulse 1.5s infinite;"></i>
+                    <span>Live class starting soon!</span>
+                    <button onclick="this.parentElement.parentElement.remove()" style="background: none; border: none; color: white; font-size: 18px; cursor: pointer; margin-left: 10px;">×</button>
+                </div>
+            `;
+            document.body.appendChild(notification);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 10000);
+        }
+
+        // Check for classes that have ended and refresh if needed
+        function checkForEndedClasses() {
+            const ongoingBadges = document.querySelectorAll('[style*="Ongoing"]');
+            if (ongoingBadges.length > 0) {
+                // Only check if we have ongoing classes displayed
+                const scripts = document.querySelectorAll('script');
+                for (let script of scripts) {
+                    if (script.textContent && script.textContent.includes('schedules')) {
+                        // Simple check - just reload every minute if there are ongoing classes
+                        const now = new Date();
+                        if (now.getSeconds() === 0) { // Every minute at 0 seconds
+                            console.log('Checking for ended classes...');
+                            loadTimetable();
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Set up timer interval for live class countdowns
+        let timerInterval;
+        
+        function startTimerUpdates() {
+            // Clear any existing interval
+            if (timerInterval) {
+                clearInterval(timerInterval);
+            }
+            
+            // Update immediately
+            updateCountdownTimers();
+            
+            // Update every second
+            timerInterval = setInterval(updateCountdownTimers, 1000);
+        }
+        
+        function stopTimerUpdates() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+
+        // Add enhanced CSS for live class status badges and animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes pulse {
+                0%, 100% { opacity: 1; transform: scale(1); }
+                50% { opacity: 0.8; transform: scale(1.05); }
+            }
+            
+            @keyframes glow {
+                0%, 100% { box-shadow: 0 0 5px rgba(16, 185, 129, 0.3); }
+                50% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.6), 0 0 30px rgba(16, 185, 129, 0.3); }
+            }
+            
+            @keyframes countdown-pulse {
+                0%, 100% { opacity: 1; }
+                50% { opacity: 0.6; }
+            }
+            
+            @keyframes slideInRight {
+                0% { 
+                    transform: translateX(100%); 
+                    opacity: 0; 
+                }
+                100% { 
+                    transform: translateX(0); 
+                    opacity: 1; 
+                }
+            }
+            
+            /* Live class specific styling */
+            .live-class-card {
+                background: linear-gradient(135deg, rgba(16, 185, 129, 0.05) 0%, rgba(16, 185, 129, 0.1) 100%);
+                border-left-color: #10B981 !important;
+            }
+            
+            .ongoing-badge {
+                background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+                box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+                animation: glow 3s ease-in-out infinite;
+            }
+            
+            .starting-soon-badge {
+                background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%) !important;
+                animation: countdown-pulse 2s ease-in-out infinite;
+            }
+            
+            .join-live-button {
+                background: linear-gradient(135deg, #10B981 0%, #059669 100%) !important;
+                box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4) !important;
+                transform: translateY(0);
+                transition: all 0.3s ease !important;
+            }
+            
+            .join-live-button:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 8px 25px rgba(16, 185, 129, 0.6) !important;
+            }
+            
+            .countdown-urgent {
+                animation: countdown-pulse 1s ease-in-out infinite;
+                color: #F59E0B !important;
+                font-weight: bold !important;
+            }
+        `;
+        document.head.appendChild(style);
     </script>
 </body>
 

@@ -262,7 +262,7 @@ function switchSection(section) {
     });
 
     // Hide all sections including analyticsSection
-    ['course', 'timetable', 'payments', 'tickets', 'certificates', 'marketplace', 'profile', 'analytics'].forEach(s => {
+    ['course', 'timetable', 'payments', 'tickets', 'certificates', 'marketplace', 'profile', 'analytics', 'membership'].forEach(s => {
         const el = document.getElementById(s + 'Section');
         if (el) el.style.display = 'none';
     });
@@ -1278,7 +1278,7 @@ async function loadPayments() {
                         </div>
                         
                         <div class="payment-info">
-                            <h4 class="payment-course">${p.courseID?.title || 'Course Offering'}</h4>
+                            <h4 class="payment-course">${p.membershipID?.packageName || p.courseID?.title || 'Course Offering'}</h4>
                             <div class="payment-meta">
                                 <span><i class="far fa-calendar-alt"></i> ${new Date(p.date).toLocaleDateString()}</span>
                                 <span><i class="fas fa-fingerprint"></i> ID: ${p._id?.substring(p._id.length - 8).toUpperCase() || 'N/A'}</span>

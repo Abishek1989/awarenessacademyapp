@@ -850,7 +850,7 @@ async function loadUserManagement(role) {
                         <th style="padding: 15px;">ID</th>
                         <th style="padding: 15px;">Email</th>
                         ${isStudent ? '<th style="padding: 15px; text-align: center;">Courses</th><th style="padding: 15px; text-align: center;">Payments</th>' : ''}
-                        ${isStaff ? '<th style="padding: 15px; text-align: center;">Mapped Courses</th>' : ''}
+                        ${isStaff ? '<th style="padding: 15px; text-align: center;">Mapped</th>' : ''}
                         <th style="padding: 15px;">Status</th>
                         <th style="padding: 15px; text-align: right;">Actions</th>
                     </tr>
@@ -916,7 +916,7 @@ async function loadUserManagement(role) {
                                     ` : ''}
                                 </div>
                             </td>` : ''}
-                            ${u.role === 'Staff' ? `<td style="padding: 15px; text-align: center; font-weight: bold; font-size: 0.95rem;">${u.mappedCoursesCount || 0}</td>` : ''}
+                            ${u.role === 'Staff' ? `<td style="padding: 15px; text-align: center; font-weight: bold; font-size: 0.95rem;">${u.totalMappedCount || 0}</td>` : ''}
                             <td style="padding: 15px;">
                                 <span class="badge ${u.active ? 'badge-active' : 'badge-inactive'}">
                                     ${u.active ? 'Active' : 'Inactive'}
@@ -1642,10 +1642,18 @@ function openUserDetailsModal(user) {
             </div>
         `;
     } else if (user.role === 'Staff') {
+        const coursesCount = user.mappedCoursesCount || 0;
+        const membershipsCount = user.mappedMembershipsCount || 0;
+        const totalCount = coursesCount + membershipsCount;
+        
         grid.innerHTML = `
-            <div style="background: #fff0f5; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #ffccdd; grid-column: span 2;">
-                <div style="font-size: 0.85rem; color: #666; font-weight: 500; margin-bottom: 5px;"><i class="fas fa-chalkboard-teacher" style="color: #e83e8c; margin-right: 5px;"></i>Mapped Courses assigned for moderation</div>
-                <div style="font-size: 1.7rem; font-weight: 700; color: #e83e8c;">${user.mappedCoursesCount || 0}</div>
+            <div style="background: #fff0f5; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #ffccdd;">
+                <div style="font-size: 0.85rem; color: #666; font-weight: 500; margin-bottom: 5px;"><i class="fas fa-book" style="color: #3b82f6; margin-right: 5px;"></i>Mapped Courses</div>
+                <div style="font-size: 1.7rem; font-weight: 700; color: #3b82f6;">${coursesCount}</div>
+            </div>
+            <div style="background: #fef3c7; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #fcd34d;">
+                <div style="font-size: 0.85rem; color: #666; font-weight: 500; margin-bottom: 5px;"><i class="fas fa-crown" style="color: #f59e0b; margin-right: 5px;"></i>Mapped Packages</div>
+                <div style="font-size: 1.7rem; font-weight: 700; color: #f59e0b;">${membershipsCount}</div>
             </div>
         `;
     }
@@ -1654,15 +1662,36 @@ function openUserDetailsModal(user) {
     const courseListDiv = document.getElementById('udmCourseList');
     const courseListTitle = document.getElementById('udmCourseListTitle');
 
-    if (user.enrolledCourses && user.enrolledCourses.length > 0) {
+    const hasCourses = user.enrolledCourses && user.enrolledCourses.length > 0;
+    const hasMemberships = user.enrolledMemberships && user.enrolledMemberships.length > 0;
+    
+    if (hasCourses || hasMemberships) {
         courseListContainer.style.display = 'block';
-        courseListTitle.innerHTML = `<i class="fas fa-list-ul" style="color: #4a90e2; margin-right: 5px;"></i> ${user.role === 'Staff' ? 'Assigned Courses' : 'Active Enrollments'}`;
-        courseListDiv.innerHTML = user.enrolledCourses.map(course => `
-            <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #ebebeb; display: flex; justify-content: space-between; align-items: center;">
-                <span style="font-weight: 500; font-size: 0.9rem; color: #444;">${course.title || 'Unknown Course'}</span>
-                <i class="fas fa-check-circle" style="color: #2ecc71; font-size: 0.9rem;"></i>
-            </div>
-        `).join('');
+        
+        let listHTML = '';
+        
+        if (hasCourses) {
+            courseListTitle.innerHTML = `<i class="fas fa-list-ul" style="color: #4a90e2; margin-right: 5px;"></i> ${user.role === 'Staff' ? 'Assigned Courses & Packages' : 'Active Enrollments'}`;
+            listHTML += `<div style="font-size: 0.85rem; font-weight: 600; color: #3b82f6; margin-bottom: 8px; margin-top: 10px;"><i class="fas fa-book" style="margin-right: 5px;"></i>Courses (${user.enrolledCourses.length})</div>`;
+            listHTML += user.enrolledCourses.map(course => `
+                <div style="background: #f8f9fa; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #ebebeb; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 500; font-size: 0.9rem; color: #444;">${course.title || 'Unknown Course'}</span>
+                    <i class="fas fa-check-circle" style="color: #2ecc71; font-size: 0.9rem;"></i>
+                </div>
+            `).join('');
+        }
+        
+        if (hasMemberships) {
+            listHTML += `<div style="font-size: 0.85rem; font-weight: 600; color: #f59e0b; margin-bottom: 8px; margin-top: 15px;"><i class="fas fa-crown" style="margin-right: 5px;"></i>Membership Packages (${user.enrolledMemberships.length})</div>`;
+            listHTML += user.enrolledMemberships.map(membership => `
+                <div style="background: #fffbeb; padding: 10px 15px; border-radius: 8px; margin-bottom: 8px; border: 1px solid #fcd34d; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 500; font-size: 0.9rem; color: #444;">${membership.packageName || 'Unknown Package'}</span>
+                    <i class="fas fa-check-circle" style="color: #f59e0b; font-size: 0.9rem;"></i>
+                </div>
+            `).join('');
+        }
+        
+        courseListDiv.innerHTML = listHTML;
     } else {
         courseListContainer.style.display = 'none';
         courseListDiv.innerHTML = '';

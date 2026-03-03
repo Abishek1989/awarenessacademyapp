@@ -33,4 +33,21 @@ router.delete('/delete/:id',
     membershipController.deleteMembership
 );
 
+// Staff Assignment Routes
+router.put('/assign-staff/:id', 
+    authorize(['Admin']), 
+    membershipController.assignStaffToMembership
+);
+
+// Staff Routes - MUST come before /staff/:id to avoid route conflict
+router.get('/staff/my-memberships', 
+    authorize(['Staff']), 
+    membershipController.getMyMemberships
+);
+
+router.get('/staff/:id', 
+    authorize(['Admin', 'Staff']), 
+    membershipController.getMembershipStaff
+);
+
 module.exports = router;

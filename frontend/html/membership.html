@@ -434,6 +434,15 @@
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 30px;
             margin-bottom: 60px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        @media (min-width: 1200px) {
+            .membership-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
         }
 
         /* Membership Card */
@@ -1102,25 +1111,82 @@
 
             try {
                 const apiBase = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api';
-                const response = await fetch(`${apiBase}/memberships/all`);
-                const data = await response.json();
+                const token = localStorage.getItem('token') || localStorage.getItem('authToken');
+                
+                // Fetch memberships
+                const membershipResponse = await fetch(`${apiBase}/memberships/all`);
+                const data = await membershipResponse.json();
+                
+                // Fetch user profile if logged in
+                let enrolledMembershipIds = [];
+                if (token) {
+                    try {
+                        const profileResponse = await fetch(`${apiBase}/auth/profile`, {
+                            headers: {
+                                'Authorization': `Bearer ${token}`
+                            }
+                        });
+                        const profileData = await profileResponse.json();
+                        if (profileData.status === 'success' && profileData.data?.enrolledMemberships) {
+                            enrolledMembershipIds = profileData.data.enrolledMemberships.map(id => id.toString());
+                        }
+                    } catch (err) {
+                        console.log('Could not fetch user profile:', err);
+                    }
+                }
 
                 loadingState.style.display = 'none';
 
                 if (data.success && data.memberships.length > 0) {
                     membershipGrid.style.display = 'grid';
-                    membershipGrid.innerHTML = data.memberships.map(membership => `
-                        <div class="membership-card ${membership.isMostPopular ? 'most-popular' : ''}">
+                    membershipGrid.innerHTML = data.memberships.map(membership => {
+                        const now = new Date();
+                        
+                        // More robust date parsing - ensure we handle timezone issues
+                        const offerEnd = new Date(membership.offerEndsAt);
+                        let programEndDate = new Date(membership.duration.endDate);
+                        
+                        // If program end date is just a date (no time), set to end of day
+                        if (programEndDate.getHours() === 0 && programEndDate.getMinutes() === 0 && programEndDate.getSeconds() === 0) {
+                            programEndDate.setHours(23, 59, 59, 999);
+                        }
+                        
+                        // Debug logging for troubleshooting
+                        console.log(`Debug for ${membership.packageName}:`);
+                        console.log(`Current time: ${now.toISOString()}`);
+                        console.log(`Offer ends: ${offerEnd.toISOString()}`);
+                        console.log(`Program ends: ${programEndDate.toISOString()}`);
+                        
+                        const isOfferExpired = now > offerEnd;
+                        const isProgramExpired = now > programEndDate;
+                        
+                        console.log(`Offer expired: ${isOfferExpired}`);
+                        console.log(`Program expired: ${isProgramExpired}`);
+                        console.log('---');
+                        const isEnrolled = enrolledMembershipIds.includes(membership._id.toString());
+                        
+                        return `
+                        <div class="membership-card ${membership.isMostPopular ? 'most-popular' : ''}" style="${isProgramExpired ? 'opacity: 0.5; filter: blur(0.5px); pointer-events: none; position: relative;' : ''}">
+                            ${isProgramExpired ? '<div style="position: absolute; top: 20px; right: 20px; background: #ef4444; color: white; padding: 8px 16px; border-radius: 20px; font-weight: bold; z-index: 10;"><i class="fas fa-ban"></i> Not Available</div>' : ''}
                             <div class="card-header">
                                 <h2 class="package-name">${membership.packageName}</h2>
                                 <div class="pricing">
-                                    <span class="original-price">${formatCurrency(membership.originalPrice)}</span>
-                                    <div class="offered-price">${formatCurrency(membership.offeredPrice)}</div>
+                                    ${isOfferExpired ? `
+                                        <div class="offered-price" style="text-decoration: none;">${formatCurrency(membership.originalPrice)}</div>
+                                        <div style="color: #ef4444; font-size: 0.9rem; margin-top: 5px;">
+                                            <i class="fas fa-info-circle"></i> Offer has expired
+                                        </div>
+                                    ` : `
+                                        <span class="original-price">${formatCurrency(membership.originalPrice)}</span>
+                                        <div class="offered-price">${formatCurrency(membership.offeredPrice)}</div>
+                                    `}
                                 </div>
+                                ${!isOfferExpired ? `
                                 <div class="offer-expires">
                                     <i class="fas fa-clock"></i>
                                     <span>${getTimeRemaining(membership.offerEndsAt)}</span>
                                 </div>
+                                ` : ''}
                             </div>
                             <div class="card-body">
                                 ${membership.features && Array.isArray(membership.features) && membership.features.length > 0 ? `
@@ -1159,12 +1225,23 @@
                                     </div>
                                 </div>
                                 
-                                <button class="enroll-btn" onclick="enrollInMembership('${membership._id}', '${membership.packageName}')">
-                                    <i class="fas fa-user-plus"></i> Enroll Now
+                                ${isProgramExpired ? `
+                                <button class="enroll-btn" disabled style="background: #6b7280; cursor: not-allowed;">
+                                    <i class="fas fa-ban"></i> Not Available Now
                                 </button>
+                                ` : isEnrolled ? `
+                                <button class="enroll-btn" disabled style="background: #10b981; cursor: not-allowed; opacity: 0.8;">
+                                    <i class="fas fa-check-circle"></i> Already Enrolled
+                                </button>
+                                ` : `
+                                <button class="enroll-btn" onclick="enrollInMembership('${membership._id}', '${membership.packageName}')">
+                                    <i class="fas fa-user-plus"></i> ${isOfferExpired ? 'Enroll at Regular Price' : 'Enroll Now'}
+                                </button>
+                                `}
                             </div>
                         </div>
-                    `).join('');
+                    `;
+                    }).join('');
                 } else {
                     emptyState.style.display = 'block';
                 }
@@ -1181,15 +1258,27 @@
             const token = localStorage.getItem('token');
             
             if (!token) {
-                alert('Please login to enroll in membership packages.');
-                window.location.href = 'login.html';
+                // Show enrollment flow message and redirect to registration
+                const message = `To enroll in "${packageName}":\n\n` +
+                    `1. Complete registration on the next page\n` +
+                    `2. Login to your account\n` +
+                    `3. Go to Marketplace in your Student Dashboard\n` +
+                    `4. Find this package and complete enrollment\n\n` +
+                    `You will be redirected to the registration page now.`;
+                
+                if (confirm(message)) {
+                    // Store membership info for later
+                    sessionStorage.setItem('pendingMembershipId', membershipId);
+                    sessionStorage.setItem('pendingMembershipName', packageName);
+                    window.location.href = 'register.html';
+                }
                 return;
             }
 
-            // Redirect to enrollment or payment page
-            alert(`Enrolling in: ${packageName}\nMembership ID: ${membershipId}\n\nThis will redirect to payment page.`);
-            // TODO: Implement actual enrollment/payment flow
-            // window.location.href = `enroll.html?membership=${membershipId}`;
+            // If logged in, redirect to student dashboard marketplace
+            sessionStorage.setItem('pendingMembershipId', membershipId);
+            sessionStorage.setItem('pendingMembershipName', packageName);
+            window.location.href = 'student-dashboard.html?tab=marketplace';
         }
 
         // Load memberships on page load

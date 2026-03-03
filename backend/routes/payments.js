@@ -11,9 +11,19 @@ router.use(authorize(['Student', 'Admin']));
 // @desc    Initialize payment and create Razorpay order
 router.post('/initialize', paymentController.initializePayment);
 
+// @route   POST /api/payments/create-order  
+// @desc    Create order for membership or course (generic)
+router.post('/create-order', paymentController.createOrder);
+
 // @route   POST /api/payments/verify
 // @desc    Verify payment and complete enrollment
-router.post('/verify', paymentController.verifyPayment);
+router.post('/verify', (req, res, next) => {
+    // Route to appropriate verification handler based on request
+    if (req.body.packageType) {
+        return paymentController.verifyPaymentGeneric(req, res, next);
+    }
+    return paymentController.verifyPayment(req, res, next);
+});
 
 // @route   POST /api/payments/failure
 // @desc    Handle payment failure

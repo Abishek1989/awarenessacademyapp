@@ -58,7 +58,8 @@ exports.createMembership = async (req, res) => {
             features,
             duration,
             classTime,
-            isMostPopular
+            isMostPopular,
+            mentors
         } = req.body;
 
         // Validation
@@ -166,6 +167,7 @@ exports.createMembership = async (req, res) => {
                 endDate: duration.endDate
             },
             classTime: classTime || null,
+            mentors: mentors || [],
             isMostPopular: isMostPopular || false,
             createdBy: req.user.id
         });
@@ -199,7 +201,8 @@ exports.updateMembership = async (req, res) => {
             duration,
             classTime,
             isMostPopular,
-            active
+            active,
+            mentors
         } = req.body;
 
         const membership = await Membership.findById(req.params.id);
@@ -306,6 +309,7 @@ exports.updateMembership = async (req, res) => {
         if (classTime !== undefined) membership.classTime = classTime;
         if (isMostPopular !== undefined) membership.isMostPopular = isMostPopular;
         if (active !== undefined) membership.active = active;
+        if (mentors !== undefined) membership.mentors = mentors;
 
         await membership.save();
 
@@ -395,6 +399,7 @@ exports.getAllMembershipsAdmin = async (req, res) => {
         const memberships = await Membership.find()
             .sort({ isMostPopular: -1, createdAt: -1 })
             .populate('createdBy', 'name email')
+            .populate('mentors', 'name email')
             .select('-__v');
 
         res.status(200).json({
@@ -407,6 +412,122 @@ exports.getAllMembershipsAdmin = async (req, res) => {
         res.status(500).json({
             success: false,
             message: 'Error fetching memberships'
+        });
+    }
+};
+
+// Assign Staff to Membership (Admin Only)
+exports.assignStaffToMembership = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { staffIds } = req.body;
+
+        if (!staffIds || !Array.isArray(staffIds)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide an array of staff IDs'
+            });
+        }
+
+        // Verify all provided IDs are staff members
+        const { User } = require('../models/index');
+        const staffMembers = await User.find({
+            _id: { $in: staffIds },
+            role: 'Staff'
+        });
+
+        if (staffMembers.length !== staffIds.length) {
+            return res.status(400).json({
+                success: false,
+                message: 'One or more provided IDs are not valid staff members'
+            });
+        }
+
+        const membership = await Membership.findByIdAndUpdate(
+            id,
+            { mentors: staffIds },
+            { new: true }
+        ).populate('mentors', 'name email');
+
+        if (!membership) {
+            return res.status(404).json({
+                success: false,
+                message: 'Membership not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            message: 'Staff assigned successfully',
+            membership
+        });
+    } catch (error) {
+        console.error('Error assigning staff to membership:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error assigning staff to membership'
+        });
+    }
+};
+
+// Get Staff Assigned to Membership
+exports.getMembershipStaff = async (req, res) => {
+    try {
+        const membership = await Membership.findById(req.params.id)
+            .populate('mentors', 'name email');
+
+        if (!membership) {
+            return res.status(404).json({
+                success: false,
+                message: 'Membership not found'
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            staff: membership.mentors || []
+        });
+    } catch (error) {
+        console.error('Error fetching membership staff:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching membership staff'
+        });
+    }
+};
+
+// Get Memberships Assigned to Current Staff
+exports.getMyMemberships = async (req, res) => {
+    try {
+        const mongoose = require('mongoose');
+        const staffId = req.user.id;
+        
+        console.log('Staff requesting memberships:', staffId);
+        console.log('Staff ID type:', typeof staffId);
+        
+        // Convert to ObjectId if it's a string
+        const staffObjectId = mongoose.Types.ObjectId.isValid(staffId) ? 
+            new mongoose.Types.ObjectId(staffId) : staffId;
+        
+        const memberships = await Membership.find({
+            mentors: { $in: [staffId, staffObjectId] }, // Try both string and ObjectId
+            active: true
+        }).select('packageName duration features mentors'); // Include mentors in selection for debugging
+
+        console.log('Found memberships for staff:', memberships.length);
+        console.log('Membership details:', memberships.map(m => ({ id: m._id, name: m.packageName, mentors: m.mentors })));
+        
+        res.status(200).json({
+            success: true,
+            count: memberships.length,
+            memberships
+        });
+    } catch (error) {
+        console.error('Error fetching staff memberships:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error fetching staff memberships',
+            error: error.message
         });
     }
 };

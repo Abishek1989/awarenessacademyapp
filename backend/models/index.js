@@ -66,6 +66,7 @@ const userSchema = new Schema({
     },
 
     enrolledCourses: [{ type: Schema.Types.ObjectId, ref: 'Course' }],
+    enrolledMemberships: [{ type: Schema.Types.ObjectId, ref: 'Membership' }],
 
     // Audit Trail
     lastEditedBy: { type: String, default: 'System' },
@@ -111,7 +112,8 @@ const courseSchema = new Schema({
 
 // 3. Schedules Collection
 const scheduleSchema = new Schema({
-    courseID: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+    courseID: { type: Schema.Types.ObjectId, ref: 'Course' }, // Optional - for course schedules
+    membershipID: { type: Schema.Types.ObjectId, ref: 'Membership' }, // Optional - for membership schedules
     staffID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     title: { type: String, required: true },
     startTime: { type: Date, required: true },
@@ -120,12 +122,21 @@ const scheduleSchema = new Schema({
     meetingLink: { type: String },
     type: { type: String, enum: ['Live', 'Recorded Release'], required: true },
     approvalStatus: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' }
+}, {
+    // Custom validation to ensure at least one of courseID or membershipID is present
+    validate: {
+        validator: function() {
+            return this.courseID || this.membershipID;
+        },
+        message: 'Either courseID or membershipID must be provided'
+    }
 });
 
 // 4. Attendance Collection
 const attendanceSchema = new Schema({
     studentID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    courseID: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+    courseID: { type: Schema.Types.ObjectId, ref: 'Course' }, // Optional - for course attendance
+    membershipID: { type: Schema.Types.ObjectId, ref: 'Membership' }, // Optional - for membership attendance
     scheduleID: { type: Schema.Types.ObjectId, ref: 'Schedule', required: true },
     status: { type: String, enum: ['Present', 'Absent'], required: true },
     timestamp: { type: Date, default: Date.now }
@@ -141,7 +152,8 @@ const paymentSchema = new Schema({
     // Internal transaction ID
     transactionID: { type: String, unique: true },
     studentID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    courseID: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+    courseID: { type: Schema.Types.ObjectId, ref: 'Course' }, // Optional - for course payments
+    membershipID: { type: Schema.Types.ObjectId, ref: 'Membership' }, // Optional - for membership payments
 
     // Payment details
     amount: { type: Number, required: true },
@@ -547,6 +559,7 @@ module.exports = {
                 endDate: { type: Date, required: true }
             },
             classTime: { type: String }, // Optional - time of class conducted
+            mentors: [{ type: Schema.Types.ObjectId, ref: 'User' }], // Staff assigned to this package
             isMostPopular: { type: Boolean, default: false }, // Only one can be true
             active: { type: Boolean, default: true },
             createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true }
