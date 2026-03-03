@@ -22,7 +22,7 @@ if (window.location.hostname !== "localhost" && window.location.hostname !== "12
     CONFIG.API_BASE_URL = '/api';
     CONFIG.CLIENT_URL = window.location.origin;
 } else {
-    // Development - use localhost
-    CONFIG.API_BASE_URL = 'http://localhost:5001/api';
-    CONFIG.CLIENT_URL = 'http://localhost:5001';
+    // Development - use localhost (backend runs on port 3000)
+    CONFIG.API_BASE_URL = 'http://localhost:3000/api';
+    CONFIG.CLIENT_URL = 'http://localhost:3000';
 }

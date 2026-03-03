@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function switchSection(section) {
     try {
         // Hide all sections
-        ['overview', 'analytics', 'users', 'courses', 'live', 'content', 'finance', 'tickets', 'messages', 'subscribers', 'gallery', 'bannerManagement', 'settings', 'certificates', 'approvals'].forEach(s => {
+        ['overview', 'analytics', 'users', 'courses', 'live', 'content', 'finance', 'tickets', 'messages', 'subscribers', 'gallery', 'membership', 'bannerManagement', 'settings', 'certificates', 'approvals'].forEach(s => {
             const el = document.getElementById(s + 'Section');
             if (el) el.style.display = 'none';
 
@@ -369,6 +369,11 @@ function switchSection(section) {
             initGallerySection();
             // Default to Gallery tab when opening section
             switchImageTab('gallery');
+        }
+        if (section === 'membership') {
+            if (typeof loadMembershipsSection === 'function') {
+                loadMembershipsSection();
+            }
         }
         if (section === 'settings') {
             loadSettings();

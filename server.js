@@ -136,6 +136,7 @@ app.use('/api/tickets', require('./backend/routes/tickets'));
 app.use('/api/contact', require('./backend/routes/contact'));
 app.use('/api/subscribers', require('./backend/routes/subscribers'));
 app.use('/api/gallery', require('./backend/routes/gallery'));
+app.use('/api/memberships', require('./backend/routes/memberships'));
 app.use('/api/banners', require('./backend/routes/banner'));
 app.use('/api/enrollments', require('./backend/routes/enrollments'));
 app.use('/api/students', require('./backend/routes/students'));

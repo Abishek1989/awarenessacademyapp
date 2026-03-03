@@ -529,5 +529,31 @@ module.exports = {
         gallerySchema.index({ active: 1, displayOrder: 1 });
 
         return mongoose.model('Gallery', gallerySchema);
+    })(),
+
+    Membership: (() => {
+        const membershipSchema = new Schema({
+            packageName: { type: String, required: true },
+            originalPrice: { type: Number, required: true },
+            offeredPrice: { type: Number, required: true },
+            offerEndsAt: { type: Date, required: true }, // Offer end date and time
+            description: { type: String }, // Legacy field - kept for backward compatibility
+            features: [{ 
+                type: String, 
+                maxlength: 100 
+            }], // Array of feature points (max 100 chars each, 1-20 points)
+            duration: {
+                startDate: { type: Date, required: true },
+                endDate: { type: Date, required: true }
+            },
+            classTime: { type: String }, // Optional - time of class conducted
+            isMostPopular: { type: Boolean, default: false }, // Only one can be true
+            active: { type: Boolean, default: true },
+            createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true }
+        }, { timestamps: true });
+
+        membershipSchema.index({ active: 1, isMostPopular: -1 });
+
+        return mongoose.model('Membership', membershipSchema);
     })()
 };

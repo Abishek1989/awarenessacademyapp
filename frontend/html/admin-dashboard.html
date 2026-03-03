@@ -2206,6 +2206,12 @@
                 </li>
 
                 <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="switchSection('membership')" title="Membership Management">
+                        <i class="fas fa-id-card"></i> <span class="link-text">Memberships</span>
+                    </a>
+                </li>
+
+                <li class="nav-item">
                     <a href="#" class="nav-link" onclick="switchSection('certificates')" title="Certificates Analysis">
                         <i class="fas fa-certificate"></i> <span class="link-text">Certificates</span>
                     </a>
@@ -3142,6 +3148,38 @@
                         <div style="padding: 0; overflow: hidden;">
                             <div style="max-height: 600px; overflow-y: auto; padding-right: 5px;">
                                 <div id="ledgerList" style="display: grid; gap: 15px;"></div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- MEMBERSHIP SECTION -->
+                    <section id="membershipSection" class="dashboard-content-section" style="display: none;">
+                        <div class="user-header-compact"
+                            style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                            <div>
+                                <h1>Membership Packages</h1>
+                                <p>Create and manage membership packages for students</p>
+                            </div>
+                            <button class="btn-primary" onclick="openAddMembershipModal()"
+                                style="padding: 12px 25px; border-radius: 50px; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-plus"></i>
+                                <span>Add Package</span>
+                            </button>
+                        </div>
+
+                        <!-- Memberships Grid -->
+                        <div class="glass-ultra" style="padding: 30px; border-radius: 20px;">
+                            <div id="membershipsGrid"
+                                style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 25px;">
+                                <!-- Memberships will be loaded dynamically -->
+                            </div>
+
+                            <div id="membershipsEmptyState"
+                                style="text-align: center; padding: 60px 20px; display: none;">
+                                <i class="fas fa-id-card"
+                                    style="font-size: 4rem; color: #ddd; margin-bottom: 20px;"></i>
+                                <p style="color: #666; font-size: 1.1rem;">No membership packages yet. Click "Add Package" to
+                                    create your first membership!</p>
                             </div>
                         </div>
                     </section>
@@ -5486,9 +5524,624 @@
         </div>
     </div>
 
+    <!-- MEMBERSHIP MODAL -->
+    <div id="membershipModal" class="modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center; overflow-y: auto;">
+        <div class="glass-card"
+            style="background: white; border-radius: 20px; width: 90%; max-width: 900px; max-height: 90vh; overflow-y: auto; position: relative; margin: 20px auto;">
+            <button onclick="closeMembershipModal()"
+                style="position: absolute; top: 20px; right: 25px; background: none; border: none; font-size: 1.8rem; cursor: pointer; color: #999; z-index: 10; transition: color 0.3s;"
+                onmouseover="this.style.color='#333'" onmouseout="this.style.color='#999'">
+                &times;
+            </button>
+
+            <div style="padding: 30px 30px 20px; border-bottom: 2px solid #f0f0f0;">
+                <h3 id="membershipModalTitle"
+                    style="margin: 0; color: #333; font-size: 1.6rem; display: flex; align-items: center; gap: 12px;">
+                    <i class="fas fa-id-card" style="color: var(--color-golden);"></i>
+                    <span id="membershipModalTitleText">Add Membership Package</span>
+                </h3>
+                <p style="margin: 8px 0 0 40px; color: #666; font-size: 0.9rem;">Create an attractive membership package with detailed features</p>
+            </div>
+
+            <!-- Form Steps Indicator -->
+            <div id="formStepsIndicator" style="padding: 20px 30px; background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                <div style="display: flex; justify-content: space-between; align-items: center; position: relative;">
+                    <div style="position: absolute; top: 20px; left: 0; right: 0; height: 3px; background: #dee2e6; z-index: 0;"></div>
+                    <div id="progressBar" style="position: absolute; top: 20px; left: 0; height: 3px; background: linear-gradient(90deg, var(--color-saffron), var(--color-golden)); z-index: 1; width: 0%; transition: width 0.3s;"></div>
+                    
+                    <div class="form-step" data-step="1" style="flex: 1; text-align: center; position: relative; z-index: 2;">
+                        <div class="step-circle" style="width: 40px; height: 40px; border-radius: 50%; background: var(--color-saffron); color: white; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-weight: 600; box-shadow: 0 3px 10px rgba(255, 138, 0, 0.3);">
+                            <i class="fas fa-info-circle"></i>
+                        </div>
+                        <div style="font-size: 0.8rem; font-weight: 600; color: #333;">Basic Info</div>
+                    </div>
+                    
+                    <div class="form-step" data-step="2" style="flex: 1; text-align: center; position: relative; z-index: 2;">
+                        <div class="step-circle" style="width: 40px; height: 40px; border-radius: 50%; background: #dee2e6; color: #6c757d; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-weight: 600; transition: all 0.3s;">
+                            <i class="fas fa-calendar-alt"></i>
+                        </div>
+                        <div style="font-size: 0.8rem; font-weight: 600; color: #6c757d;">Duration</div>
+                    </div>
+                    
+                    <div class="form-step" data-step="3" style="flex: 1; text-align: center; position: relative; z-index: 2;">
+                        <div class="step-circle" style="width: 40px; height: 40px; border-radius: 50%; background: #dee2e6; color: #6c757d; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-weight: 600; transition: all 0.3s;">
+                            <i class="fas fa-list-check"></i>
+                        </div>
+                        <div style="font-size: 0.8rem; font-weight: 600; color: #6c757d;">Features</div>
+                    </div>
+                    
+                    <div class="form-step" data-step="4" style="flex: 1; text-align: center; position: relative; z-index: 2;">
+                        <div class="step-circle" style="width: 40px; height: 40px; border-radius: 50%; background: #dee2e6; color: #6c757d; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-weight: 600; transition: all 0.3s;">
+                            <i class="fas fa-clock"></i>
+                        </div>
+                        <div style="font-size: 0.8rem; font-weight: 600; color: #6c757d;">Schedule</div>
+                    </div>
+                    
+                    <div class="form-step" data-step="5" style="flex: 1; text-align: center; position: relative; z-index: 2;">
+                        <div class="step-circle" style="width: 40px; height: 40px; border-radius: 50%; background: #dee2e6; color: #6c757d; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-weight: 600; transition: all 0.3s;">
+                            <i class="fas fa-check-circle"></i>
+                        </div>
+                        <div style="font-size: 0.8rem; font-weight: 600; color: #6c757d;">Review</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding: 30px;">
+                <form id="membershipForm">
+                    <input type="hidden" id="membershipId" />
+                    <input type="hidden" id="currentFormStep" value="1" />
+
+                    <!-- STAGE 1: BASIC INFORMATION -->
+                    <div class="form-stage active" id="stage1">
+                        <h4 style="color: var(--color-saffron); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-info-circle"></i> Basic Information
+                        </h4>
+
+                        <!-- Package Name -->
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 0.95rem;">
+                                <i class="fas fa-tag" style="color: var(--color-golden); margin-right: 6px;"></i>
+                                Package Name <span style="color: #e74c3c;">*</span>
+                            </label>
+                            <input type="text" id="packageName" class="form-control" placeholder="e.g., Premium Meditation Package"
+                                required style="padding: 12px 15px; border-radius: 10px; width: 100%; border: 2px solid #e0e0e0; font-size: 1rem; transition: border-color 0.3s;"
+                                onblur="validatePackageName()" />
+                            <small id="packageNameError" style="color: #e74c3c; display: none; margin-top: 5px; font-size: 0.85rem;">
+                                <i class="fas fa-exclamation-circle"></i> <span id="packageNameErrorText"></span>
+                            </small>
+                            <small style="color: #666; display: block; margin-top: 5px; font-size: 0.85rem;">Package name must be unique</small>
+                        </div>
+
+                        <!-- Pricing -->
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                            <div class="form-group">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 0.95rem;">
+                                    <i class="fas fa-rupee-sign" style="color: var(--color-golden); margin-right: 6px;"></i>
+                                    Original Price <span style="color: #e74c3c;">*</span>
+                                </label>
+                                <input type="number" id="originalPrice" class="form-control" placeholder="10000" min="1"
+                                    required style="padding: 12px 15px; border-radius: 10px; width: 100%; border: 2px solid #e0e0e0; font-size: 1rem;"
+                                    oninput="calculateDiscount()" />
+                            </div>
+
+                            <div class="form-group">
+                                <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 0.95rem;">
+                                    <i class="fas fa-tags" style="color: var(--color-golden); margin-right: 6px;"></i>
+                                    Offered Price <span style="color: #e74c3c;">*</span>
+                                </label>
+                                <div style="position: relative;">
+                                    <input type="number" id="offeredPrice" class="form-control" placeholder="7500" min="1"
+                                        required style="padding: 12px 15px; border-radius: 10px; width: 100%; border: 2px solid #e0e0e0; font-size: 1rem;"
+                                        oninput="calculateDiscount()" />
+                                    <div id="discountBadge" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); background: linear-gradient(135deg, #4caf50 0%, #45a049 100%); color: white; padding: 4px 12px; border-radius: 20px; font-size: 0.85rem; font-weight: 600; display: none; box-shadow: 0 2px 8px rgba(76, 175, 80, 0.3);">
+                                        0% OFF
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <small id="priceError" style="color: #e74c3c; display: none; margin-top: -15px; margin-bottom: 15px; font-size: 0.85rem;">
+                            <i class="fas fa-exclamation-circle"></i> <span id="priceErrorText">Offered price must be less than original price</span>
+                        </small>
+                    </div>
+
+                    <!-- STAGE 2: DURATION & TIMELINE -->
+                    <div class="form-stage" id="stage2" style="display: none;">
+                        <h4 style="color: var(--color-saffron); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-calendar-alt"></i> Duration & Timeline
+                        </h4>
+
+                        <!-- Date Info Section -->
+                        <div style="background: #f8f9fa; padding: 20px; border-radius: 12px; border-left: 4px solid var(--color-saffron); margin-bottom: 25px;">
+                            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 12px;">
+                                <i class="fas fa-info-circle" style="color: var(--color-saffron); font-size: 1.1rem;"></i>
+                                <h5 style="margin: 0; color: #333; font-size: 0.95rem;">Timeline Explanation</h5>
+                            </div>
+                            <div style="display: flex; flex-direction: column; gap: 8px; font-size: 0.85rem; color: #666;">
+                                <div style="display: flex; align-items: start; gap: 8px;">
+                                    <i class="fas fa-calendar-check" style="color: var(--color-golden); margin-top: 2px; font-size: 0.9rem;"></i>
+                                    <div><strong>Program Start:</strong> When the membership period begins</div>
+                                </div>
+                                <div style="display: flex; align-items: start; gap: 8px;">
+                                    <i class="fas fa-calendar-times" style="color: var(--color-golden); margin-top: 2px; font-size: 0.9rem;"></i>
+                                    <div><strong>Program End:</strong> When the membership period ends</div>
+                                </div>
+                                <div style="display: flex; align-items: start; gap: 8px;">
+                                    <i class="fas fa-clock" style="color: var(--color-golden); margin-top: 2px; font-size: 0.9rem;"></i>
+                                    <div><strong>Offer Deadline:</strong> Last date to enroll at the discounted price</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Program Duration -->
+                        <div style="background: #fff9e6; padding: 20px; border-radius: 12px; margin-bottom: 20px; border: 2px solid #ffd700;">
+                            <h5 style="margin: 0 0 15px 0; color: #333; font-size: 1rem; display: flex; align-items: center; gap: 8px;">
+                                <i class="fas fa-calendar" style="color: var(--color-golden);"></i>
+                                Program Duration
+                                <span class="info-tooltip" data-tooltip="The complete duration of the membership program" style="cursor: help; color: #999; font-size: 0.9rem;">
+                                    <i class="fas fa-question-circle"></i>
+                                </span>
+                            </h5>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div class="form-group">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 0.95rem;">
+                                        <i class="fas fa-calendar-check" style="color: var(--color-golden); margin-right: 6px;"></i>
+                                        Start Date <span style="color: #e74c3c;">*</span>
+                                    </label>
+                                    <input type="datetime-local" id="startDate" class="form-control"
+                                        required style="padding: 12px 15px; border-radius: 10px; width: 100%; border: 2px solid #e0e0e0; font-size: 1rem;"
+                                        onchange="validateDates()" />
+                                </div>
+
+                                <div class="form-group">
+                                    <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 0.95rem;">
+                                        <i class="fas fa-calendar-times" style="color: var(--color-golden); margin-right: 6px;"></i>
+                                        End Date <span style="color: #e74c3c;">*</span>
+                                    </label>
+                                    <input type="datetime-local" id="endDate" class="form-control"
+                                        required style="padding: 12px 15px; border-radius: 10px; width: 100%; border: 2px solid #e0e0e0; font-size: 1rem;"
+                                        onchange="validateDates()" />
+                                </div>
+                            </div>
+                            <small id="dateError" style="color: #e74c3c; display: none; margin-top: 8px; font-size: 0.85rem;">
+                                <i class="fas fa-exclamation-circle"></i> <span id="dateErrorText"></span>
+                            </small>
+                        </div>
+
+                        <!-- Offer Deadline -->
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 0.95rem;">
+                                <i class="fas fa-clock" style="color: var(--color-golden); margin-right: 6px;"></i>
+                                Offer Ends At
+                                <span class="info-tooltip" data-tooltip="Deadline for users to enroll at the discounted price" style="cursor: help; color: #999; font-size: 0.9rem; margin-left: 4px;">
+                                    <i class="fas fa-question-circle"></i>
+                                </span>
+                                <span style="color: #e74c3c;">*</span>
+                            </label>
+                            <input type="datetime-local" id="offerEndsAt" class="form-control"
+                                required style="padding: 12px 15px; border-radius: 10px; width: 100%; border: 2px solid #e0e0e0; font-size: 1rem;" />
+                        </div>
+                    </div>
+
+                    <!-- STAGE 3: PACKAGE FEATURES -->
+                    <div class="form-stage" id="stage3" style="display: none;">
+                        <h4 style="color: var(--color-saffron); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-list-check"></i> Package Features
+                        </h4>
+
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label style="display: block; margin-bottom: 12px; font-weight: 600; color: #333; font-size: 0.95rem;">
+                                <i class="fas fa-list-ul" style="color: var(--color-golden); margin-right: 6px;"></i>
+                                Feature Points <span style="color: #e74c3c;">*</span>
+                            </label>
+                            <div id="featurePointsContainer" style="background: #f8f9fa; padding: 20px; border-radius: 12px; border: 2px dashed #d0d5dd;">
+                                <!-- Feature points will be added here dynamically -->
+                            </div>
+                            <button type="button" onclick="addFeaturePoint()" 
+                                style="margin-top: 15px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: 600; display: flex; align-items: center; gap: 8px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);"
+                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(102, 126, 234, 0.4)';"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(102, 126, 234, 0.3)';">
+                                <i class="fas fa-plus-circle"></i> Add Feature Point
+                            </button>
+                            <small style="color: #666; display: block; margin-top: 8px; font-size: 0.85rem;">
+                                <i class="fas fa-info-circle"></i> Add 1-20 feature points, each up to 100 characters
+                            </small>
+                        </div>
+                    </div>
+
+                    <!-- STAGE 4: CLASS SCHEDULE -->
+                    <div class="form-stage" id="stage4" style="display: none;">
+                        <h4 style="color: var(--color-saffron); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-clock"></i> Class Schedule (Optional)
+                        </h4>
+
+                        <div style="background: #f0f8ff; padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #2196F3;">
+                            <p style="margin: 0; color: #666; font-size: 0.9rem;">
+                                <i class="fas fa-info-circle" style="color: #2196F3;"></i>
+                                Set up recurring class schedules. You can add multiple time slots for each day, and the system will check for conflicts.
+                            </p>
+                        </div>
+
+                        <!-- Day Selection -->
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; margin-bottom: 12px; font-weight: 600; color: #333; font-size: 0.95rem;">
+                                <i class="fas fa-calendar-week" style="color: var(--color-golden); margin-right: 6px;"></i>
+                                Select Days
+                            </label>
+                            <div id="daySelection" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px;">
+                                <label class="day-checkbox" style="display: flex; align-items: center; gap: 8px; padding: 12px 15px; background: white; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; transition: all 0.3s;">
+                                    <input type="checkbox" value="Monday" onchange="toggleDaySchedule('Monday')">
+                                    <span style="font-weight: 500; color: #333; font-size: 0.9rem;">Monday</span>
+                                </label>
+                                <label class="day-checkbox" style="display: flex; align-items: center; gap: 8px; padding: 12px 15px; background: white; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; transition: all 0.3s;">
+                                    <input type="checkbox" value="Tuesday" onchange="toggleDaySchedule('Tuesday')">
+                                    <span style="font-weight: 500; color: #333; font-size: 0.9rem;">Tuesday</span>
+                                </label>
+                                <label class="day-checkbox" style="display: flex; align-items: center; gap: 8px; padding: 12px 15px; background: white; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; transition: all 0.3s;">
+                                    <input type="checkbox" value="Wednesday" onchange="toggleDaySchedule('Wednesday')">
+                                    <span style="font-weight: 500; color: #333; font-size: 0.9rem;">Wednesday</span>
+                                </label>
+                                <label class="day-checkbox" style="display: flex; align-items: center; gap: 8px; padding: 12px 15px; background: white; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; transition: all 0.3s;">
+                                    <input type="checkbox" value="Thursday" onchange="toggleDaySchedule('Thursday')">
+                                    <span style="font-weight: 500; color: #333; font-size: 0.9rem;">Thursday</span>
+                                </label>
+                                <label class="day-checkbox" style="display: flex; align-items: center; gap: 8px; padding: 12px 15px; background: white; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; transition: all 0.3s;">
+                                    <input type="checkbox" value="Friday" onchange="toggleDaySchedule('Friday')">
+                                    <span style="font-weight: 500; color: #333; font-size: 0.9rem;">Friday</span>
+                                </label>
+                                <label class="day-checkbox" style="display: flex; align-items: center; gap: 8px; padding: 12px 15px; background: white; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; transition: all 0.3s;">
+                                    <input type="checkbox" value="Saturday" onchange="toggleDaySchedule('Saturday')">
+                                    <span style="font-weight: 500; color: #333; font-size: 0.9rem;">Saturday</span>
+                                </label>
+                                <label class="day-checkbox" style="display: flex; align-items: center; gap: 8px; padding: 12px 15px; background: white; border: 2px solid #e0e0e0; border-radius: 10px; cursor: pointer; transition: all 0.3s;">
+                                    <input type="checkbox" value="Sunday" onchange="toggleDaySchedule('Sunday')">
+                                    <span style="font-weight: 500; color: #333; font-size: 0.9rem;">Sunday</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Time Slots Container -->
+                        <div id="timeSlotsContainer">
+                            <!-- Time slots for each selected day will appear here -->
+                        </div>
+
+                        <small id="scheduleError" style="color: #e74c3c; display: none; margin-top: 10px; font-size: 0.85rem;">
+                            <i class="fas fa-exclamation-circle"></i> <span id="scheduleErrorText"></span>
+                        </small>
+                    </div>
+
+                    <!-- STAGE 5: REVIEW -->
+                    <div class="form-stage" id="stage5" style="display: none;">
+                        <h4 style="color: var(--color-saffron); margin-bottom: 20px; display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-check-circle"></i> Review & Finalize
+                        </h4>
+
+                        <!-- Most Popular -->
+                        <div class="form-group" style="margin-bottom: 25px; background: #fff9e6; padding: 15px; border-radius: 10px; border: 2px solid #ffd700;">
+                            <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; margin: 0;">
+                                <input type="checkbox" id="isMostPopular" style="width: 20px; height: 20px; cursor: pointer; accent-color: var(--color-golden);" />
+                                <span style="font-weight: 600; color: #333; font-size: 0.95rem;">Mark as Most Popular Package</span>
+                                <i class="fas fa-star" style="color: var(--color-golden);"></i>
+                            </label>
+                            <small style="color: #666; display: block; margin-top: 5px; margin-left: 30px; font-size: 0.85rem;">
+                                Only one package can be marked as most popular at a time
+                            </small>
+                        </div>
+
+                        <!-- Summary -->
+                        <div id="reviewSummary" style="background: #f8f9fa; padding: 20px; border-radius: 12px; border: 2px solid #e0e0e0;">
+                            <h5 style="margin: 0 0 15px 0; color: #333; font-size: 1rem;">Package Summary</h5>
+                            <div id="summaryContent" style="font-size: 0.9rem; color: #666;">
+                                <!-- Summary will be populated by JavaScript -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Navigation Buttons -->
+                    <div style="display: flex; gap: 12px; justify-content: space-between; padding-top: 20px; border-top: 2px solid #f0f0f0; margin-top: 20px;">
+                        <button type="button" id="prevStageBtn" onclick="previousFormStage()" class="btn-secondary"
+                            style="padding: 12px 30px; border-radius: 10px; font-weight: 600; font-size: 1rem; transition: all 0.3s; display: none;">
+                            <i class="fas fa-arrow-left"></i> Previous
+                        </button>
+                        <div style="flex: 1;"></div>
+                        <button type="button" id="nextStageBtn" onclick="nextFormStage()" class="btn-primary"
+                            style="padding: 12px 30px; border-radius: 10px; font-weight: 600; font-size: 1rem; box-shadow: 0 4px 15px rgba (102, 126, 234, 0.3); transition: all 0.3s;">
+                            Next <i class="fas fa-arrow-right"></i>
+                        </button>
+                        <button type="submit" class="btn-primary" id="membershipSubmitBtn"
+                            style="padding: 12px 35px; border-radius: 10px; font-weight: 600; font-size: 1rem; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3); transition: all 0.3s; display: none;">
+                            <i class="fas fa-save"></i> Save Package
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        /* Form Stage Management */
+        .form-stage {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Info Tooltip */
+        .info-tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .info-tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .info-tooltip:hover::before {
+            content: '';
+            position: absolute;
+            bottom: 115%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 6px solid transparent;
+            border-top-color: #333;
+            z-index: 1000;
+        }
+        
+        /* Day Checkbox Styling */
+        .day-checkbox {
+            transition: all 0.3s;
+        }
+        
+        .day-checkbox:hover {
+            border-color: var(--color-saffron) !important;
+            background: #fff5e6 !important;
+        }
+        
+        .day-checkbox input[type="checkbox"]:checked + span {
+            color: var(--color-saffron);
+            font-weight: 600;
+        }
+        
+        .day-checkbox:has(input[type="checkbox"]:checked) {
+            border-color: var(--color-saffron) !important;
+            background: linear-gradient(135deg, #fff5e6 0%, #ffe6cc 100%) !important;
+            box-shadow: 0 2px 8px rgba(255, 138, 0, 0.2);
+        }
+        
+        /* Time Slot Card */
+        .time-slot-card {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        
+        .time-slot-card:hover {
+            border-color: var(--color-saffron);
+            box-shadow: 0 4px 15px rgba(255, 138, 0, 0.15);
+        }
+        
+        .time-slot-item {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .conflict-warning {
+            background: #fee !important;
+            border-color: #e74c3c !important;
+        }
+        
+        /* Feature Point Input Styling */
+        .feature-point-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 15px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        .feature-number {
+            background: var(--color-golden);
+            color: white;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            flex-shrink: 0;
+            margin-top: 12px;
+        }
+        
+        .remove-feature-btn {
+            background: #fee;
+            color: #e74c3c;
+            border: none;
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            margin-top: 8px;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+        
+        .remove-feature-btn:hover {
+            background: #e74c3c;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        /* Mobile Responsive Styles for Membership Modal */
+        @media (max-width: 768px) {
+            #membershipModal .glass-card {
+                width: 95% !important;
+                margin: 10px auto !important;
+                max-height: 95vh !important;
+            }
+            
+            #membershipModal .glass-card > div:first-of-type {
+                padding: 20px 20px 15px !important;
+            }
+            
+            #membershipModal .glass-card > div:last-of-type {
+                padding: 20px !important;
+            }
+            
+            #membershipModalTitle {
+                font-size: 1.3rem !important;
+            }
+            
+            #membershipModal [style*="grid-template-columns"] {
+                grid-template-columns: 1fr !important;
+                gap: 15px !important;
+            }
+            
+            .feature-point-item {
+                margin-bottom: 15px !important;
+            }
+            
+            #featurePointsContainer {
+                padding: 15px !important;
+            }
+            
+            #membershipModal button[type="submit"],
+            #membershipModal button[type="button"] {
+                padding: 12px 20px !important;
+                font-size: 0.9rem !important;
+            }
+            
+            #membershipModal [style*="justify-content: flex-end"] {
+                flex-direction: column-reverse;
+            }
+            
+            #membershipModal [style*="justify-content: flex-end"] button {
+                width: 100%;
+            }
+            
+            /* Form Steps on Mobile */
+            #formStepsIndicator {
+                padding: 15px 15px !important;
+            }
+            
+            .form-step {
+                font-size: 0.7rem !important;
+            }
+            
+            .form-step .step-circle {
+                width: 32px !important;
+                height: 32px !important;
+                font-size: 0.8rem !important;
+            }
+            
+            .form-step > div:last-child {
+                font-size: 0.7rem !important;
+            }
+            
+            #daySelection {
+                grid-template-columns: repeat(2, 1fr) !important;
+            }
+            
+            .time-slot-card {
+                padding: 15px !important;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .feature-point-item > div {
+                flex-wrap: wrap;
+            }
+            
+            .feature-point-input {
+                width: 100% !important;
+            }
+            
+            .add-point-btn, .remove-point-btn {
+                margin-top: 8px !important;
+                width: 100% !important;
+                height: 42px !important;
+            }
+            
+            .char-count {
+                margin-right: 0 !important;
+            }
+        }
+
+        /* Input focus effects */
+        #membershipModal input:focus,
+        #membershipModal textarea:focus {
+            border-color: var(--color-golden) !important;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(255, 153, 51, 0.1);
+        }
+
+        /* Feature point animations */
+        .feature-point-item {
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+    </style>
+
     <!-- Cropper.js & Banner Management Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script src="../js/banner-management.js"></script>
+    <script src="../js/membership-management.js"></script>
 </body>
 
 </html>
