@@ -51,7 +51,9 @@ class Environment {
     createCamera() {
 
         this.camera = new THREE.PerspectiveCamera(65, this.container.clientWidth / this.container.clientHeight, 1, 10000);
-        this.camera.position.set(0, 0, 100);
+        // Offset the camera slightly to the right on desktop, so the text appears on the left side of the full-width canvas
+        const offsetX = window.innerWidth > 768 ? 50 : 0;
+        this.camera.position.set(offsetX, 0, 100);
 
     }
 
@@ -72,6 +74,8 @@ class Environment {
     onWindowResize() {
 
         this.camera.aspect = this.container.clientWidth / this.container.clientHeight;
+        const offsetX = window.innerWidth > 768 ? 50 : 0;
+        this.camera.position.set(offsetX, 0, 100);
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(this.container.clientWidth, this.container.clientHeight);
 
