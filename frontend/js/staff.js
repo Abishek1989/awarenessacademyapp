@@ -292,6 +292,21 @@ window.staffResetWizard = function () {
     const dropCont = document.getElementById('dropzoneContent');
     if (dropCont) dropCont.style.display = 'block';
 
+    // Reset Thumbnail UI
+    const thumbUrl = document.getElementById('courseThumb');
+    const thumbInput = document.getElementById('courseThumbInput');
+    const thumbPreviewContainer = document.getElementById('thumbPreviewContainer');
+    const thumbPreviewImg = document.getElementById('thumbPreviewImg');
+    const thumbUploadProgress = document.getElementById('thumbUploadProgress');
+    const thumbUploadStatus = document.getElementById('thumbUploadStatus');
+
+    if (thumbUrl) thumbUrl.value = '';
+    if (thumbInput) thumbInput.value = '';
+    if (thumbPreviewContainer) thumbPreviewContainer.style.display = 'none';
+    if (thumbPreviewImg) thumbPreviewImg.src = '';
+    if (thumbUploadProgress) thumbUploadProgress.style.display = 'none';
+    if (thumbUploadStatus) thumbUploadStatus.textContent = '';
+
     // Only call updateStaffStepUI if it exists (defined later)
     if (typeof updateStaffStepUI === 'function') {
         updateStaffStepUI();
@@ -329,7 +344,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const introHidden = document.getElementById('introVideoUrl');
     const uploadProgress = document.getElementById('uploadProgress');
     const progressBar = document.getElementById('progressBar');
-    const uploadStatus = document.getElementById('uploadStatus');
     const videoPreview = document.getElementById('videoPreviewContainer');
     // const previewPlayer = document.getElementById('previewPlayer');
     const removeBtn = document.getElementById('removeVideoBtn');
@@ -364,55 +378,215 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // Thumbnail Upload Logic
+    const thumbInput = document.getElementById('courseThumbInput');
+    const thumbHidden = document.getElementById('courseThumb');
+    const thumbUploadProgress = document.getElementById('thumbUploadProgress');
+    const thumbProgressBar = document.getElementById('thumbProgressBar');
+    const thumbUploadStatus = document.getElementById('thumbUploadStatus');
+    const thumbPreviewContainer = document.getElementById('thumbPreviewContainer');
+    const thumbPreviewImg = document.getElementById('thumbPreviewImg');
+    const removeThumbBtn = document.getElementById('removeThumbBtn');
+
+    if (thumbInput) {
+        thumbInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Validate format
+            if (file.type !== 'image/webp') {
+                UI.error('Only WebP images are allowed for thumbnails.');
+                thumbInput.value = '';
+                return;
+            }
+
+            // Validate size (500KB = 500 * 1024 bytes)
+            if (file.size > 500 * 1024) {
+                UI.error('Thumbnail exceeds the 500KB limit.');
+                thumbInput.value = '';
+                return;
+            }
+
+            // Reset UI
+            thumbUploadProgress.style.display = 'block';
+            thumbProgressBar.style.width = '0%';
+            thumbUploadStatus.textContent = 'Uploading thumbnail...';
+            thumbPreviewContainer.style.display = 'none';
+
+            const formData = new FormData();
+            formData.append('thumbnail', file);
+
+            try {
+                // Fake progress indicating action
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    if (progress > 90) clearInterval(interval);
+                    thumbProgressBar.style.width = `${progress}%`;
+                }, 100);
+
+                const res = await fetch(`${Auth.apiBase}/uploads/thumbnail`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: formData
+                });
+
+                clearInterval(interval);
+                thumbProgressBar.style.width = '100%';
+
+                if (res.ok) {
+                    const data = await res.json();
+                    thumbUploadStatus.textContent = 'Upload Complete';
+                    thumbHidden.value = data.url;
+
+                    // Show Preview
+                    thumbPreviewImg.src = data.url;
+                    thumbPreviewContainer.style.display = 'block';
+                    thumbUploadProgress.style.display = 'none';
+                } else {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.message || 'Thumbnail upload failed');
+                }
+            } catch (err) {
+                UI.handleError(err, 'Thumbnail Upload');
+                thumbUploadStatus.textContent = 'Upload Failed';
+                thumbUploadProgress.style.display = 'none';
+                thumbInput.value = ''; // Reset on fail
+            }
+        });
+
+        removeThumbBtn.addEventListener('click', () => {
+            thumbInput.value = '';
+            thumbHidden.value = '';
+            thumbPreviewContainer.style.display = 'none';
+            thumbPreviewImg.src = '';
+            thumbUploadStatus.textContent = '';
+            thumbUploadProgress.style.display = 'none';
+        });
+    }
+
     async function handleIntroUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Validation
+        const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];
+        if (!allowedTypes.includes(file.type)) {
+            UI.error('Invalid file type. Only MP4, WebM, MOV, AVI, and MKV videos are allowed.');
+            return;
+        }
+
+        const maxSize = 5 * 1024 * 1024 * 1024; // 5GB limit locally
+        if (file.size > maxSize) {
+            UI.error('File too large. Maximum size is 5GB.');
+            return;
+        }
+
         // Reset UI
         uploadProgress.style.display = 'block';
         progressBar.style.width = '0%';
-        uploadStatus.textContent = 'Uploading...';
         dropzoneContent.style.display = 'none';
 
-        const formData = new FormData();
-        formData.append('file', file);
-
         try {
-            // Fake progress
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += 10;
-                if (progress > 90) clearInterval(interval);
-                progressBar.style.width = `${progress}%`;
-            }, 200);
+            // Step 1: Initialize Upload
+            const estimatedChunkSize = 50 * 1024 * 1024; // Estimate 50MB
+            const chunksCount = Math.ceil(file.size / estimatedChunkSize);
 
-            const res = await fetch(`${Auth.apiBase}/uploads/content`, {
+            const initRes = await fetch(`${Auth.apiBase}/uploads/video/init`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    filename: file.name,
+                    contentType: file.type,
+                    fileSize: file.size,
+                    chunksCount: chunksCount
+                })
             });
 
-            clearInterval(interval);
-            progressBar.style.width = '100%';
-
-            if (res.ok) {
-                const data = await res.json();
-                uploadStatus.textContent = 'Upload Complete';
-                introHidden.value = data.url;
-
-                // Show Preview
-                document.getElementById('videoPreview').style.display = 'block';
-                document.getElementById('videoLink').href = data.url;
-                videoPreview.style.display = 'block';
-                // previewPlayer.src = data.url;
-                uploadProgress.style.display = 'none';
-            } else {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.message || 'Upload failed');
+            if (!initRes.ok) {
+                const errData = await initRes.json();
+                throw new Error(errData.message || 'Failed to initialize upload. Limit may be reached.');
             }
+
+            const initData = await initRes.json();
+            const { uploadId, key, chunkSize } = initData;
+            const actualChunkSize = chunkSize || estimatedChunkSize;
+            const actualChunksCount = Math.ceil(file.size / actualChunkSize);
+
+            // Step 2: Request Presigned URLs for all parts
+            const parts = Array.from({ length: actualChunksCount }, (_, i) => i + 1);
+
+            const signRes = await fetch(`${Auth.apiBase}/uploads/video/sign`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ key, uploadId, parts })
+            });
+
+            if (!signRes.ok) throw new Error('Failed to sign upload parts.');
+            const signData = await signRes.json();
+            const signedUrls = signData.signedUrls;
+
+            // Step 3: Upload Parts Directly to R2
+            const uploadedParts = [];
+            let totalUploaded = 0;
+
+            for (let i = 0; i < actualChunksCount; i++) {
+                const start = i * actualChunkSize;
+                const end = Math.min(start + actualChunkSize, file.size);
+                const chunk = file.slice(start, end);
+                const partNumber = i + 1;
+                const signedUrlObj = signedUrls.find(s => s.partNumber === partNumber);
+
+                if (!signedUrlObj) throw new Error(`Missing presigned URL for part ${partNumber}`);
+
+                const uploadChunkRes = await fetch(signedUrlObj.url, {
+                    method: 'PUT',
+                    body: chunk
+                });
+
+                if (!uploadChunkRes.ok) throw new Error(`Failed to upload part ${partNumber}`);
+
+                // S3 requires the ETag wrapped in quotes
+                const etag = uploadChunkRes.headers.get('ETag');
+                uploadedParts.push({ PartNumber: partNumber, ETag: etag });
+
+                totalUploaded += chunk.size;
+                const percentComplete = (totalUploaded / file.size) * 100;
+                progressBar.style.width = percentComplete + '%';
+            }
+
+            // Step 4: Complete Upload
+            const completeRes = await fetch(`${Auth.apiBase}/uploads/video/complete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ key, uploadId, parts: uploadedParts })
+            });
+
+            if (!completeRes.ok) throw new Error('Failed to finalize upload.');
+            const completeData = await completeRes.json();
+
+            // Successful Finish
+            introHidden.value = completeData.fileUrl;
+
+            // Show Preview
+            document.getElementById('videoPreview').style.display = 'block';
+            document.getElementById('videoLink').href = completeData.fileUrl;
+            videoPreview.style.display = 'block';
+            uploadProgress.style.display = 'none';
+
         } catch (err) {
-            UI.handleError(err, 'Intro Upload', 'Video upload failed. Please try a different file or format.');
+            UI.handleError(err, 'Intro Upload', err.message || 'Video upload failed. Please try a different file or format.');
             dropzoneContent.style.display = 'block';
+            uploadProgress.style.display = 'none';
         }
     }
 
@@ -842,10 +1016,10 @@ async function loadSchedules() {
             const now = new Date();
             const startTime = new Date(s.startTime);
             const endTime = new Date(s.endTime);
-            
+
             let statusColor = '#3B82F6'; // Default blue for upcoming
             let statusLabel = 'Upcoming';
-            
+
             if (now >= startTime && now <= endTime) {
                 statusColor = '#10B981'; // Green for live
                 statusLabel = 'Live Now';

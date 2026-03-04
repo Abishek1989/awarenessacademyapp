@@ -1,4 +1,4 @@
-const { S3Client, CreateMultipartUploadCommand, CompleteMultipartUploadCommand, UploadPartCommand } = require('@aws-sdk/client-s3');
+const { S3Client, CreateMultipartUploadCommand, CompleteMultipartUploadCommand, UploadPartCommand, PutObjectCommand } = require('@aws-sdk/client-s3');
 const { getSignedUrl } = require('@aws-sdk/s3-request-presigner');
 const DeveloperSettings = require('../models/DeveloperSettings');
 const User = require('../models/index').User; // Fallback to get admin email
@@ -135,5 +135,42 @@ exports.completeUpload = catchAsync(async (req, res, next) => {
     res.status(200).json({
         status: 'success',
         fileUrl
+    });
+});
+
+exports.uploadThumbnail = catchAsync(async (req, res, next) => {
+    if (!req.file) {
+        return next(new AppError('No thumbnail file uploaded.', 400));
+    }
+
+    // Double check mimetype despite multer filter
+    if (req.file.mimetype !== 'image/webp') {
+        return next(new AppError('Only WebP images are supported for thumbnails.', 400));
+    }
+
+    // Ensure within 500KB limit
+    if (req.file.size > 500 * 1024) {
+        return next(new AppError('Thumbnail size indicates memory upload failure. Exceeds 500KB.', 400));
+    }
+
+    // 1 op for PutObject
+    await checkClassALimits(1);
+
+    const uniqueKey = `thumbnails/${Date.now()}-thumb.webp`;
+
+    const command = new PutObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME,
+        Key: uniqueKey,
+        Body: req.file.buffer,
+        ContentType: 'image/webp'
+    });
+
+    await s3Client.send(command);
+
+    const fileUrl = `${process.env.R2_CUSTOM_DOMAIN}/${uniqueKey}`;
+
+    res.status(200).json({
+        status: 'success',
+        url: fileUrl
     });
 });

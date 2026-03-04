@@ -379,6 +379,11 @@ exports.updateCourse = async (req, res) => {
         const { id } = req.params;
         const updates = req.body;
 
+        if (updates.thumbUrl) {
+            updates.thumbnail = updates.thumbUrl;
+            delete updates.thumbUrl;
+        }
+
         // Get the old course to check status change
         const oldCourse = await Course.findById(id);
         if (!oldCourse) return res.status(404).json({ message: 'Course not found' });

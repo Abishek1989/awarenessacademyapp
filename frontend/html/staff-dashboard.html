@@ -799,7 +799,8 @@
                         style="height: 35px;">
                 </a>
                 <p class="sidebar-subtitle"
-                    style="font-size: 0.75rem; font-weight: 600; color: var(--color-saffron); display: none; letter-spacing: 1px; margin-top: 5px;">MENTOR
+                    style="font-size: 0.75rem; font-weight: 600; color: var(--color-saffron); display: none; letter-spacing: 1px; margin-top: 5px;">
+                    MENTOR
                     SUITE</p>
             </div>
             <ul style="list-style: none; padding: 0; margin: 0;">
@@ -828,8 +829,9 @@
                             class="fas fa-ticket-alt"></i> <span class="sidebar-text">Support Tickets</span></a></li>
                 <li><a href="#" class="nav-link" onclick="switchSection('profile')" title="My Profile"><i
                             class="fas fa-user-circle"></i> <span class="sidebar-text">My Profile</span></a></li>
-                <li><a href="#" id="logoutBtn" class="nav-link" style="color: var(--color-error); margin-top: 40px; font-size: 0.875rem;"
-                        title="Logout"><i class="fas fa-sign-out-alt"></i> <span class="sidebar-text">Logout</span></a>
+                <li><a href="#" id="logoutBtn" class="nav-link"
+                        style="color: var(--color-error); margin-top: 40px; font-size: 0.875rem;" title="Logout"><i
+                            class="fas fa-sign-out-alt"></i> <span class="sidebar-text">Logout</span></a>
                 </li>
             </ul>
         </aside>
@@ -1385,7 +1387,7 @@
                     </div>
                     <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
                         <div class="form-group mb-3">
-                            <label>Price (USD) <span style="color:red">*</span></label>
+                            <label>Price (₹) <span style="color:red">*</span></label>
                             <input type="number" name="price" id="coursePrice" class="form-control" required
                                 placeholder="0 for Free">
                         </div>
@@ -1396,9 +1398,24 @@
                         </div>
                     </div>
                     <div class="form-group mb-3">
-                        <label>Thumbnail URL</label>
-                        <input type="text" name="thumbnail" id="courseThumb" class="form-control"
-                            placeholder="https://...">
+                        <label>Thumbnail Image (WebP only, Max 500KB) <span style="color:red">*</span></label>
+                        <input type="file" id="courseThumbInput" accept="image/webp" class="form-control"
+                            style="margin-bottom:10px;">
+
+                        <div id="thumbUploadProgress"
+                            style="display: none; height: 4px; background: #eee; margin-top: 5px; margin-bottom: 10px; border-radius: 2px; overflow: hidden;">
+                            <div id="thumbProgressBar"
+                                style="width: 0%; height: 100%; background: var(--color-success);"></div>
+                        </div>
+
+                        <div id="thumbPreviewContainer"
+                            style="display: none; margin-top: 10px; position:relative; width: 200px; border-radius: 8px; overflow:hidden; border: 1px solid #ddd;">
+                            <img id="thumbPreviewImg" src="" style="width: 100%; height: auto; display: block;">
+                            <button type="button" id="removeThumbBtn"
+                                style="position: absolute; top:5px; right:5px; background: #fee; border: none; color: var(--color-error); width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.8rem;">&times;</button>
+                        </div>
+                        <p id="thumbUploadStatus" style="font-size: 0.85rem; color: #666; margin-top:5px;"></p>
+                        <input type="hidden" name="thumbnail" id="courseThumb" required>
                     </div>
                 </div>
 
@@ -2260,7 +2277,8 @@
                     <label>Live Link (Meeting URL)</label>
                     <input type="text" name="meetingLink" class="form-control"
                         placeholder="e.g. https://meet.google.com/xyz or Zoom link">
-                    <small style="color: var(--color-text-secondary);">Students will use this link to join at the scheduled
+                    <small style="color: var(--color-text-secondary);">Students will use this link to join at the
+                        scheduled
                         time.</small>
                 </div>
                 <div style="display: flex; gap: 10px; margin-top: 30px;">
@@ -2412,7 +2430,7 @@
         });
 
         // === SCHEDULE MANAGEMENT FOR COURSES & MEMBERSHIPS ===
-        
+
         // Toggle between course and membership selection
         function toggleScheduleTypeOptions() {
             const type = document.getElementById('scheduleType').value;
@@ -2420,14 +2438,14 @@
             const membershipGroup = document.getElementById('membershipSelectGroup');
             const courseSelect = document.getElementById('scheduleCourseSelect');
             const membershipSelect = document.getElementById('scheduleMembershipSelect');
-            
+
             if (type === 'course') {
                 courseGroup.style.display = 'block';
                 membershipGroup.style.display = 'none';
                 courseSelect.required = true;
                 membershipSelect.required = false;
                 membershipSelect.value = '';
-                
+
                 // Ensure courses are loaded
                 if (courseSelect.children.length <= 1) {
                     loadStaffCoursesAndMemberships();
@@ -2438,7 +2456,7 @@
                 courseSelect.required = false;
                 membershipSelect.required = true;
                 courseSelect.value = '';
-                
+
                 // Ensure memberships are loaded
                 if (membershipSelect.children.length <= 1) {
                     loadStaffCoursesAndMemberships();
@@ -2460,7 +2478,7 @@
         }
 
         // Close Schedule Modal
-        document.getElementById('closeScheduleModal').addEventListener('click', function() {
+        document.getElementById('closeScheduleModal').addEventListener('click', function () {
             document.getElementById('scheduleModal').style.display = 'none';
             document.getElementById('scheduleForm').reset();
             toggleScheduleTypeOptions(); // Reset dropdowns
@@ -2476,7 +2494,7 @@
                 const coursesResponse = await fetch(`${apiBase}/staff/courses`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
+
                 let coursesData = [];
                 if (coursesResponse.ok) {
                     coursesData = await coursesResponse.json();
@@ -2486,10 +2504,10 @@
                     const errorText = await coursesResponse.text();
                     console.error('Error response:', errorText);
                 }
-                
+
                 const courseSelect = document.getElementById('scheduleCourseSelect');
                 courseSelect.innerHTML = '<option value="">-- Select Course --</option>';
-                
+
                 if (Array.isArray(coursesData) && coursesData.length > 0) {
                     coursesData.forEach(course => {
                         courseSelect.innerHTML += `<option value="${course._id}">${course.title}</option>`;
@@ -2504,7 +2522,7 @@
                 const membershipsResponse = await fetch(`${apiBase}/memberships/staff/my-memberships`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
+
                 let membershipsData = {};
                 if (membershipsResponse.ok) {
                     membershipsData = await membershipsResponse.json();
@@ -2514,10 +2532,10 @@
                     const errorText = await membershipsResponse.text();
                     console.error('Error response:', errorText);
                 }
-                
+
                 const membershipSelect = document.getElementById('scheduleMembershipSelect');
                 membershipSelect.innerHTML = '<option value="">-- Select Membership --</option>';
-                
+
                 if (membershipsData.success && membershipsData.memberships && membershipsData.memberships.length > 0) {
                     membershipsData.memberships.forEach(membership => {
                         membershipSelect.innerHTML += `<option value="${membership._id}">${membership.packageName}</option>`;
@@ -2527,30 +2545,30 @@
                     membershipSelect.innerHTML += '<option value="" disabled>No membership packages assigned to you</option>';
                     console.log('No memberships found or API failed');
                 }
-                
+
                 console.log('Loaded courses:', Array.isArray(coursesData) ? coursesData.length : 0);
                 console.log('Loaded memberships:', membershipsData.memberships ? membershipsData.memberships.length : 0);
-                
+
             } catch (error) {
                 console.error('Error loading courses/memberships:', error);
-                
+
                 // Add error options to dropdowns
                 const courseSelect = document.getElementById('scheduleCourseSelect');
                 const membershipSelect = document.getElementById('scheduleMembershipSelect');
-                
+
                 courseSelect.innerHTML = '<option value="">-- Select Course --</option><option value="" disabled>Error loading courses</option>';
                 membershipSelect.innerHTML = '<option value="">-- Select Membership --</option><option value="" disabled>Error loading memberships</option>';
             }
         }
 
         // Submit Schedule Form
-        document.getElementById('scheduleForm').addEventListener('submit', async function(e) {
+        document.getElementById('scheduleForm').addEventListener('submit', async function (e) {
             e.preventDefault();
-            
+
             const token = localStorage.getItem('token');
             const apiBase = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api';
             const formData = new FormData(e.target);
-            
+
             const scheduleData = {
                 title: formData.get('title'),
                 startTime: formData.get('startTime'),
@@ -2561,7 +2579,7 @@
             // Add either courseID or membershipID based on selection
             const courseID = formData.get('courseID');
             const membershipID = formData.get('membershipID');
-            
+
             // Only include non-empty values
             if (courseID && courseID.trim() !== '') {
                 scheduleData.courseID = courseID.trim();
@@ -2569,7 +2587,7 @@
             if (membershipID && membershipID.trim() !== '') {
                 scheduleData.membershipID = membershipID.trim();
             }
-            
+
             // Validate that at least one is selected
             if (!scheduleData.courseID && !scheduleData.membershipID) {
                 alert('Please select either a course or membership package');
@@ -2608,7 +2626,7 @@
             const token = localStorage.getItem('token');
             const apiBase = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api';
             const scheduleList = document.getElementById('scheduleList');
-            
+
             scheduleList.innerHTML = '<p style="text-align: center; color: #999; padding: 40px;">Loading schedules...</p>';
 
             try {
@@ -2632,7 +2650,7 @@
                 schedules.sort((a, b) => new Date(a.startTime) - new Date(b.startTime));
 
                 let html = '<div style="display: grid; gap: 15px;">';
-                
+
                 schedules.forEach(schedule => {
                     const startTime = new Date(schedule.startTime);
                     const endTime = new Date(schedule.endTime);
@@ -2640,7 +2658,7 @@
                     const packageType = schedule.courseID ? 'Course' : 'Membership';
                     const isUpcoming = startTime > new Date();
                     const isPast = endTime < new Date();
-                    
+
                     html += `
                         <div class="glass-card" style="padding: 20px; border-left: 4px solid ${isUpcoming ? 'var(--color-golden)' : '#95a5a6'}; ${isPast ? 'opacity: 0.7;' : ''}">
                             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 15px;">
@@ -2678,7 +2696,7 @@
                         </div>
                     `;
                 });
-                
+
                 html += '</div>';
                 scheduleList.innerHTML = html;
 
@@ -2695,11 +2713,11 @@
 
         // Load schedules when live section is shown
         const originalSwitchSection = window.switchSection;
-        window.switchSection = function(section) {
+        window.switchSection = function (section) {
             if (typeof originalSwitchSection === 'function') {
                 originalSwitchSection(section);
             }
-            
+
             if (section === 'live') {
                 loadSchedules();
             }

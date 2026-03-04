@@ -50,6 +50,15 @@ const pdfFilter = (req, file, cb) => {
     }
 };
 
+// WebP filter for thumbnails
+const webpFilter = (req, file, cb) => {
+    if (file.mimetype === 'image/webp') {
+        cb(null, true);
+    } else {
+        cb(new AppError('Invalid file type. Only WebP images are allowed for thumbnails.', 400), false);
+    }
+};
+
 const upload = multer({
     storage: storage,
     fileFilter: fileFilter,
@@ -58,8 +67,19 @@ const upload = multer({
     }
 });
 
+// Memory storage for thumbnails that will be directly uploaded to R2
+const memoryStorage = multer.memoryStorage();
+const thumbnailUpload = multer({
+    storage: memoryStorage,
+    fileFilter: webpFilter,
+    limits: {
+        fileSize: 500 * 1024 // 500KB limit
+    }
+});
+
 exports.upload = upload;
 exports.uploadMiddleware = upload.single('file');
+exports.thumbnailUploadMiddleware = thumbnailUpload.single('thumbnail');
 
 exports.uploadFile = catchAsync(async (req, res, next) => {
     if (!req.file) {

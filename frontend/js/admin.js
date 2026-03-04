@@ -205,6 +205,98 @@ document.addEventListener('DOMContentLoaded', () => {
         initBannerUploadHandlers();
     }
 
+    // Admin Course Thumbnail Upload Logic
+    const adminThumbInput = document.getElementById('courseThumbInput');
+    const adminThumbHidden = document.getElementById('courseThumb');
+    const adminThumbUploadProgress = document.getElementById('thumbUploadProgress');
+    const adminThumbProgressBar = document.getElementById('thumbProgressBar');
+    const adminThumbPreviewContainer = document.getElementById('thumbPreviewContainer');
+    const adminThumbPreviewImg = document.getElementById('thumbPreviewImg');
+    const adminThumbUploadStatus = document.getElementById('thumbUploadStatus');
+    const adminRemoveThumbBtn = document.getElementById('removeThumbBtn');
+
+    if (adminThumbInput) {
+        adminThumbInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            // Strict Validation Before Upload
+            if (file.type !== 'image/webp') {
+                UI.error('Only WebP images are allowed for thumbnails.');
+                adminThumbInput.value = ''; // Reset input
+                return;
+            }
+
+            if (file.size > 500 * 1024) { // 500KB limit
+                UI.error('Thumbnail size must be less than 500KB.');
+                adminThumbInput.value = ''; // Reset input
+                return;
+            }
+
+            // UI Reset & Progress State
+            adminThumbUploadProgress.style.display = 'block';
+            adminThumbProgressBar.style.width = '0%';
+            adminThumbUploadStatus.textContent = 'Uploading thumbnail...';
+            adminThumbUploadStatus.style.color = '#666';
+
+            const formData = new FormData();
+            formData.append('thumbnail', file);
+
+            try {
+                // Fake progress animation
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 10;
+                    if (progress > 90) clearInterval(interval);
+                    adminThumbProgressBar.style.width = `${progress}%`;
+                }, 100);
+
+                // Direct R2 Upload via backend
+                const res = await fetch(`${Auth.apiBase}/uploads/thumbnail`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+                    body: formData
+                });
+
+                clearInterval(interval);
+                adminThumbProgressBar.style.width = '100%';
+
+                if (res.ok) {
+                    const data = await res.json();
+                    adminThumbUploadStatus.textContent = 'Upload Complete!';
+                    adminThumbUploadStatus.style.color = 'var(--color-success)';
+                    adminThumbHidden.value = data.url; // Save R2 URL
+
+                    // Show Preview
+                    adminThumbPreviewImg.src = data.url;
+                    adminThumbPreviewContainer.style.display = 'block';
+
+                    setTimeout(() => {
+                        adminThumbUploadProgress.style.display = 'none';
+                    }, 1000);
+                } else {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.message || 'Upload failed');
+                }
+            } catch (err) {
+                UI.handleError(err, 'Thumbnail Upload');
+                adminThumbUploadStatus.textContent = 'Upload Failed';
+                adminThumbUploadStatus.style.color = 'var(--color-error)';
+                adminThumbUploadProgress.style.display = 'none';
+                adminThumbInput.value = ''; // Reset on fail
+            }
+        });
+
+        adminRemoveThumbBtn.addEventListener('click', () => {
+            adminThumbInput.value = '';
+            adminThumbHidden.value = '';
+            adminThumbPreviewContainer.style.display = 'none';
+            adminThumbPreviewImg.src = '';
+            adminThumbUploadStatus.textContent = '';
+            adminThumbUploadProgress.style.display = 'none';
+        });
+    }
+
     // Admin Course Info Video Upload Logic
     const adminIntroDropzone = document.getElementById('adminIntroVideoDropzone');
     const adminIntroInput = document.getElementById('adminIntroVideoInput');
@@ -249,47 +341,124 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Validation
+        const allowedTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-msvideo', 'video/x-matroska'];
+        if (!allowedTypes.includes(file.type)) {
+            UI.error('Invalid file type. Only MP4, WebM, MOV, AVI, and MKV videos are allowed.');
+            return;
+        }
+
+        const maxSize = 5 * 1024 * 1024 * 1024; // 5GB limit locally
+        if (file.size > maxSize) {
+            UI.error('File too large. Maximum size is 5GB.');
+            return;
+        }
+
         // Reset UI
         adminUploadProgress.style.display = 'block';
         adminProgressBar.style.width = '0%';
         adminDropzoneContent.style.display = 'none';
 
-        const formData = new FormData();
-        formData.append('file', file);
-
         try {
-            // Fake progress
-            let progress = 0;
-            const interval = setInterval(() => {
-                progress += 10;
-                if (progress > 90) clearInterval(interval);
-                adminProgressBar.style.width = `${progress}%`;
-            }, 200);
+            // Step 1: Initialize Upload
+            const estimatedChunkSize = 50 * 1024 * 1024; // Estimate 50MB
+            const chunksCount = Math.ceil(file.size / estimatedChunkSize);
 
-            const res = await fetch(`${Auth.apiBase}/uploads/content`, {
+            const initRes = await fetch(`${Auth.apiBase}/uploads/video/init`, {
                 method: 'POST',
-                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` },
-                body: formData
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({
+                    filename: file.name,
+                    contentType: file.type,
+                    fileSize: file.size,
+                    chunksCount: chunksCount
+                })
             });
 
-            clearInterval(interval);
-            adminProgressBar.style.width = '100%';
-
-            if (res.ok) {
-                const data = await res.json();
-                adminIntroHidden.value = data.url;
-
-                // Show Preview indicator
-                adminVideoPreview.style.display = 'block';
-                document.getElementById('adminVideoLink').href = data.url;
-                adminUploadProgress.style.display = 'none';
-            } else {
-                throw new Error('Upload failed');
+            if (!initRes.ok) {
+                const errData = await initRes.json();
+                throw new Error(errData.message || 'Failed to initialize upload. Limit may be reached.');
             }
+
+            const initData = await initRes.json();
+            const { uploadId, key, chunkSize } = initData;
+            const actualChunkSize = chunkSize || estimatedChunkSize;
+            const actualChunksCount = Math.ceil(file.size / actualChunkSize);
+
+            // Step 2: Request Presigned URLs for all parts
+            const parts = Array.from({ length: actualChunksCount }, (_, i) => i + 1);
+
+            const signRes = await fetch(`${Auth.apiBase}/uploads/video/sign`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ key, uploadId, parts })
+            });
+
+            if (!signRes.ok) throw new Error('Failed to sign upload parts.');
+            const signData = await signRes.json();
+            const signedUrls = signData.signedUrls;
+
+            // Step 3: Upload Parts Directly to R2
+            const uploadedParts = [];
+            let totalUploaded = 0;
+
+            for (let i = 0; i < actualChunksCount; i++) {
+                const start = i * actualChunkSize;
+                const end = Math.min(start + actualChunkSize, file.size);
+                const chunk = file.slice(start, end);
+                const partNumber = i + 1;
+                const signedUrlObj = signedUrls.find(s => s.partNumber === partNumber);
+
+                if (!signedUrlObj) throw new Error(`Missing presigned URL for part ${partNumber}`);
+
+                const uploadChunkRes = await fetch(signedUrlObj.url, {
+                    method: 'PUT',
+                    body: chunk
+                });
+
+                if (!uploadChunkRes.ok) throw new Error(`Failed to upload part ${partNumber}`);
+
+                // S3 requires the ETag wrapped in quotes
+                const etag = uploadChunkRes.headers.get('ETag');
+                uploadedParts.push({ PartNumber: partNumber, ETag: etag });
+
+                totalUploaded += chunk.size;
+                const percentComplete = (totalUploaded / file.size) * 100;
+                adminProgressBar.style.width = percentComplete + '%';
+            }
+
+            // Step 4: Complete Upload
+            const completeRes = await fetch(`${Auth.apiBase}/uploads/video/complete`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                },
+                body: JSON.stringify({ key, uploadId, parts: uploadedParts })
+            });
+
+            if (!completeRes.ok) throw new Error('Failed to finalize upload.');
+            const completeData = await completeRes.json();
+
+            // Successful Finish
+            adminIntroHidden.value = completeData.fileUrl;
+
+            // Show Preview indicator
+            adminVideoPreview.style.display = 'block';
+            document.getElementById('adminVideoLink').href = completeData.fileUrl;
+            adminUploadProgress.style.display = 'none';
         } catch (err) {
             console.error(err);
-            UI.error('Upload failed');
+            UI.error(err.message || 'Upload failed');
             adminDropzoneContent.style.display = 'block';
+            adminUploadProgress.style.display = 'none';
+            adminIntroInput.value = ''; // Reset on fail
         }
     }
 });
@@ -963,7 +1132,7 @@ async function loadUserManagement(role) {
                 </tbody>
             </table>
         `;
-        
+
         // Add hover event listeners for payment breakdown tooltips with smart positioning
         setTimeout(() => {
             const paymentWrappers = document.querySelectorAll('.payment-cell-wrapper');
@@ -972,19 +1141,19 @@ async function loadUserManagement(role) {
                 if (tooltip) {
                     const arrowUp = tooltip.querySelector('.tooltip-arrow-up');
                     const arrowDown = tooltip.querySelector('.tooltip-arrow-down');
-                    
-                    wrapper.addEventListener('mouseenter', function() {
+
+                    wrapper.addEventListener('mouseenter', function () {
                         // Show tooltip temporarily to measure its height
                         tooltip.style.display = 'block';
                         tooltip.style.visibility = 'hidden';
-                        
+
                         // Get element and tooltip positions
                         const rect = wrapper.getBoundingClientRect();
                         const tooltipHeight = tooltip.offsetHeight;
                         const spaceAbove = rect.top;
                         const spaceBelow = window.innerHeight - rect.bottom;
                         const requiredSpace = tooltipHeight + 15; // tooltip height + arrow + margin
-                        
+
                         // Determine position based on available space
                         if (spaceAbove >= requiredSpace || spaceAbove > spaceBelow) {
                             // Show above
@@ -999,12 +1168,12 @@ async function loadUserManagement(role) {
                             if (arrowDown) arrowDown.style.display = 'block';
                             if (arrowUp) arrowUp.style.display = 'none';
                         }
-                        
+
                         // Make tooltip visible
                         tooltip.style.visibility = 'visible';
                     });
-                    
-                    wrapper.addEventListener('mouseleave', function() {
+
+                    wrapper.addEventListener('mouseleave', function () {
                         tooltip.style.display = 'none';
                     });
                 }
@@ -1645,7 +1814,7 @@ function openUserDetailsModal(user) {
         const coursesCount = user.mappedCoursesCount || 0;
         const membershipsCount = user.mappedMembershipsCount || 0;
         const totalCount = coursesCount + membershipsCount;
-        
+
         grid.innerHTML = `
             <div style="background: #fff0f5; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #ffccdd;">
                 <div style="font-size: 0.85rem; color: #666; font-weight: 500; margin-bottom: 5px;"><i class="fas fa-book" style="color: #3b82f6; margin-right: 5px;"></i>Mapped Courses</div>
@@ -1664,12 +1833,12 @@ function openUserDetailsModal(user) {
 
     const hasCourses = user.enrolledCourses && user.enrolledCourses.length > 0;
     const hasMemberships = user.enrolledMemberships && user.enrolledMemberships.length > 0;
-    
+
     if (hasCourses || hasMemberships) {
         courseListContainer.style.display = 'block';
-        
+
         let listHTML = '';
-        
+
         if (hasCourses) {
             courseListTitle.innerHTML = `<i class="fas fa-list-ul" style="color: #4a90e2; margin-right: 5px;"></i> ${user.role === 'Staff' ? 'Assigned Courses & Packages' : 'Active Enrollments'}`;
             listHTML += `<div style="font-size: 0.85rem; font-weight: 600; color: #3b82f6; margin-bottom: 8px; margin-top: 10px;"><i class="fas fa-book" style="margin-right: 5px;"></i>Courses (${user.enrolledCourses.length})</div>`;
@@ -1680,7 +1849,7 @@ function openUserDetailsModal(user) {
                 </div>
             `).join('');
         }
-        
+
         if (hasMemberships) {
             listHTML += `<div style="font-size: 0.85rem; font-weight: 600; color: #f59e0b; margin-bottom: 8px; margin-top: 15px;"><i class="fas fa-crown" style="margin-right: 5px;"></i>Membership Packages (${user.enrolledMemberships.length})</div>`;
             listHTML += user.enrolledMemberships.map(membership => `
@@ -1690,7 +1859,7 @@ function openUserDetailsModal(user) {
                 </div>
             `).join('');
         }
-        
+
         courseListDiv.innerHTML = listHTML;
     } else {
         courseListContainer.style.display = 'none';
@@ -2036,7 +2205,7 @@ async function loadLedger() {
 
 function setFinanceTimeframe(period, btn) {
     window.financeTimePeriod = period;
-    
+
     // Update button styles
     document.querySelectorAll('.finance-tf-btn').forEach(b => {
         b.style.background = 'transparent';
@@ -2045,13 +2214,13 @@ function setFinanceTimeframe(period, btn) {
         b.style.fontWeight = '500';
         b.classList.remove('active');
     });
-    
+
     btn.style.background = 'var(--primary-gradient)';
     btn.style.color = 'white';
     btn.style.boxShadow = '0 4px 10px rgba(255, 153, 51, 0.2)';
     btn.style.fontWeight = '600';
     btn.classList.add('active');
-    
+
     // Re-filter and render
     filterFinanceLedger();
 }
@@ -2104,7 +2273,7 @@ function renderLedger(ledger) {
     if (window.allLedger && document.getElementById('financeTotalRevenue')) {
         const timePeriod = window.financeTimePeriod || 'all';
         let dateThreshold = null;
-        
+
         if (timePeriod === 'month') {
             const now = new Date();
             dateThreshold = new Date(now.getFullYear(), now.getMonth(), 1);
@@ -2113,9 +2282,9 @@ function renderLedger(ledger) {
         let revenue = 0;
         let students = {};
         let courses = {};
-        
+
         // Filter by time period for KPI calculations
-        const dataForKPI = dateThreshold 
+        const dataForKPI = dateThreshold
             ? window.allLedger.filter(p => {
                 const transactionDate = new Date(p.date || p.createdAt || p.initiatedAt);
                 return transactionDate >= dateThreshold;
@@ -3247,7 +3416,7 @@ async function loadLiveClasses() {
     const dateFilter = document.getElementById('liveDateFilter') ? document.getElementById('liveDateFilter').value : 'all';
 
     container.innerHTML = '<div style="text-align:center; padding:40px; color:#666;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 10px;"></i><br>Loading live classes...</div>';
-    
+
     try {
         // Fetch all schedules
         const res = await fetch(`${Auth.apiBase}/schedules/my-timetable`, { headers: Auth.getHeaders() });
@@ -3262,7 +3431,7 @@ async function loadLiveClasses() {
             const courseFilterEl = document.getElementById('liveCourseFilter');
             if (courseFilterEl && courses.length > 0) {
                 const currentValue = courseFilterEl.value;
-                courseFilterEl.innerHTML = '<option value="">All Courses</option>' + 
+                courseFilterEl.innerHTML = '<option value="">All Courses</option>' +
                     courses.map(c => `<option value="${c._id}">${c.title}</option>`).join('');
                 courseFilterEl.value = currentValue;
             }
@@ -3270,7 +3439,7 @@ async function loadLiveClasses() {
 
         // Apply filters
         if (search) {
-            schedules = schedules.filter(s => 
+            schedules = schedules.filter(s =>
                 s.title.toLowerCase().includes(search) ||
                 (s.courseID?.title || '').toLowerCase().includes(search) ||
                 (s.staffID?.name || '').toLowerCase().includes(search)
@@ -3324,7 +3493,7 @@ async function loadLiveClasses() {
 
 function updateLiveStatistics(schedules) {
     const total = schedules.length;
-    
+
     const now = new Date();
     const next24h = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     const upcoming = schedules.filter(s => {
@@ -3338,7 +3507,7 @@ function updateLiveStatistics(schedules) {
 
 function renderLiveClasses(schedules) {
     const container = document.getElementById('liveClassesContainer');
-    
+
     if (!schedules || schedules.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding:60px; color:#999;"><i class="fas fa-calendar-times" style="font-size: 3rem; margin-bottom: 15px; opacity: 0.3;"></i><h3 style="color: #999;">No live classes found</h3><p>No classes match your current filters.</p></div>';
         return;
@@ -3348,7 +3517,7 @@ function renderLiveClasses(schedules) {
         const now = new Date();
         const start = new Date(startTime);
         const end = new Date(endTime);
-        
+
         if (now > end) return { label: 'Completed', color: '#6B7280', icon: 'check' };
         if (now >= start && now <= end) return { label: 'Live Now', color: '#EF4444', icon: 'broadcast-tower', pulse: true };
         if (start - now < 3600000) return { label: 'Starting Soon', color: '#F59E0B', icon: 'clock' };
@@ -3358,15 +3527,15 @@ function renderLiveClasses(schedules) {
     container.innerHTML = `
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 20px;">
             ${schedules.map(s => {
-                const timeStatus = getTimeStatus(s.startTime, s.endTime);
-                const startDate = new Date(s.startTime);
-                const endDate = new Date(s.endTime);
-                const duration = s.expectedDuration || Math.round((endDate - startDate) / 60000);
-                const now = new Date();
-                const isCompleted = now > endDate;
-                const isUpcoming = now < new Date(s.startTime);
+        const timeStatus = getTimeStatus(s.startTime, s.endTime);
+        const startDate = new Date(s.startTime);
+        const endDate = new Date(s.endTime);
+        const duration = s.expectedDuration || Math.round((endDate - startDate) / 60000);
+        const now = new Date();
+        const isCompleted = now > endDate;
+        const isUpcoming = now < new Date(s.startTime);
 
-                return `
+        return `
                 <div class="glass-card" style="padding: 18px; border-radius: 12px; border-left: 4px solid ${timeStatus.color}; transition: all 0.3s; position: relative; display: flex; flex-direction: column; height: 100%;"
                     onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.08)';"
                     onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
@@ -3440,7 +3609,7 @@ function renderLiveClasses(schedules) {
                     </div>
                 </div>
                 `;
-            }).join('')}
+    }).join('')}
         </div>
 
         <style>
@@ -3454,7 +3623,7 @@ function renderLiveClasses(schedules) {
 
 async function deleteLiveClass(scheduleId) {
     console.log('Attempting to delete schedule with ID:', scheduleId);
-    
+
     if (!confirm('Are you sure you want to delete this live class? This action cannot be undone.')) {
         return;
     }
@@ -3467,7 +3636,7 @@ async function deleteLiveClass(scheduleId) {
         });
 
         console.log('Delete response status:', res.status);
-        
+
         if (res.ok) {
             UI.success('Live class deleted successfully!');
             loadLiveClasses();
@@ -3490,10 +3659,10 @@ async function editLiveClass(scheduleId) {
         // Fetch the schedule details
         const res = await fetch(`${Auth.apiBase}/schedules/my-timetable`, { headers: Auth.getHeaders() });
         if (!res.ok) throw new Error('Failed to fetch schedule');
-        
+
         const schedules = await res.json();
         const schedule = schedules.find(s => s._id === scheduleId);
-        
+
         if (!schedule) {
             UI.error('Schedule not found');
             return;
@@ -3502,16 +3671,16 @@ async function editLiveClass(scheduleId) {
         // Populate the form
         document.getElementById('editScheduleId').value = schedule._id;
         document.getElementById('editLiveTitle').value = schedule.title;
-        
+
         // Format datetime for input
         const startTime = new Date(schedule.startTime);
         const formattedStart = startTime.toISOString().slice(0, 16);
         document.getElementById('editLiveStartTime').value = formattedStart;
-        
+
         // Set minimum datetime to 10 minutes from now
         const startTimeInput = document.getElementById('editLiveStartTime');
         startTimeInput.min = getMinimumScheduleTime();
-        
+
         document.getElementById('editLiveDuration').value = schedule.expectedDuration || 60;
         document.getElementById('editLiveMeetingLink').value = schedule.meetingLink || '';
 
@@ -3552,7 +3721,7 @@ function validateMeetingLink(url) {
     if (!url || url.trim() === '') {
         return { valid: false, message: 'Meeting link is required' };
     }
-    
+
     try {
         const urlObj = new URL(url);
         // Check if it's http or https protocol
@@ -3572,7 +3741,7 @@ async function openCreateLiveClassModal() {
         if (res.ok) {
             const courses = await res.json();
             const courseSelect = document.getElementById('createLiveCourse');
-            courseSelect.innerHTML = '<option value="">-- Select a Course --</option>' + 
+            courseSelect.innerHTML = '<option value="">-- Select a Course --</option>' +
                 courses.map(c => `<option value="${c._id}">${c.title}</option>`).join('');
         }
 
@@ -3842,6 +4011,19 @@ async function openCourseModal(course = null) {
         document.getElementById('courseCategory').value = course.category || '';
         document.getElementById('courseDuration').value = course.duration || '';
         document.getElementById('courseThumb').value = course.thumbnail || '';
+
+        // Show uploaded state if thumbnail exists
+        if (course.thumbnail) {
+            const thumbPreviewCont = document.getElementById('thumbPreviewContainer');
+            if (thumbPreviewCont) {
+                thumbPreviewCont.style.display = 'block';
+                document.getElementById('thumbPreviewImg').src = course.thumbnail;
+            }
+        } else {
+            const thumbPreviewCont = document.getElementById('thumbPreviewContainer');
+            if (thumbPreviewCont) thumbPreviewCont.style.display = 'none';
+        }
+
         document.getElementById('courseIntroText').value = course.introText || '';
         document.getElementById('courseIntroVideoUrl').value = course.introVideoUrl || '';
         document.getElementById('courseIntroVideoUrl').value = course.introVideoUrl || '';
@@ -3874,6 +4056,24 @@ async function openCourseModal(course = null) {
         document.getElementById('courseId').value = '';
         // Uncheck all
         document.querySelectorAll('input[name="mentorId"]').forEach(cb => cb.checked = false);
+        document.getElementById('courseThumb').value = '';
+
+        // Reset Thumbnail UI
+        const thumbInput = document.getElementById('courseThumbInput');
+        if (thumbInput) thumbInput.value = '';
+
+        const thumbPreviewCont = document.getElementById('thumbPreviewContainer');
+        if (thumbPreviewCont) thumbPreviewCont.style.display = 'none';
+
+        const thumbPreviewImg = document.getElementById('thumbPreviewImg');
+        if (thumbPreviewImg) thumbPreviewImg.src = '';
+
+        const thumbUploadStatus = document.getElementById('thumbUploadStatus');
+        if (thumbUploadStatus) thumbUploadStatus.textContent = '';
+
+        const thumbUploadProgress = document.getElementById('thumbUploadProgress');
+        if (thumbUploadProgress) thumbUploadProgress.style.display = 'none';
+
         document.getElementById('courseIntroText').value = '';
         document.getElementById('courseIntroVideoUrl').value = '';
         document.getElementById('courseIntroVideoUrl').value = '';

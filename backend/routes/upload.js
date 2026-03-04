@@ -14,6 +14,14 @@ router.post(
   uploadController.uploadFile,
 );
 
+// Course Thumbnail Upload Route
+router.post(
+  "/thumbnail",
+  authorize(["Staff", "Admin"]),
+  uploadController.thumbnailUploadMiddleware,
+  r2Controller.uploadThumbnail
+);
+
 // Cloudflare R2 Direct Multipart Upload Routes
 router.post(
   "/video/init",
