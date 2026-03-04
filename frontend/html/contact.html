@@ -25,7 +25,7 @@
         content="Get in touch with us. Visit our academy in Thammampatty or contact us for course inquiries.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://awarenessacademy.in/contact.html">
-    <meta property="og:image" content="https://awarenessacademy.in/assets/og-contact.jpg">
+    <meta property="og:image" content="https://awarenessacademy.in/assets/founder.png">
     <meta property="og:site_name" content="Awareness Academy">
     <meta property="og:locale" content="en_IN">
 
@@ -33,7 +33,7 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Contact Awareness Academy">
     <meta name="twitter:description" content="Reach us at Thammampatty, Salem. Phone: +91 98433 41742">
-    <meta name="twitter:image" content="https://awarenessacademy.in/assets/og-contact.jpg">
+    <meta name="twitter:image" content="https://awarenessacademy.in/assets/founder.png">
 
     <!-- Schema.org Structured Data -->
     <script type="application/ld+json">
@@ -940,10 +940,291 @@
                 top: 19px;
             }
         }
+
+        /* --- Animations --- */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ----  Background floating element keyframes ---- */
+        @keyframes floatOrb {
+
+            0%,
+            100% {
+                transform: translateY(0px) translateX(0px) scale(1);
+            }
+
+            25% {
+                transform: translateY(-35px) translateX(20px) scale(1.05);
+            }
+
+            50% {
+                transform: translateY(-60px) translateX(-10px) scale(0.95);
+            }
+
+            75% {
+                transform: translateY(-25px) translateX(-30px) scale(1.03);
+            }
+        }
+
+        @keyframes floatDiamond {
+
+            0%,
+            100% {
+                transform: rotate(45deg) translateY(0px);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: rotate(225deg) translateY(-40px);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: 0.15;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.9;
+                transform: scale(1.5);
+            }
+        }
+
+        @keyframes driftX {
+
+            0%,
+            100% {
+                transform: translateX(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateX(60px) rotate(180deg);
+            }
+        }
+
+        @keyframes pulseRing {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.6;
+            }
+
+            50% {
+                transform: scale(1.4);
+                opacity: 0.15;
+            }
+
+            100% {
+                transform: scale(0.8);
+                opacity: 0.6;
+            }
+        }
+
+        /* --- Floating BG Element Base --- */
+        .bg-float-wrap {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            animation: floatOrb linear infinite;
+            will-change: transform;
+        }
+
+        .bg-diamond {
+            position: absolute;
+            border-radius: 4px;
+            animation: floatDiamond ease-in-out infinite;
+            will-change: transform, opacity;
+        }
+
+        .bg-spark {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: twinkle ease-in-out infinite;
+            will-change: transform, opacity;
+        }
+
+        .bg-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid;
+            animation: pulseRing ease-in-out infinite;
+            will-change: transform, opacity;
+        }
+
+        .bg-drift {
+            position: absolute;
+            border-radius: 50px;
+            animation: driftX ease-in-out infinite;
+            will-change: transform;
+        }
+
+        /* === SCROLL PROGRESS BAR === */
+        #scroll-progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, #FF6B6B, #FF9933, #FFD700, #34d399, #60a5fa, #a78bfa);
+            background-size: 400% 100%;
+            animation: progressGlow 4s linear infinite;
+            z-index: 9999;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 8px rgba(255, 153, 51, 0.6);
+        }
+
+        @keyframes progressGlow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 400% 50%;
+            }
+        }
+
+        /* === BACK TO TOP BUTTON === */
+        #back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #FF9933, #FFD700);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 9998;
+            opacity: 0;
+            transform: translateY(20px) scale(0.8);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            box-shadow: 0 6px 25px rgba(255, 153, 51, 0.4);
+            border: none;
+        }
+
+        #back-to-top.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        #back-to-top:hover {
+            box-shadow: 0 8px 35px rgba(255, 153, 51, 0.7);
+            transform: translateY(-4px) scale(1.08);
+        }
+
+        #back-to-top:active {
+            transform: scale(0.94);
+        }
+
+        @keyframes bttBounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+
+        #back-to-top.visible {
+            animation: bttBounce 2.5s ease-in-out infinite;
+            animation-delay: 1s;
+        }
+
+        /* === RIPPLE EFFECT === */
+        .ripple-host {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple-wave {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 153, 51, 0.25);
+            transform: scale(0);
+            animation: ripple-anim 0.7s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-anim {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* === TILT card === */
+        .tilt-card {
+            transform-style: preserve-3d;
+            transform: perspective(1000px);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .tilt-card:hover {
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12) !important;
+        }
+
+        /* === Glowing section header h1 === */
+        .contact-hero h1 {
+            position: relative;
+            display: inline-block;
+        }
+
+        .contact-hero h1::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            border-radius: 4px;
+            background: linear-gradient(90deg, var(--color-saffron), var(--color-golden));
+        }
+
+        @media (max-width: 600px) {
+            #back-to-top {
+                bottom: 20px;
+                right: 16px;
+                width: 44px;
+                height: 44px;
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 
 <body>
+    <!-- Scroll Progress Bar -->
+    <div id="scroll-progress-bar"></div>
     <div class="bg-pattern"></div>
 
     <nav class="nav" id="mainNav">
@@ -981,6 +1262,7 @@
             <a href="index.html"><i class="fas fa-home"></i> Home</a>
             <a href="about.html"><i class="fas fa-info-circle"></i> About</a>
             <a href="courses.html"><i class="fas fa-graduation-cap"></i> Courses</a>
+            <a href="membership.html"><i class="fas fa-id-card"></i> Membership</a>
             <a href="gallery.html"><i class="fas fa-images"></i> Gallery</a>
             <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
             <a href="contact.html" class="active"><i class="fas fa-envelope"></i> Contact</a>
@@ -1007,6 +1289,14 @@
 
     <!-- Hero Section -->
     <header class="contact-hero">
+        <div class="bg-float-wrap">
+            <div class="bg-orb"
+                style="width:300px; height:300px; background:rgba(255,153,51,0.1); left:-100px; top:10%; animation-duration:15s;">
+            </div>
+            <div class="bg-orb"
+                style="width:250px; height:250px; background:rgba(255,215,0,0.08); right:-50px; top:20%; animation-duration:18s; animation-delay:-2s;">
+            </div>
+        </div>
         <div class="fade-in-up">
             <h1>Let's Connect on Your <br>Spiritual Journey</h1>
             <p>Our sanctuary is always open for seekers. Reach out for course inquiries, guidance, or to schedule a
@@ -1015,6 +1305,15 @@
     </header>
 
     <main class="contact-grid">
+        <div class="bg-float-wrap">
+            <div class="bg-diamond"
+                style="width:30px; height:30px; background:rgba(255,153,51,0.1); left:5%; top:25%; animation-duration:10s;">
+            </div>
+            <div class="bg-ring"
+                style="width:100px; height:100px; border-color:rgba(255,215,0,0.15); left:40%; bottom:20%; animation-duration:8s;">
+            </div>
+            <div class="bg-spark" style="right:10%; top:35%; background:#FF9933; animation-duration:3s;"></div>
+        </div>
         <!-- Left Side: Information -->
         <div class="info-cards-container">
             <a href="tel:+919843341742" class="info-card fade-in-up">
@@ -1230,6 +1529,80 @@
             observer.observe(el);
         });
     </script>
+    <script>
+        // ===== SCROLL PROGRESS BAR & BACK TO TOP =====
+        (function () {
+            const bar = document.getElementById('scroll-progress-bar');
+            const btt = document.getElementById('back-to-top');
+            window.addEventListener('scroll', () => {
+                const scrollTop = window.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+                if (bar) bar.style.width = pct + '%';
+                if (btt) btt.classList.toggle('visible', scrollTop > 400);
+            }, { passive: true });
+            if (btt) {
+                btt.addEventListener('click', () => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+        })();
+
+        // ===== RIPPLE EFFECT =====
+        document.addEventListener('click', function (e) {
+            const el = e.target.closest('.info-card, .contact-form, .ripple-host, .btn-primary, .social-icon');
+            if (!el) return;
+            el.classList.add('ripple-host');
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple-wave';
+            const rect = el.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size / 2}px;top:${e.clientY - rect.top - size / 2}px`;
+            el.appendChild(ripple);
+            ripple.addEventListener('animationend', () => ripple.remove());
+        });
+
+        // ===== 3D TILT EFFECT =====
+        (function () {
+            const els = document.querySelectorAll('.info-card, .contact-form');
+            els.forEach(el => {
+                el.style.transition = 'transform 0.1s ease';
+                el.addEventListener('mousemove', (e) => {
+                    const rect = el.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const cx = rect.width / 2;
+                    const cy = rect.height / 2;
+                    const rotX = ((y - cy) / cy) * -4;
+                    const rotY = ((x - cx) / cx) * 4;
+                    el.style.transform = `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateY(-4px)`;
+                });
+                el.addEventListener('mouseleave', () => {
+                    el.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
+                    el.style.transition = 'transform 0.5s ease';
+                });
+            });
+        })();
+
+        // ===== MOUSE PARALLAX for bg floating elements =====
+        (function () {
+            const orbs = document.querySelectorAll('.bg-orb');
+            window.addEventListener('mousemove', (e) => {
+                const mx = (e.clientX / window.innerWidth - 0.5);
+                const my = (e.clientY / window.innerHeight - 0.5);
+                orbs.forEach((orb, i) => {
+                    const depth = (i % 3 + 1) * 12;
+                    const ox = mx * depth;
+                    const oy = my * depth;
+                    orb.style.transform = `translate(${ox}px, ${oy}px)`;
+                });
+            }, { passive: true });
+        })();
+    </script>
+    <!-- Back to Top Button -->
+    <button id="back-to-top" title="Go to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
 </body>
 
 </html>

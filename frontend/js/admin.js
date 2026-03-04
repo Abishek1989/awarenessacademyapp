@@ -634,11 +634,13 @@ async function loadSettings() {
             }
 
             // Update profile section header info
-            const profHeaderName = document.querySelector('#s-prof h3');
-            if (profHeaderName) profHeaderName.textContent = user.name || 'Admin Account';
-
-            const profHeaderEmail = document.querySelector('#s-prof p');
-            if (profHeaderEmail) profHeaderEmail.textContent = user.email || '';
+            const profHeaderInside = document.querySelector('#s-prof .glass-ultra > div div');
+            if (profHeaderInside) {
+                const profName = profHeaderInside.querySelector('h3');
+                const profEmail = profHeaderInside.querySelector('p');
+                if (profName) profName.textContent = user.name || 'Admin Account';
+                if (profEmail) profEmail.textContent = user.email || '';
+            }
         }
     } catch (err) {
         console.error('Error loading settings:', err);
@@ -4757,23 +4759,7 @@ async function removeSelectedStudents() {
 /* --- SETTINGS --- */
 let currentSettings = {};
 
-async function loadSettings() {
-    try {
-        const res = await fetch(`${Auth.apiBase}/settings`, { headers: Auth.getHeaders() });
-        currentSettings = await res.json();
-
-        // Populate UI
-        document.getElementById('maintenanceToggle').checked = currentSettings.isMaintenanceMode;
-        document.getElementById('rightClickToggle').checked = currentSettings.disableRightClick;
-        document.getElementById('maintenanceMessageInput').value = currentSettings.maintenanceMessage || '';
-        document.getElementById('siteTitleInput').value = currentSettings.siteTitle || '';
-        document.getElementById('supportEmailInput').value = currentSettings.supportEmail || '';
-
-    } catch (err) {
-        console.error(err);
-        UI.error('Failed to load settings');
-    }
-}
+// loadSettings is already defined earlier at line 578 to handle both system and profile settings.
 
 async function toggleSetting(key, value) {
     try {
@@ -5415,6 +5401,20 @@ window.switchSettingsTab = function (element, tabId) {
     });
     const target = document.getElementById(tabId);
     if (target) target.classList.add('active');
+};
+
+// Password Visibility Toggle
+window.togglePasswordVisibility = function (id, icon) {
+    const input = document.getElementById(id);
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
 };
 
 function renderMessagesPagination(currentPage, totalPages, total) {

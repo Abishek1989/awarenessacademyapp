@@ -3779,11 +3779,8 @@
                                 <div class="settings-nav-item active" onclick="switchSettingsTab(this, 's-gen')">
                                     <i class="fas fa-sliders-h"></i> General
                                 </div>
-                                <div class="settings-nav-item" onclick="switchSettingsTab(this, 's-sec')">
-                                    <i class="fas fa-shield-alt"></i> Security
-                                </div>
                                 <div class="settings-nav-item" onclick="switchSettingsTab(this, 's-prof')">
-                                    <i class="fas fa-user-circle"></i> Profile
+                                    <i class="fas fa-user-circle"></i> Profile & Security
                                 </div>
                                 <div id="developerTabBtn" class="settings-nav-item" onclick="handleDeveloperClick()"
                                     style="display: none;">
@@ -3896,36 +3893,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Security Settings -->
-                                <div id="s-sec" class="settings-content-panel">
-                                    <div class="glass-ultra" style="padding: 30px; border-radius: 20px;">
-                                        <h3 style="margin-bottom: 25px; font-size: 1.4rem;">Security & Password</h3>
-                                        <form id="adminPasswordForm">
-                                            <div class="form-group" style="margin-bottom: 20px;">
-                                                <label style="margin-bottom: 8px; display: block;">Current
-                                                    Password</label>
-                                                <input type="password" id="currentPassword" class="form-control"
-                                                    style="padding: 12px; border-radius: 10px;" required>
-                                            </div>
-                                            <div class="form-group" style="margin-bottom: 20px;">
-                                                <label style="margin-bottom: 8px; display: block;">New Password</label>
-                                                <input type="password" id="newPassword" class="form-control"
-                                                    style="padding: 12px; border-radius: 10px;" required>
-                                            </div>
-                                            <div class="form-group" style="margin-bottom: 25px;">
-                                                <label style="margin-bottom: 8px; display: block;">Confirm New
-                                                    Password</label>
-                                                <input type="password" id="confirmNewPassword" class="form-control"
-                                                    style="padding: 12px; border-radius: 10px;" required>
-                                            </div>
-                                            <div style="text-align: right;">
-                                                <button type="submit" class="btn-primary"
-                                                    style="padding: 12px 30px;">Update
-                                                    Password</button>
-                                            </div>
-                                        </form>
-                                    </div>
-                                </div>
 
                                 <!-- Profile Settings -->
                                 <div id="s-prof" class="settings-content-panel">
@@ -3955,19 +3922,66 @@
                                         <form id="adminProfileForm">
                                             <div class="form-group" style="margin-bottom: 20px;">
                                                 <label style="margin-bottom: 8px; display: block;">Display Name</label>
-                                                <input type="text" id="profileDisplayName" class="form-control"
-                                                    value="Admin User" style="padding: 12px; border-radius: 10px;">
+                                                <input type="text" id="profileDisplayName" class="form-control" value=""
+                                                    placeholder="Loading..."
+                                                    style="padding: 12px; border-radius: 10px;">
                                             </div>
                                             <div class="form-group" style="margin-bottom: 25px;">
                                                 <label style="margin-bottom: 8px; display: block;">Email Address</label>
-                                                <input type="email" id="profileEmail" class="form-control"
-                                                    value="admin@awarenessacademy.com" disabled
+                                                <input type="email" id="profileEmail" class="form-control" value=""
+                                                    disabled placeholder="Loading..."
                                                     style="background: #f3f4f6; cursor: not-allowed; padding: 12px; border-radius: 10px;">
                                             </div>
-                                            <div style="text-align: right;">
+                                            <div style="text-align: right; margin-bottom: 30px;">
                                                 <button type="submit" class="btn-primary"
                                                     style="padding: 12px 30px;">Save
                                                     Profile</button>
+                                            </div>
+                                        </form>
+
+                                        <hr style="border: 0; border-top: 1px solid rgba(0,0,0,0.1); margin: 30px 0;">
+
+                                        <h3 style="margin-bottom: 25px; font-size: 1.4rem;">Security & Password</h3>
+                                        <form id="adminPasswordForm">
+                                            <div class="form-group" style="margin-bottom: 20px; position: relative;">
+                                                <label style="margin-bottom: 8px; display: block;">Current
+                                                    Password</label>
+                                                <div style="position: relative;">
+                                                    <input type="password" id="currentPassword" class="form-control"
+                                                        style="padding: 12px; padding-right: 45px; border-radius: 10px; width: 100%;"
+                                                        required>
+                                                    <i class="fas fa-eye"
+                                                        onclick="togglePasswordVisibility('currentPassword', this)"
+                                                        style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #999;"></i>
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 20px; position: relative;">
+                                                <label style="margin-bottom: 8px; display: block;">New Password</label>
+                                                <div style="position: relative;">
+                                                    <input type="password" id="newPassword" class="form-control"
+                                                        style="padding: 12px; padding-right: 45px; border-radius: 10px; width: 100%;"
+                                                        required>
+                                                    <i class="fas fa-eye"
+                                                        onclick="togglePasswordVisibility('newPassword', this)"
+                                                        style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #999;"></i>
+                                                </div>
+                                            </div>
+                                            <div class="form-group" style="margin-bottom: 25px; position: relative;">
+                                                <label style="margin-bottom: 8px; display: block;">Confirm New
+                                                    Password</label>
+                                                <div style="position: relative;">
+                                                    <input type="password" id="confirmNewPassword" class="form-control"
+                                                        style="padding: 12px; padding-right: 45px; border-radius: 10px; width: 100%;"
+                                                        required>
+                                                    <i class="fas fa-eye"
+                                                        onclick="togglePasswordVisibility('confirmNewPassword', this)"
+                                                        style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); cursor: pointer; color: #999;"></i>
+                                                </div>
+                                            </div>
+                                            <div style="text-align: right;">
+                                                <button type="submit" class="btn-primary"
+                                                    style="padding: 12px 30px;">Update
+                                                    Password</button>
                                             </div>
                                         </form>
                                     </div>
@@ -3981,10 +3995,6 @@
                             <button class="settings-mobile-tab-btn active" onclick="switchSettingsTab(this, 's-gen')">
                                 <i class="fas fa-sliders-h"></i>
                                 <span>General</span>
-                            </button>
-                            <button class="settings-mobile-tab-btn" onclick="switchSettingsTab(this, 's-sec')">
-                                <i class="fas fa-shield-alt"></i>
-                                <span>Security</span>
                             </button>
                             <button class="settings-mobile-tab-btn" onclick="switchSettingsTab(this, 's-prof')">
                                 <i class="fas fa-user-circle"></i>

@@ -34,9 +34,9 @@
         content="Transform your life through ancient wisdom. Meditation, Reiki, Yoga & holistic healing courses at India's premier spiritual academy in Tamil Nadu." />
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://awarenessacademy.in/" />
-    <meta property="og:image" content="https://awarenessacademy.in/assets/og-image.jpg" />
+    <meta property="og:image" content="https://awarenessacademy.in/assets/founder.png" />
     <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <meta property="og:image:height" content="1500" />
     <meta property="og:site_name" content="Awareness Academy" />
     <meta property="og:locale" content="en_IN" />
 
@@ -45,7 +45,7 @@
     <meta name="twitter:title" content="Awareness Academy | Spiritual & Meditation Training India" />
     <meta name="twitter:description"
         content="Transform your life through ancient wisdom. Meditation, Reiki, Yoga & holistic healing courses in Tamil Nadu." />
-    <meta name="twitter:image" content="https://awarenessacademy.in/assets/og-image.jpg" />
+    <meta name="twitter:image" content="https://awarenessacademy.in/assets/founder.png" />
 
     <!-- Schema.org Structured Data -->
     <script type="application/ld+json">
@@ -889,8 +889,22 @@
 
         /* --- Features Section --- */
         .features-section {
-            padding: 100px 20px;
-            background: var(--color-warm-white);
+            padding: 110px 20px;
+            background: linear-gradient(160deg, #fff8f0 0%, #fff3e0 40%, #fef9f0 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .features-section::before {
+            content: '';
+            position: absolute;
+            width: 700px;
+            height: 700px;
+            background: radial-gradient(circle, rgba(255, 153, 51, 0.06) 0%, transparent 70%);
+            border-radius: 50%;
+            bottom: -200px;
+            right: -200px;
+            pointer-events: none;
         }
 
         .section-header {
@@ -899,15 +913,46 @@
             margin: 0 auto 70px;
         }
 
+        .section-badge {
+            display: inline-block;
+            padding: 6px 20px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 18px;
+        }
+
+        .section-badge.orange {
+            background: rgba(255, 153, 51, 0.12);
+            color: var(--color-saffron);
+            border: 1px solid rgba(255, 153, 51, 0.25);
+        }
+
+        .section-badge.purple {
+            background: rgba(124, 58, 237, 0.1);
+            color: #7c3aed;
+            border: 1px solid rgba(124, 58, 237, 0.2);
+        }
+
+        .section-badge.gold {
+            background: rgba(251, 191, 36, 0.12);
+            color: #d97706;
+            border: 1px solid rgba(251, 191, 36, 0.25);
+        }
+
         .section-header h2 {
-            font-size: clamp(2.5rem, 4vw, 3.5rem);
+            font-size: clamp(2.2rem, 4vw, 3.2rem);
             color: var(--color-saffron-dark);
-            margin-bottom: 20px;
+            margin-bottom: 18px;
+            line-height: 1.2;
         }
 
         .section-header p {
-            font-size: 1.2rem;
+            font-size: 1.15rem;
             color: var(--color-text-secondary);
+            line-height: 1.7;
         }
 
         .features-grid {
@@ -919,92 +964,126 @@
         }
 
         .feature-card {
-            background: var(--color-bg-glass);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: var(--border-radius-lg);
-            padding: 40px 30px;
+            background: white;
+            border-radius: 20px;
+            padding: 40px 28px;
             text-align: center;
             transition: all 0.4s ease;
             position: relative;
             overflow: hidden;
+            box-shadow: 0 6px 30px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(0, 0, 0, 0.05);
         }
 
-        .feature-card::before {
-            content: "";
+        .feature-card::after {
+            content: '';
             position: absolute;
-            top: 0;
+            bottom: 0;
             left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg,
-                    var(--color-saffron),
-                    var(--color-golden));
+            right: 0;
+            height: 3px;
+            background: var(--card-accent, linear-gradient(90deg, #ff9933, #ffcc00));
             transform: scaleX(0);
+            transform-origin: left;
             transition: transform 0.4s ease;
         }
 
-        .feature-card:hover::before {
+        .feature-card:hover::after {
             transform: scaleX(1);
         }
 
         .feature-card:hover {
             transform: translateY(-10px);
-            box-shadow: var(--shadow-hover);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Each card gets a unique accent color */
+        .feature-card:nth-child(1) {
+            --card-accent: linear-gradient(90deg, #ff6b6b, #ff8e53);
+        }
+
+        .feature-card:nth-child(2) {
+            --card-accent: linear-gradient(90deg, #a78bfa, #7c3aed);
+        }
+
+        .feature-card:nth-child(3) {
+            --card-accent: linear-gradient(90deg, #34d399, #059669);
+        }
+
+        .feature-card:nth-child(4) {
+            --card-accent: linear-gradient(90deg, #60a5fa, #2563eb);
+        }
+
+        .feature-card:nth-child(5) {
+            --card-accent: linear-gradient(90deg, #f59e0b, #d97706);
+        }
+
+        .feature-card:nth-child(6) {
+            --card-accent: linear-gradient(90deg, #f472b6, #db2777);
         }
 
         .feature-icon {
             width: 80px;
             height: 80px;
-            background: linear-gradient(135deg,
-                    var(--color-saffron),
-                    var(--color-golden));
-            border-radius: 20px;
+            background: var(--card-accent, linear-gradient(135deg, #ff9933, #ffcc00));
+            border-radius: 22px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin: 0 auto 25px;
             color: white;
-            font-size: 2.5rem;
+            font-size: 2.2rem;
             transition: all 0.4s ease;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
         }
 
         .feature-card:hover .feature-icon {
-            transform: scale(1.1) rotate(5deg);
+            transform: scale(1.12) rotate(6deg);
         }
 
         .feature-card h3 {
-            font-size: 1.5rem;
-            margin-bottom: 15px;
+            font-size: 1.4rem;
+            margin-bottom: 12px;
             color: var(--color-text-primary);
+            font-weight: 700;
         }
 
         .feature-card p {
             color: var(--color-text-secondary);
             line-height: 1.7;
+            font-size: 0.97rem;
         }
 
         /* --- Stats Counter Section --- */
         .stats-section {
-            padding: 60px 20px;
-            background: linear-gradient(135deg,
-                    var(--color-saffron-dark),
-                    var(--color-golden-dark));
+            padding: 80px 20px;
+            background: linear-gradient(135deg, #1a1a3e 0%, #2d1b69 40%, #1a1a3e 100%);
             position: relative;
             overflow: hidden;
         }
 
         .stats-section::before {
-            content: "";
+            content: '';
             position: absolute;
-            width: 500px;
-            height: 500px;
-            background: radial-gradient(circle,
-                    rgba(255, 255, 255, 0.1),
-                    transparent);
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255, 153, 51, 0.12), transparent 60%);
             border-radius: 50%;
-            top: -250px;
-            right: -250px;
+            top: -200px;
+            right: -150px;
+            pointer-events: none;
+        }
+
+        .stats-section::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(168, 85, 247, 0.1), transparent 60%);
+            border-radius: 50%;
+            bottom: -150px;
+            left: -100px;
+            pointer-events: none;
         }
 
         .stats-grid {
@@ -1020,16 +1099,32 @@
         .stat-box {
             text-align: center;
             color: white;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 35px 20px;
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, background 0.3s ease;
+        }
+
+        .stat-box:hover {
+            transform: translateY(-6px);
+            background: rgba(255, 153, 51, 0.1);
+            border-color: rgba(255, 153, 51, 0.3);
         }
 
         .stat-number {
-            font-size: 2.8rem;
+            font-size: 3rem;
             font-weight: 700;
             font-family: var(--font-heading);
             margin-bottom: 8px;
             opacity: 0;
             transform: translateY(20px);
             transition: all 0.6s ease;
+            background: linear-gradient(135deg, #FF9933, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .stat-box.visible .stat-number {
@@ -1039,25 +1134,30 @@
 
         .stat-label {
             font-size: 0.85rem;
-            opacity: 0.9;
+            opacity: 0.85;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             font-weight: 600;
             white-space: nowrap;
+            color: rgba(255, 255, 255, 0.9);
         }
 
         .stat-icon-large {
-            font-size: 2rem;
-            margin-bottom: 12px;
-            opacity: 0.3;
+            font-size: 2.2rem;
+            margin-bottom: 15px;
+            opacity: 1;
+            background: linear-gradient(135deg, #FF9933, #FFD700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        /* --- Scrolling Banner Carousel Section --- */
+        /* --- Fading Banner Slideshow Section --- */
         .banner-carousel-section {
             width: 100%;
             max-width: 100vw;
             overflow: hidden;
-            background: #f9fafb;
+            background: #000;
             position: relative;
             margin: 0;
             padding: 0;
@@ -1067,41 +1167,32 @@
             width: 100%;
             max-width: 100%;
             aspect-ratio: 16 / 6;
-            /* Fixed 16:6 ratio */
             position: relative;
             overflow: hidden;
-            background: linear-gradient(135deg,
-                    rgba(255, 165, 0, 0.05) 0%,
-                    rgba(255, 215, 0, 0.05) 100%);
         }
 
+        /* Track is just a sizing wrapper - no flex scroll needed */
         .banner-carousel-track {
-            display: flex;
-            height: 100%;
-            animation: scroll-banners 30s linear infinite;
-            will-change: transform;
-            cursor: pointer;
-            backface-visibility: hidden;
-            -webkit-backface-visibility: hidden;
-            transform-style: preserve-3d;
-        }
-
-        .banner-carousel-container:hover .banner-carousel-track {
-            animation-play-state: paused;
-        }
-
-        .banner-carousel-track.paused {
-            animation-play-state: paused !important;
-        }
-
-        .banner-item {
-            flex: 0 0 100%;
-            min-width: 100%;
-            max-width: 100%;
-            height: 100%;
             position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* All banners sit stacked in the same position */
+        .banner-item {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
             background: #000;
-            overflow: hidden;
+        }
+
+        /* The currently visible banner */
+        .banner-item.active {
+            opacity: 1;
         }
 
         .banner-item img {
@@ -1112,83 +1203,69 @@
             display: block;
         }
 
-        /* Infinite scroll animation */
-        @keyframes scroll-banners {
-            0% {
-                transform: translateX(0);
-            }
-
-            100% {
-                transform: translateX(-33.333333%);
-                /* Scroll exactly one-third (with tripled content) */
-            }
-        }
-
-        /* Touch gesture support */
-        .banner-carousel-track {
-            touch-action: pan-y;
-            user-select: none;
-        }
-
         /* Responsive adjustments */
-        @media (max-width: 1024px) {
-            .banner-carousel-container {
-                aspect-ratio: 16 / 6;
-            }
-        }
-
         @media (max-width: 768px) {
             .banner-carousel-container {
                 aspect-ratio: 16 / 9;
-                /* Slightly taller on mobile for better visibility */
             }
         }
 
         @media (max-width: 480px) {
             .banner-carousel-container {
                 aspect-ratio: 16 / 6;
-                /* Maintain ratio even on small screens */
             }
         }
 
         /* --- Courses Preview Section --- */
         .courses-preview-section {
-            padding: 100px 20px;
-            background: white;
+            padding: 110px 20px;
+            background: linear-gradient(180deg, #f8f4ff 0%, #eef2ff 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .courses-preview-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 800px;
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #a78bfa, #60a5fa, transparent);
         }
 
         .courses-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
             gap: 40px;
             max-width: 1200px;
-            margin: 0 auto 50px;
+            margin: 0 auto 55px;
         }
 
         .course-preview-card {
-            background: var(--color-bg-glass);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.4);
-            border-radius: var(--border-radius-lg);
+            background: white;
+            border-radius: 24px;
             overflow: hidden;
             transition: all 0.4s ease;
-            box-shadow: var(--shadow-soft);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(167, 139, 250, 0.15);
         }
 
         .course-preview-card:hover {
-            transform: translateY(-10px);
-            box-shadow: var(--shadow-hover);
+            transform: translateY(-12px);
+            box-shadow: 0 20px 50px rgba(124, 58, 237, 0.15);
         }
 
         .course-image {
             width: 100%;
             height: 250px;
             object-fit: cover;
-            transition: transform 0.4s ease;
+            transition: transform 0.5s ease;
         }
 
         .course-preview-card:hover .course-image {
-            transform: scale(1.05);
+            transform: scale(1.06);
         }
 
         .course-content {
@@ -1196,32 +1273,37 @@
         }
 
         .course-category {
-            color: var(--color-saffron);
-            font-size: 0.85rem;
+            display: inline-block;
+            background: linear-gradient(135deg, #a78bfa, #7c3aed);
+            color: white;
+            font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 10px;
-            display: block;
+            padding: 4px 14px;
+            border-radius: 20px;
+            margin-bottom: 12px;
         }
 
         .course-content h3 {
-            font-size: 1.6rem;
-            margin-bottom: 15px;
+            font-size: 1.5rem;
+            margin-bottom: 12px;
             color: var(--color-text-primary);
+            font-weight: 700;
         }
 
         .course-content p {
             color: var(--color-text-secondary);
             line-height: 1.7;
             margin-bottom: 20px;
+            font-size: 0.97rem;
         }
 
         .course-meta {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding-top: 20px;
+            padding-top: 18px;
             border-top: 1px solid rgba(0, 0, 0, 0.05);
         }
 
@@ -1229,120 +1311,164 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            color: var(--color-text-secondary);
+            color: var(--color-saffron);
             font-size: 0.9rem;
+            font-weight: 600;
         }
 
         .course-link {
-            color: var(--color-saffron);
-            font-weight: 600;
+            color: #7c3aed;
+            font-weight: 700;
             text-decoration: none;
             display: flex;
             align-items: center;
             gap: 8px;
             transition: gap 0.3s ease;
+            font-size: 0.95rem;
         }
 
         .course-link:hover {
-            gap: 12px;
+            gap: 14px;
         }
 
         .view-all-btn {
             text-align: center;
         }
 
-        /* --- Testimonials Carousel --- */
+        /* --- Testimonials Grid (Static) --- */
         .testimonials-section {
             padding: 100px 20px;
-            background: var(--color-warm-white);
+            background: linear-gradient(180deg, #fdf6ec 0%, #fff9f4 100%);
+            position: relative;
             overflow: hidden;
         }
 
-        .testimonials-carousel-wrapper {
-            max-width: 1000px;
+        .testimonials-section::before {
+            content: '';
+            position: absolute;
+            top: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 153, 51, 0.06) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .testimonials-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            max-width: 1200px;
             margin: 0 auto;
-            position: relative;
-        }
-
-        .testimonials-track {
-            display: flex;
-            transition: transform 0.5s ease;
-        }
-
-        .testimonial-slide {
-            min-width: 100%;
-            padding: 0 20px;
         }
 
         .testimonial-card {
             background: white;
-            padding: 50px;
-            border-radius: var(--border-radius-lg);
-            box-shadow: var(--shadow-soft);
-            text-align: center;
+            border-radius: 24px;
+            padding: 40px 35px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.07);
+            border: 1px solid rgba(255, 153, 51, 0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            transition: transform 0.35s ease, box-shadow 0.35s ease;
+            position: relative;
+            overflow: hidden;
         }
 
-        .testimonial-quote {
-            font-size: 1.8rem;
+        .testimonial-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--color-saffron), var(--color-golden));
+            border-radius: 24px 24px 0 0;
+        }
+
+        .testimonial-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 40px rgba(255, 153, 51, 0.15);
+        }
+
+        .testimonial-stars {
+            display: flex;
+            gap: 4px;
             color: var(--color-golden);
-            margin-bottom: 30px;
+            font-size: 1rem;
+        }
+
+        .testimonial-quote-icon {
+            font-size: 2.5rem;
+            color: rgba(255, 153, 51, 0.15);
+            line-height: 1;
+            font-family: Georgia, serif;
+            user-select: none;
         }
 
         .testimonial-text {
-            font-size: 1.3rem;
+            font-size: 1rem;
             font-style: italic;
-            color: var(--color-text-secondary);
+            color: #555;
             line-height: 1.8;
-            margin-bottom: 40px;
+            flex: 1;
         }
 
         .testimonial-author {
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 20px;
+            gap: 14px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(0, 0, 0, 0.06);
         }
 
-        .author-image {
-            width: 70px;
-            height: 70px;
+        .testimonial-avatar {
+            width: 52px;
+            height: 52px;
             border-radius: 50%;
-            object-fit: cover;
-            border: 3px solid var(--color-saffron);
+            background: linear-gradient(135deg, var(--color-saffron), var(--color-golden));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+            box-shadow: 0 4px 12px rgba(255, 153, 51, 0.3);
         }
 
         .author-info h4 {
-            margin: 0 0 5px 0;
+            margin: 0 0 3px 0;
             color: var(--color-text-primary);
-            font-size: 1.2rem;
+            font-size: 1rem;
+            font-weight: 700;
         }
 
         .author-info p {
             margin: 0;
             color: var(--color-saffron);
+            font-size: 0.85rem;
             font-weight: 600;
         }
 
-        .carousel-dots {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-top: 40px;
+        @media (max-width: 900px) {
+            .testimonials-grid {
+                grid-template-columns: 1fr;
+                max-width: 560px;
+            }
         }
 
-        .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #ddd;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
+        @media (max-width: 600px) {
+            .testimonials-section {
+                padding: 60px 15px;
+            }
 
-        .dot.active {
-            background: var(--color-saffron);
-            width: 30px;
-            border-radius: 6px;
+            .testimonial-card {
+                padding: 30px 22px;
+            }
         }
 
         /* --- Footer (Same as other pages) --- */
@@ -1679,6 +1805,173 @@
             }
         }
 
+        /* ----  Background floating element keyframes ---- */
+        @keyframes floatOrb {
+
+            0%,
+            100% {
+                transform: translateY(0px) translateX(0px) scale(1);
+            }
+
+            25% {
+                transform: translateY(-35px) translateX(20px) scale(1.05);
+            }
+
+            50% {
+                transform: translateY(-60px) translateX(-10px) scale(0.95);
+            }
+
+            75% {
+                transform: translateY(-25px) translateX(-30px) scale(1.03);
+            }
+        }
+
+        @keyframes floatDiamond {
+
+            0%,
+            100% {
+                transform: rotate(45deg) translateY(0px);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: rotate(225deg) translateY(-40px);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: 0.15;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.9;
+                transform: scale(1.5);
+            }
+        }
+
+        @keyframes driftX {
+
+            0%,
+            100% {
+                transform: translateX(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateX(60px) rotate(180deg);
+            }
+        }
+
+        @keyframes pulseRing {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.6;
+            }
+
+            50% {
+                transform: scale(1.4);
+                opacity: 0.15;
+            }
+
+            100% {
+                transform: scale(0.8);
+                opacity: 0.6;
+            }
+        }
+
+        @keyframes spiralFloat {
+            0% {
+                transform: translateY(0) rotate(0deg) translateX(0);
+                opacity: 0.4;
+            }
+
+            25% {
+                transform: translateY(-20px) rotate(90deg) translateX(15px);
+                opacity: 0.7;
+            }
+
+            50% {
+                transform: translateY(-35px) rotate(180deg) translateX(0);
+                opacity: 0.4;
+            }
+
+            75% {
+                transform: translateY(-15px) rotate(270deg) translateX(-15px);
+                opacity: 0.7;
+            }
+
+            100% {
+                transform: translateY(0) rotate(360deg) translateX(0);
+                opacity: 0.4;
+            }
+        }
+
+        /* --- Floating BG Element Base --- */
+        .bg-float-wrap {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* orbs */
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            animation: floatOrb linear infinite;
+            will-change: transform;
+        }
+
+        /* diamond/square */
+        .bg-diamond {
+            position: absolute;
+            border-radius: 4px;
+            animation: floatDiamond ease-in-out infinite;
+            will-change: transform, opacity;
+        }
+
+        /* sparkle dot */
+        .bg-spark {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: twinkle ease-in-out infinite;
+            will-change: transform, opacity;
+        }
+
+        /* ring / circle outline */
+        .bg-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid;
+            animation: pulseRing ease-in-out infinite;
+            will-change: transform, opacity;
+        }
+
+        /* drifting line / capsule */
+        .bg-drift {
+            position: absolute;
+            border-radius: 50px;
+            animation: driftX ease-in-out infinite;
+            will-change: transform;
+        }
+
+        /* ensure section content is always above */
+        .features-section>*:not(.bg-float-wrap),
+        .stats-section>*:not(.bg-float-wrap),
+        .courses-preview-section>*:not(.bg-float-wrap),
+        .testimonials-section>*:not(.bg-float-wrap) {
+            position: relative;
+            z-index: 1;
+        }
+
         .scroll-reveal {
             opacity: 0;
             transform: translateY(30px);
@@ -1911,6 +2204,189 @@
             }
         }
     </style>
+
+    <!-- Advanced UI Enhancement Styles -->
+    <style>
+        /* === SCROLL PROGRESS BAR === */
+        #scroll-progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, #FF6B6B, #FF9933, #FFD700, #34d399, #60a5fa, #a78bfa);
+            background-size: 400% 100%;
+            animation: progressGlow 4s linear infinite;
+            z-index: 9999;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 8px rgba(255, 153, 51, 0.6);
+        }
+
+        @keyframes progressGlow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 400% 50%;
+            }
+        }
+
+        /* === BACK TO TOP BUTTON === */
+        #back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #FF9933, #FFD700);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 9998;
+            opacity: 0;
+            transform: translateY(20px) scale(0.8);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            box-shadow: 0 6px 25px rgba(255, 153, 51, 0.4);
+            border: none;
+        }
+
+        #back-to-top.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        #back-to-top:hover {
+            box-shadow: 0 8px 35px rgba(255, 153, 51, 0.7);
+            transform: translateY(-4px) scale(1.08);
+        }
+
+        #back-to-top:active {
+            transform: scale(0.94);
+        }
+
+        @keyframes bttBounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+
+        #back-to-top.visible {
+            animation: bttBounce 2.5s ease-in-out infinite;
+            animation-delay: 1s;
+        }
+
+        /* === WAVE DIVIDERS === */
+        .wave-divider {
+            line-height: 0;
+            overflow: hidden;
+            position: relative;
+            z-index: 2;
+        }
+
+        .wave-divider svg {
+            display: block;
+            width: 100%;
+        }
+
+        /* === RIPPLE EFFECT on Cards === */
+        .ripple-host {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple-wave {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 153, 51, 0.25);
+            transform: scale(0);
+            animation: ripple-anim 0.7s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-anim {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* === TILT card on hover (enhanced by JS) === */
+        .tilt-card {
+            transform-style: preserve-3d;
+            transform: perspective(1000px);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .tilt-card:hover {
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12) !important;
+        }
+
+        /* === Glowing section header h2 === */
+        .section-header h2 {
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-header h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--color-saffron), var(--color-golden));
+        }
+
+        /* === Stat number count-up glow === */
+        .stat-box.visible .stat-number {
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+        }
+
+        /* === Feature cards stagger reveal === */
+        .feature-card:nth-child(2) {
+            transition-delay: 0.08s;
+        }
+
+        .feature-card:nth-child(3) {
+            transition-delay: 0.16s;
+        }
+
+        .feature-card:nth-child(4) {
+            transition-delay: 0.24s;
+        }
+
+        .feature-card:nth-child(5) {
+            transition-delay: 0.32s;
+        }
+
+        .feature-card:nth-child(6) {
+            transition-delay: 0.40s;
+        }
+
+        /* Mobile adjustments for back-to-top */
+        @media (max-width: 600px) {
+            #back-to-top {
+                bottom: 20px;
+                right: 16px;
+                width: 44px;
+                height: 44px;
+                font-size: 1rem;
+            }
+        }
+    </style>
     <style>
         /* Hero Overlay */
         .hero-overlay-content {
@@ -2103,6 +2579,13 @@
 </head>
 
 <body>
+    <!-- Scroll Progress Bar -->
+    <div id="scroll-progress-bar"></div>
+
+    <!-- Back to Top Button -->
+    <button id="back-to-top" aria-label="Back to top" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <i class="fas fa-chevron-up"></i>
+    </button>
     <nav class="nav" id="mainNav">
         <a href="index.html" class="logo">
             <img src="../assets/logo.png" alt="AWARENESS ACADEMY" />
@@ -2231,6 +2714,36 @@
 
     <!-- Stats Counter Section -->
     <section class="stats-section">
+        <!-- Floating BG elements -->
+        <div class="bg-float-wrap">
+            <!-- large soft orbs -->
+            <div class="bg-orb"
+                style="width:300px;height:300px;background:rgba(255,153,51,0.08);top:-80px;left:5%;animation-duration:12s;">
+            </div>
+            <div class="bg-orb"
+                style="width:200px;height:200px;background:rgba(168,85,247,0.1);bottom:-60px;right:8%;animation-duration:9s;animation-delay:-3s;">
+            </div>
+            <div class="bg-orb"
+                style="width:150px;height:150px;background:rgba(96,165,250,0.08);top:40%;left:40%;animation-duration:15s;animation-delay:-6s;">
+            </div>
+            <!-- rings -->
+            <div class="bg-ring"
+                style="width:100px;height:100px;border-color:rgba(255,215,0,0.2);top:20%;left:15%;animation-duration:6s;">
+            </div>
+            <div class="bg-ring"
+                style="width:60px;height:60px;border-color:rgba(255,215,0,0.15);bottom:25%;right:20%;animation-duration:4.5s;animation-delay:-2s;">
+            </div>
+            <!-- sparkles -->
+            <div class="bg-spark" style="background:#FFD700;top:15%;left:25%;animation-duration:2.5s;"></div>
+            <div class="bg-spark"
+                style="background:#FF9933;top:65%;left:70%;animation-duration:3.2s;animation-delay:-0.8s;"></div>
+            <div class="bg-spark"
+                style="background:#a78bfa;top:35%;left:85%;animation-duration:2s;animation-delay:-1.5s;"></div>
+            <div class="bg-spark"
+                style="background:#60a5fa;top:75%;left:45%;animation-duration:4s;animation-delay:-1s;"></div>
+            <div class="bg-spark"
+                style="background:#FFD700;top:50%;left:10%;animation-duration:1.8s;animation-delay:-0.4s;"></div>
+        </div>
         <div class="stats-grid">
             <div class="stat-box">
                 <div class="stat-icon-large">
@@ -2263,14 +2776,60 @@
         </div>
     </section>
 
+    <!-- Wave divider: stats → features -->
+    <div class="wave-divider" style="background:#1a1a3e;margin-bottom:-2px;">
+        <svg viewBox="0 0 1440 60" preserveAspectRatio="none" height="60" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,30 C360,70 1080,-10 1440,30 L1440,60 L0,60 Z" fill="#fff8f0" />
+        </svg>
+    </div>
+
     <!-- Features Section -->
     <section class="features-section">
+        <!-- Floating BG elements -->
+        <div class="bg-float-wrap">
+            <!-- soft colour orbs -->
+            <div class="bg-orb"
+                style="width:350px;height:350px;background:rgba(255,107,107,0.06);top:-100px;right:-80px;animation-duration:14s;">
+            </div>
+            <div class="bg-orb"
+                style="width:250px;height:250px;background:rgba(167,139,250,0.07);bottom:-80px;left:-60px;animation-duration:11s;animation-delay:-5s;">
+            </div>
+            <div class="bg-orb"
+                style="width:180px;height:180px;background:rgba(52,211,153,0.07);top:45%;left:55%;animation-duration:16s;animation-delay:-8s;">
+            </div>
+            <!-- rotating diamonds -->
+            <div class="bg-diamond"
+                style="width:22px;height:22px;background:rgba(255,153,51,0.18);top:12%;left:18%;animation-duration:8s;">
+            </div>
+            <div class="bg-diamond"
+                style="width:16px;height:16px;background:rgba(167,139,250,0.22);top:65%;left:75%;animation-duration:10s;animation-delay:-3s;">
+            </div>
+            <div class="bg-diamond"
+                style="width:30px;height:30px;background:rgba(52,211,153,0.18);bottom:15%;left:35%;animation-duration:12s;animation-delay:-6s;">
+            </div>
+            <div class="bg-diamond"
+                style="width:18px;height:18px;background:rgba(244,114,182,0.22);top:30%;right:12%;animation-duration:9s;animation-delay:-2s;">
+            </div>
+            <!-- drifting capsules -->
+            <div class="bg-drift"
+                style="width:55px;height:10px;background:rgba(255,153,51,0.12);top:25%;left:5%;animation-duration:7s;">
+            </div>
+            <div class="bg-drift"
+                style="width:40px;height:8px;background:rgba(124,58,237,0.1);bottom:30%;right:5%;animation-duration:9s;animation-delay:-4s;">
+            </div>
+            <!-- sparkle dots -->
+            <div class="bg-spark" style="background:#ff9933;top:8%;left:48%;animation-duration:2.2s;"></div>
+            <div class="bg-spark"
+                style="background:#a78bfa;top:80%;left:22%;animation-duration:3s;animation-delay:-1s;"></div>
+            <div class="bg-spark"
+                style="background:#34d399;top:55%;left:90%;animation-duration:2.7s;animation-delay:-0.5s;"></div>
+            <div class="bg-spark"
+                style="background:#f472b6;top:18%;left:88%;animation-duration:3.5s;animation-delay:-1.8s;"></div>
+        </div>
         <div class="section-header scroll-reveal">
+            <span class="section-badge orange">✦ Why Us</span>
             <h2>Why Choose AWARENESS ACADEMY</h2>
-            <p>
-                Discover the unique benefits that set us apart in your
-                spiritual journey
-            </p>
+            <p>Discover the unique benefits that set us apart in your spiritual journey</p>
         </div>
         <div class="features-grid">
             <div class="feature-card scroll-reveal">
@@ -2337,9 +2896,57 @@
         </div>
     </section>
 
+    <!-- Wave divider: features → courses -->
+    <div class="wave-divider" style="background:#fff8f0;margin-bottom:-2px;">
+        <svg viewBox="0 0 1440 55" preserveAspectRatio="none" height="55" xmlns="http://www.w3.org/2000/svg">
+            <path d="M0,25 C480,55 960,-5 1440,25 L1440,55 L0,55 Z" fill="#f8f4ff" />
+        </svg>
+    </div>
+
     <!-- Courses Preview Section -->
     <section class="courses-preview-section">
+        <!-- Floating BG elements -->
+        <div class="bg-float-wrap">
+            <!-- purple/blue orbs -->
+            <div class="bg-orb"
+                style="width:320px;height:320px;background:rgba(124,58,237,0.07);top:-100px;left:-80px;animation-duration:13s;">
+            </div>
+            <div class="bg-orb"
+                style="width:220px;height:220px;background:rgba(96,165,250,0.07);bottom:-70px;right:-50px;animation-duration:10s;animation-delay:-4s;">
+            </div>
+            <div class="bg-orb"
+                style="width:160px;height:160px;background:rgba(167,139,250,0.07);top:50%;left:50%;animation-duration:17s;animation-delay:-9s;">
+            </div>
+            <!-- diamonds -->
+            <div class="bg-diamond"
+                style="width:24px;height:24px;background:rgba(124,58,237,0.2);top:10%;right:15%;animation-duration:9s;">
+            </div>
+            <div class="bg-diamond"
+                style="width:18px;height:18px;background:rgba(96,165,250,0.2);bottom:20%;left:12%;animation-duration:11s;animation-delay:-4s;">
+            </div>
+            <div class="bg-diamond"
+                style="width:14px;height:14px;background:rgba(167,139,250,0.25);top:40%;right:5%;animation-duration:7s;animation-delay:-2s;">
+            </div>
+            <!-- rings -->
+            <div class="bg-ring"
+                style="width:120px;height:120px;border-color:rgba(124,58,237,0.12);top:15%;left:8%;animation-duration:7s;">
+            </div>
+            <div class="bg-ring"
+                style="width:80px;height:80px;border-color:rgba(96,165,250,0.14);bottom:20%;right:15%;animation-duration:5s;animation-delay:-2.5s;">
+            </div>
+            <!-- drifting capsule -->
+            <div class="bg-drift"
+                style="width:60px;height:10px;background:rgba(124,58,237,0.1);top:35%;right:8%;animation-duration:8s;">
+            </div>
+            <!-- sparkles -->
+            <div class="bg-spark" style="background:#7c3aed;top:5%;left:35%;animation-duration:2.8s;"></div>
+            <div class="bg-spark"
+                style="background:#60a5fa;top:85%;left:60%;animation-duration:2.3s;animation-delay:-0.7s;"></div>
+            <div class="bg-spark"
+                style="background:#a78bfa;top:60%;left:5%;animation-duration:3.6s;animation-delay:-1.3s;"></div>
+        </div>
         <div class="section-header scroll-reveal">
+            <span class="section-badge purple">✦ Featured</span>
             <h2>Featured Courses</h2>
             <p>Start your spiritual journey with our latest courses</p>
         </div>
@@ -2406,79 +3013,69 @@
         </div>
     </section>
 
-    <!-- Testimonials Carousel -->
+    <!-- Testimonials Grid -->
     <section class="testimonials-section">
         <div class="section-header scroll-reveal">
+            <span class="section-badge gold">✦ Testimonials</span>
             <h2>What Our Students Say</h2>
             <p>Real transformations from real people</p>
         </div>
-        <div class="testimonials-carousel-wrapper">
-            <div class="testimonials-track" id="testimonialsTrack">
-                <div class="testimonial-slide">
-                    <div class="testimonial-card">
-                        <div class="testimonial-quote">
-                            <i class="fas fa-quote-left"></i>
-                        </div>
-                        <p class="testimonial-text">
-                            "AWARENESS ACADEMY has completely transformed my
-                            approach to life. The meditation course helped
-                            me find inner peace I never thought possible."
-                        </p>
-                        <div class="testimonial-author">
-                            <img src="../assets/images/user_sarah.jpg" alt="Sarah Jenkins" class="author-image" />
-                            <div class="author-info">
-                                <h4>Sarah Jenkins</h4>
-                                <p>Yoga Instructor</p>
-                            </div>
-                        </div>
-                    </div>
+        <div class="testimonials-grid">
+
+            <!-- Card 1 -->
+            <div class="testimonial-card scroll-reveal">
+                <div class="testimonial-stars">
+                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                        class="fas fa-star"></i><i class="fas fa-star"></i>
                 </div>
-                <div class="testimonial-slide">
-                    <div class="testimonial-card">
-                        <div class="testimonial-quote">
-                            <i class="fas fa-quote-left"></i>
-                        </div>
-                        <p class="testimonial-text">
-                            "The ancient wisdom courses bridged the gap
-                            between traditional teachings and modern
-                            application. Truly life-changing experience!"
-                        </p>
-                        <div class="testimonial-author">
-                            <img src="https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80"
-                                alt="David Ross" class="author-image" />
-                            <div class="author-info">
-                                <h4>David Ross</h4>
-                                <p>Software Engineer</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="testimonial-slide">
-                    <div class="testimonial-card">
-                        <div class="testimonial-quote">
-                            <i class="fas fa-quote-left"></i>
-                        </div>
-                        <p class="testimonial-text">
-                            "The supportive community and expert guidance
-                            made my spiritual journey truly rewarding. I'm
-                            grateful for this transformative experience."
-                        </p>
-                        <div class="testimonial-author">
-                            <img src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-1.2.1&auto=format&fit=crop&w=100&q=80"
-                                alt="Amara Singh" class="author-image" />
-                            <div class="author-info">
-                                <h4>Amara Singh</h4>
-                                <p>Artist</p>
-                            </div>
-                        </div>
+                <div class="testimonial-quote-icon">❝</div>
+                <p class="testimonial-text">AWARENESS ACADEMY has completely transformed my approach to life. The
+                    meditation course helped me find inner peace I never thought possible.</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar">S</div>
+                    <div class="author-info">
+                        <h4>Sarah Jenkins</h4>
+                        <p>Yoga Instructor</p>
                     </div>
                 </div>
             </div>
-            <div class="carousel-dots">
-                <span class="dot active" onclick="goToSlide(0)"></span>
-                <span class="dot" onclick="goToSlide(1)"></span>
-                <span class="dot" onclick="goToSlide(2)"></span>
+
+            <!-- Card 2 -->
+            <div class="testimonial-card scroll-reveal">
+                <div class="testimonial-stars">
+                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                        class="fas fa-star"></i><i class="fas fa-star"></i>
+                </div>
+                <div class="testimonial-quote-icon">❝</div>
+                <p class="testimonial-text">The ancient wisdom courses bridged the gap between traditional teachings and
+                    modern application. Truly a life-changing experience that I'd recommend to everyone!</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar">D</div>
+                    <div class="author-info">
+                        <h4>David Ross</h4>
+                        <p>Software Engineer</p>
+                    </div>
+                </div>
             </div>
+
+            <!-- Card 3 -->
+            <div class="testimonial-card scroll-reveal">
+                <div class="testimonial-stars">
+                    <i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i
+                        class="fas fa-star"></i><i class="fas fa-star"></i>
+                </div>
+                <div class="testimonial-quote-icon">❝</div>
+                <p class="testimonial-text">The supportive community and expert guidance made my spiritual journey truly
+                    rewarding. I'm grateful for this transformative experience at Awareness Academy.</p>
+                <div class="testimonial-author">
+                    <div class="testimonial-avatar">A</div>
+                    <div class="author-info">
+                        <h4>Amara Singh</h4>
+                        <p>Artist</p>
+                    </div>
+                </div>
+            </div>
+
         </div>
     </section>
 
@@ -2796,46 +3393,45 @@
         window.addEventListener("scroll", checkStatsInView);
         window.addEventListener("load", checkStatsInView);
 
-        // Testimonials Carousel
-        let currentSlide = 0;
-        const slides = document.querySelectorAll(".testimonial-slide");
-        const dots = document.querySelectorAll(".dot");
-        const track = document.getElementById("testimonialsTrack");
-
-        function goToSlide(index) {
-            currentSlide = index;
-            track.style.transform = `translateX(-${currentSlide * 100}%)`;
-            dots.forEach((dot, i) => {
-                dot.classList.toggle("active", i === currentSlide);
-            });
-        }
-
-        function nextSlide() {
-            currentSlide = (currentSlide + 1) % slides.length;
-            goToSlide(currentSlide);
-        }
-
-        // Auto-advance carousel
-        setInterval(nextSlide, 5000);
 
         // Particle creation removed - container doesn't exist
 
-        // === BANNER CAROUSEL LOADER ===
+        // === FADING BANNER SLIDESHOW ===
+        let bannerInterval = null;
+        let currentBannerIndex = 0;
+        let bannerItems = [];
+        let bannerPaused = false;
+
+        function showBanner(index) {
+            bannerItems.forEach((item, i) => {
+                item.classList.toggle('active', i === index);
+            });
+        }
+
+        function startBannerSlideshow() {
+            if (bannerItems.length === 0) return;
+            bannerInterval = setInterval(() => {
+                currentBannerIndex = (currentBannerIndex + 1) % bannerItems.length;
+                showBanner(currentBannerIndex);
+            }, 5000);
+        }
+
+        function pauseBannerSlideshow() {
+            if (bannerInterval) {
+                clearInterval(bannerInterval);
+                bannerInterval = null;
+            }
+        }
+
         async function loadBanners() {
-            const section = document.getElementById(
-                "bannerCarouselSection",
-            );
-            const track = document.getElementById("bannerCarouselTrack");
+            const section = document.getElementById('bannerCarouselSection');
+            const track = document.getElementById('bannerCarouselTrack');
 
             try {
-                // Use configured base and avoid double "/api/api" when CONFIG.API_BASE_URL already contains `/api`.
-                const response = await fetch(
-                    `${CONFIG.API_BASE_URL}/banners`,
-                );
+                const response = await fetch(`${CONFIG.API_BASE_URL}/banners`);
 
                 if (!response.ok) {
-                    console.log("No banners available or API error");
-                    section.style.display = "none";
+                    section.style.display = 'none';
                     return;
                 }
 
@@ -2847,124 +3443,141 @@
                         : [];
 
                 if (!banners || banners.length === 0) {
-                    section.style.display = "none";
+                    section.style.display = 'none';
                     return;
                 }
 
-                // Generate banner HTML
-                const bannersHTML = banners
-                    .map((banner) => {
-                        let imageUrl = banner.imageUrl;
-                        if (imageUrl && !imageUrl.startsWith("http")) {
-                            // Normalize slashes
-                            let relativePath = imageUrl.replace(/\\/g, "/");
+                // Build banner items
+                track.innerHTML = banners.map((banner) => {
+                    let imageUrl = banner.imageUrl;
+                    if (imageUrl && !imageUrl.startsWith('http')) {
+                        let relativePath = imageUrl.replace(/\\/g, '/');
+                        if (relativePath.startsWith('backend/')) relativePath = relativePath.substring(8);
+                        else if (relativePath.startsWith('/backend/')) relativePath = relativePath.substring(9);
+                        if (relativePath.startsWith('/')) relativePath = relativePath.substring(1);
+                        const apiBase = CONFIG.API_BASE_URL.endsWith('/api')
+                            ? CONFIG.API_BASE_URL.slice(0, -4)
+                            : CONFIG.API_BASE_URL;
+                        imageUrl = `${apiBase}/${relativePath}`;
+                    }
+                    return `<div class="banner-item"><img src="${imageUrl}" alt="${banner.title || 'Banner'}" loading="lazy"></div>`;
+                }).join('');
 
-                            // Remove 'backend/' prefix if present
-                            if (relativePath.startsWith("backend/")) {
-                                relativePath = relativePath.substring(8);
-                            } else if (
-                                relativePath.startsWith("/backend/")
-                            ) {
-                                relativePath = relativePath.substring(9);
-                            }
+                // Collect items, show first
+                bannerItems = Array.from(track.querySelectorAll('.banner-item'));
+                currentBannerIndex = 0;
+                showBanner(0);
 
-                            // Ensure no leading slash
-                            if (relativePath.startsWith("/"))
-                                relativePath = relativePath.substring(1);
+                // Show section and start
+                section.style.display = 'block';
+                startBannerSlideshow();
 
-                            const apiBase = CONFIG.API_BASE_URL.endsWith(
-                                "/api",
-                            )
-                                ? CONFIG.API_BASE_URL.slice(0, -4)
-                                : CONFIG.API_BASE_URL;
+                // Wire up pause/resume interaction
+                const container = document.getElementById('bannerCarouselContainer');
 
-                            imageUrl = `${apiBase}/${relativePath}`;
-                        }
+                // Desktop: pause on hover
+                container.addEventListener('mouseenter', () => {
+                    pauseBannerSlideshow();
+                });
+                container.addEventListener('mouseleave', () => {
+                    if (!bannerPaused) startBannerSlideshow();
+                });
 
-                        return `
-                    <div class="banner-item">
-                        <img src="${imageUrl}" alt="${banner.title || "Banner"}" loading="lazy">
-                    </div>
-                `;
-                    })
-                    .join("");
+                // Mobile: pause while finger is down, resume on lift
+                container.addEventListener('touchstart', () => {
+                    pauseBannerSlideshow();
+                }, { passive: true });
+                container.addEventListener('touchend', () => {
+                    if (!bannerPaused) startBannerSlideshow();
+                }, { passive: true });
 
-                // Triple the banners for truly seamless infinite loop
-                // This ensures smooth scrolling with no visible jump when animation restarts
-                track.innerHTML = bannersHTML + bannersHTML + bannersHTML;
-
-                // Calculate animation duration based on number of banners (5 seconds per banner)
-                const duration = Math.max(1, banners.length) * 5;
-
-                // Force reflow to ensure animation starts fresh
-                track.style.animation = "none";
-                track.offsetHeight; // Trigger reflow
-                track.style.animation = `scroll-banners ${duration}s linear infinite`;
-
-                // Show the section
-                section.style.display = "block";
-
-                // Add pause/play functionality
-                initBannerPauseControls();
             } catch (error) {
-                console.error("Error loading banners:", error);
-                section.style.display = "none";
+                console.error('Error loading banners:', error);
+                section.style.display = 'none';
             }
-        }
-
-        // Banner pause/play controls
-        function initBannerPauseControls() {
-            const container = document.getElementById(
-                "bannerCarouselContainer",
-            );
-            const track = document.getElementById("bannerCarouselTrack");
-            const indicator = document.getElementById(
-                "bannerPlayPauseIndicator",
-            );
-            const icon = indicator?.querySelector("i");
-
-            let isPaused = false;
-
-            if (!container || !track) return;
-
-            // Click to toggle pause/play
-            container.addEventListener("click", (e) => {
-                isPaused = !isPaused;
-
-                if (isPaused) {
-                    track.classList.add("paused");
-                    if (icon) icon.className = "fas fa-play";
-                } else {
-                    track.classList.remove("paused");
-                    if (icon) icon.className = "fas fa-pause";
-                }
-
-                // Show indicator briefly
-                if (indicator) {
-                    indicator.style.opacity = "1";
-                    setTimeout(() => {
-                        indicator.style.opacity = "0";
-                    }, 600);
-                }
-            });
-
-            // Show indicator on hover (without clicking)
-            container.addEventListener("mouseenter", () => {
-                if (indicator && !isPaused) {
-                    icon.className = "fas fa-pause";
-                    indicator.style.opacity = "0.8";
-                }
-            });
-
-            container.addEventListener("mouseleave", () => {
-                if (indicator) {
-                    indicator.style.opacity = "0";
-                }
-            });
         }
 
         // Load banners on page load
         loadBanners();
+    </script>
+
+    <script>
+        // ===== SCROLL PROGRESS BAR =====
+        (function () {
+            const bar = document.getElementById('scroll-progress-bar');
+            const btt = document.getElementById('back-to-top');
+            window.addEventListener('scroll', () => {
+                const scrollTop = window.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+                if (bar) bar.style.width = pct + '%';
+                if (btt) btt.classList.toggle('visible', scrollTop > 400);
+            }, { passive: true });
+        })();
+
+        // ===== RIPPLE EFFECT on all cards =====
+        document.addEventListener('click', function (e) {
+            const card = e.target.closest('.feature-card, .course-preview-card, .testimonial-card, .stat-box');
+            if (!card) return;
+            card.classList.add('ripple-host');
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple-wave';
+            const rect = card.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size / 2}px;top:${e.clientY - rect.top - size / 2}px`;
+            card.appendChild(ripple);
+            ripple.addEventListener('animationend', () => ripple.remove());
+        });
+
+        // ===== 3D TILT on hover for feature & course cards =====
+        (function () {
+            const cards = document.querySelectorAll('.feature-card, .course-preview-card');
+            cards.forEach(card => {
+                card.classList.add('tilt-card');
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const cx = rect.width / 2;
+                    const cy = rect.height / 2;
+                    const rotX = ((y - cy) / cy) * -7;
+                    const rotY = ((x - cx) / cx) * 7;
+                    card.style.transform = `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateY(-8px)`;
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
+                    card.style.transition = 'transform 0.5s ease';
+                });
+                card.addEventListener('mouseenter', () => {
+                    card.style.transition = 'transform 0.1s ease';
+                });
+            });
+        })();
+
+        // ===== MOUSE PARALLAX for bg floating elements =====
+        (function () {
+            const orbs = document.querySelectorAll('.bg-orb');
+            window.addEventListener('mousemove', (e) => {
+                const mx = (e.clientX / window.innerWidth - 0.5);
+                const my = (e.clientY / window.innerHeight - 0.5);
+                orbs.forEach((orb, i) => {
+                    const depth = (i % 3 + 1) * 12;
+                    const ox = mx * depth;
+                    const oy = my * depth;
+                    orb.style.transform = `translate(${ox}px, ${oy}px)`;
+                });
+            }, { passive: true });
+        })();
+
+        // ===== TESTIMONIAL CARD hover glow =====
+        document.querySelectorAll('.testimonial-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.boxShadow = '0 20px 60px rgba(255,153,51,0.18), 0 0 0 1px rgba(255,153,51,0.15)';
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.boxShadow = '';
+            });
+        });
     </script>
     <!-- GSAP & Plugins -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>

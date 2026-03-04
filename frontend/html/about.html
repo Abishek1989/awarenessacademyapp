@@ -25,7 +25,7 @@
         content="Discover our journey since 2014. Meet founder Abhishek Rajan and learn about our mission to transform lives through spiritual wisdom.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://awarenessacademy.in/about.html">
-    <meta property="og:image" content="https://awarenessacademy.in/assets/og-about.jpg">
+    <meta property="og:image" content="https://awarenessacademy.in/assets/founder.png">
     <meta property="og:site_name" content="Awareness Academy">
     <meta property="og:locale" content="en_IN">
 
@@ -34,7 +34,7 @@
     <meta name="twitter:title" content="About Awareness Academy | Est. 2014">
     <meta name="twitter:description"
         content="Founded by Abhishek Rajan in 2014. 10+ years transforming lives through meditation & spiritual coaching in Tamil Nadu.">
-    <meta name="twitter:image" content="https://awarenessacademy.in/assets/og-about.jpg">
+    <meta name="twitter:image" content="https://awarenessacademy.in/assets/founder.png">
 
     <!-- Schema.org Structured Data -->
     <script type="application/ld+json">
@@ -2574,10 +2574,293 @@
                 font-size: 1.5rem;
             }
         }
+
+        /* --- Animations --- */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ----  Background floating element keyframes ---- */
+        @keyframes floatOrb {
+
+            0%,
+            100% {
+                transform: translateY(0px) translateX(0px) scale(1);
+            }
+
+            25% {
+                transform: translateY(-35px) translateX(20px) scale(1.05);
+            }
+
+            50% {
+                transform: translateY(-60px) translateX(-10px) scale(0.95);
+            }
+
+            75% {
+                transform: translateY(-25px) translateX(-30px) scale(1.03);
+            }
+        }
+
+        @keyframes floatDiamond {
+
+            0%,
+            100% {
+                transform: rotate(45deg) translateY(0px);
+                opacity: 0.5;
+            }
+
+            50% {
+                transform: rotate(225deg) translateY(-40px);
+                opacity: 0.8;
+            }
+        }
+
+        @keyframes twinkle {
+
+            0%,
+            100% {
+                opacity: 0.15;
+                transform: scale(1);
+            }
+
+            50% {
+                opacity: 0.9;
+                transform: scale(1.5);
+            }
+        }
+
+        @keyframes driftX {
+
+            0%,
+            100% {
+                transform: translateX(0) rotate(0deg);
+            }
+
+            50% {
+                transform: translateX(60px) rotate(180deg);
+            }
+        }
+
+        @keyframes pulseRing {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.6;
+            }
+
+            50% {
+                transform: scale(1.4);
+                opacity: 0.15;
+            }
+
+            100% {
+                transform: scale(0.8);
+                opacity: 0.6;
+            }
+        }
+
+        /* --- Floating BG Element Base --- */
+        .bg-float-wrap {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .bg-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(40px);
+            animation: floatOrb linear infinite;
+            will-change: transform;
+        }
+
+        .bg-diamond {
+            position: absolute;
+            border-radius: 4px;
+            animation: floatDiamond ease-in-out infinite;
+            will-change: transform, opacity;
+        }
+
+        .bg-spark {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            animation: twinkle ease-in-out infinite;
+            will-change: transform, opacity;
+        }
+
+        .bg-ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid;
+            animation: pulseRing ease-in-out infinite;
+            will-change: transform, opacity;
+        }
+
+        .bg-drift {
+            position: absolute;
+            border-radius: 50px;
+            animation: driftX ease-in-out infinite;
+            will-change: transform;
+        }
+
+        /* === SCROLL PROGRESS BAR === */
+        #scroll-progress-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 0%;
+            height: 3px;
+            background: linear-gradient(90deg, #FF6B6B, #FF9933, #FFD700, #34d399, #60a5fa, #a78bfa);
+            background-size: 400% 100%;
+            animation: progressGlow 4s linear infinite;
+            z-index: 9999;
+            transition: width 0.1s linear;
+            box-shadow: 0 0 8px rgba(255, 153, 51, 0.6);
+        }
+
+        @keyframes progressGlow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 400% 50%;
+            }
+        }
+
+        /* === BACK TO TOP BUTTON === */
+        #back-to-top {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 52px;
+            height: 52px;
+            background: linear-gradient(135deg, #FF9933, #FFD700);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            z-index: 9998;
+            opacity: 0;
+            transform: translateY(20px) scale(0.8);
+            transition: opacity 0.4s ease, transform 0.4s ease;
+            box-shadow: 0 6px 25px rgba(255, 153, 51, 0.4);
+            border: none;
+        }
+
+        #back-to-top.visible {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        #back-to-top:hover {
+            box-shadow: 0 8px 35px rgba(255, 153, 51, 0.7);
+            transform: translateY(-4px) scale(1.08);
+        }
+
+        #back-to-top:active {
+            transform: scale(0.94);
+        }
+
+        @keyframes bttBounce {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+
+        #back-to-top.visible {
+            animation: bttBounce 2.5s ease-in-out infinite;
+            animation-delay: 1s;
+        }
+
+        /* === RIPPLE EFFECT === */
+        .ripple-host {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ripple-wave {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 153, 51, 0.25);
+            transform: scale(0);
+            animation: ripple-anim 0.7s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-anim {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* === TILT card === */
+        .tilt-card {
+            transform-style: preserve-3d;
+            transform: perspective(1000px);
+            transition: box-shadow 0.3s ease;
+        }
+
+        .tilt-card:hover {
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.12) !important;
+        }
+
+        /* === Glowing section header h2 === */
+        .section-header h2 {
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-header h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            border-radius: 3px;
+            background: linear-gradient(90deg, var(--color-saffron), var(--color-golden));
+        }
+
+        @media (max-width: 600px) {
+            #back-to-top {
+                bottom: 20px;
+                right: 16px;
+                width: 44px;
+                height: 44px;
+                font-size: 1rem;
+            }
+        }
     </style>
 </head>
 
 <body>
+    <!-- Scroll Progress Bar -->
+    <div id="scroll-progress-bar"></div>
+    <!-- Scroll Progress Bar -->
+    <div id="scroll-progress-bar"></div>
     <!-- Navigation -->
     <nav class="nav" id="mainNav">
         <a href="index.html" class="logo">
@@ -2615,6 +2898,7 @@
             <a href="index.html"><i class="fas fa-home"></i> Home</a>
             <a href="about.html" class="active"><i class="fas fa-info-circle"></i> About</a>
             <a href="courses.html"><i class="fas fa-graduation-cap"></i> Courses</a>
+            <a href="membership.html"><i class="fas fa-id-card"></i> Membership</a>
             <a href="gallery.html"><i class="fas fa-images"></i> Gallery</a>
             <a href="faq.html"><i class="fas fa-question-circle"></i> FAQ</a>
             <a href="contact.html"><i class="fas fa-envelope"></i> Contact</a>
@@ -2729,6 +3013,20 @@
 
     <!-- Philosophy Section -->
     <section class="philosophy-section">
+        <div class="bg-float-wrap">
+            <div class="bg-orb"
+                style="width:300px; height:300px; background:rgba(255,153,51,0.1); left:-100px; top:20%; animation-duration:15s;">
+            </div>
+            <div class="bg-orb"
+                style="width:250px; height:250px; background:rgba(255,215,0,0.08); right:-50px; bottom:10%; animation-duration:18s; animation-delay:-2s;">
+            </div>
+            <div class="bg-diamond"
+                style="width:30px; height:30px; background:rgba(255,153,51,0.2); left:15%; top:40%; animation-duration:12s;">
+            </div>
+            <div class="bg-ring"
+                style="width:100px; height:100px; border-color:rgba(255,153,51,0.3); right:20%; top:15%; animation-duration:8s;">
+            </div>
+        </div>
         <div class="section-header">
             <span class="section-tag">Our Philosophy</span>
             <h2 class="section-title">The Five-Fold Harmony</h2>
@@ -3284,6 +3582,80 @@
             document.body.style.overflow = ''; // Restore background scrolling
         }
     </script>
+    <script>
+        // ===== SCROLL PROGRESS BAR & BACK TO TOP =====
+        (function () {
+            const bar = document.getElementById('scroll-progress-bar');
+            const btt = document.getElementById('back-to-top');
+            window.addEventListener('scroll', () => {
+                const scrollTop = window.scrollY;
+                const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+                const pct = docHeight > 0 ? (scrollTop / docHeight) * 100 : 0;
+                if (bar) bar.style.width = pct + '%';
+                if (btt) btt.classList.toggle('visible', scrollTop > 400);
+            }, { passive: true });
+            if (btt) {
+                btt.addEventListener('click', () => {
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+        })();
+
+        // ===== RIPPLE EFFECT =====
+        document.addEventListener('click', function (e) {
+            const card = e.target.closest('.tilt-card, .ripple-host, .milestone-card, .team-card, .blog-card, .btn-primary, .hero-btn');
+            if (!card) return;
+            card.classList.add('ripple-host');
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple-wave';
+            const rect = card.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.cssText = `width:${size}px;height:${size}px;left:${e.clientX - rect.left - size / 2}px;top:${e.clientY - rect.top - size / 2}px`;
+            card.appendChild(ripple);
+            ripple.addEventListener('animationend', () => ripple.remove());
+        });
+
+        // ===== 3D TILT EFFECT =====
+        (function () {
+            const cards = document.querySelectorAll('.tilt-card, .milestone-card, .team-card, .blog-card');
+            cards.forEach(card => {
+                card.style.transition = 'transform 0.1s ease';
+                card.addEventListener('mousemove', (e) => {
+                    const rect = card.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const y = e.clientY - rect.top;
+                    const cx = rect.width / 2;
+                    const cy = rect.height / 2;
+                    const rotX = ((y - cy) / cy) * -7;
+                    const rotY = ((x - cx) / cx) * 7;
+                    card.style.transform = `perspective(1000px) rotateX(${rotX}deg) rotateY(${rotY}deg) translateY(-8px)`;
+                });
+                card.addEventListener('mouseleave', () => {
+                    card.style.transform = 'perspective(1000px) rotateX(0) rotateY(0) translateY(0)';
+                    card.style.transition = 'transform 0.5s ease';
+                });
+            });
+        })();
+
+        // ===== MOUSE PARALLAX for bg floating elements =====
+        (function () {
+            const orbs = document.querySelectorAll('.bg-orb');
+            window.addEventListener('mousemove', (e) => {
+                const mx = (e.clientX / window.innerWidth - 0.5);
+                const my = (e.clientY / window.innerHeight - 0.5);
+                orbs.forEach((orb, i) => {
+                    const depth = (i % 3 + 1) * 12;
+                    const ox = mx * depth;
+                    const oy = my * depth;
+                    orb.style.transform = `translate(${ox}px, ${oy}px)`;
+                });
+            }, { passive: true });
+        })();
+    </script>
+    <!-- Back to Top Button -->
+    <button id="back-to-top" title="Go to top">
+        <i class="fas fa-arrow-up"></i>
+    </button>
 </body>
 
 </html>
