@@ -55,39 +55,8 @@ function selectPayment(el, method) {
     selectedMethod = method;
 }
 
-async function applyCoupon() {
-    const code = document.getElementById('couponCode').value.trim();
-    if (!code) return;
-
-    try {
-        const res = await fetch(`${Auth.apiBase}/payments/validate-coupon`, {
-            method: 'POST',
-            headers: Auth.getHeaders(),
-            body: JSON.stringify({ code })
-        });
-        const data = await res.json();
-
-        if (res.ok) {
-            discountPercent = data.discountPercent;
-            appliedCoupon = code.toUpperCase();
-            alert('Grace code applied! AWARNESS ACADEMY welcomes you.');
-            updateTotals();
-        } else {
-            alert(data.message);
-        }
-    } catch (err) {
-        alert('Connection to the treasury failed.');
-    }
-}
-
 function updateTotals() {
-    const discount = (basePrice * discountPercent) / 100;
-    const final = basePrice - discount;
-
-    if (discount > 0) {
-        document.getElementById('discountRow').style.display = 'flex';
-        document.getElementById('discountAmt').textContent = `-$${discount.toFixed(2)}`;
-    }
+    const final = basePrice;
 
     document.getElementById('finalPrice').textContent = `$${final.toFixed(2)}`;
 }
@@ -103,8 +72,7 @@ async function processCheckout() {
             headers: Auth.getHeaders(),
             body: JSON.stringify({
                 courseID: courseID,
-                paymentMethod: selectedMethod,
-                couponCode: appliedCoupon
+                paymentMethod: selectedMethod
             })
         });
 

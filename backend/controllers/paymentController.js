@@ -9,7 +9,7 @@ const crypto = require('crypto');
  */
 exports.initializePayment = async (req, res) => {
     try {
-        const { courseId, couponCode } = req.body;
+        const { courseId } = req.body;
         const studentId = req.user.id;
 
         // Validate course exists
@@ -33,40 +33,19 @@ exports.initializePayment = async (req, res) => {
         const user = await User.findById(studentId);
         const profileCompletion = calculateProfileCompletion(user);
         if (profileCompletion < 100) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: 'Please complete your profile before enrolling',
-                profileCompletion 
+                profileCompletion
             });
         }
 
-        // Apply coupon if provided
+        // Calculate final amount
         let finalAmount = course.price;
-        let discountAmount = 0;
-        let appliedCoupon = null;
-
-        if (couponCode) {
-            try {
-                const { Coupon } = require('../models/index');
-                const coupon = await Coupon.findOne({ 
-                    code: couponCode.toUpperCase(), 
-                    active: true 
-                });
-
-                if (coupon && (!coupon.expiryDate || new Date() <= coupon.expiryDate)) {
-                    discountAmount = Math.round(course.price * (coupon.discountPercent / 100));
-                    finalAmount = course.price - discountAmount;
-                    appliedCoupon = coupon.code;
-                }
-            } catch (couponError) {
-                console.error('Coupon validation error:', couponError);
-                // Continue without coupon
-            }
-        }
 
         // Validate amount (minimum ₹1.00)
         if (finalAmount < 1) {
-            return res.status(400).json({ 
-                message: 'Invalid payment amount. Minimum amount is ₹1.00' 
+            return res.status(400).json({
+                message: 'Invalid payment amount. Minimum amount is ₹1.00'
             });
         }
 
@@ -75,7 +54,7 @@ exports.initializePayment = async (req, res) => {
 
         // Generate receipt ID
         const receiptId = razorpayService.generateReceiptId(studentId, courseId);
-        
+
         // Create Razorpay order
         const orderResult = await razorpayService.createOrder(
             finalAmount,
@@ -84,9 +63,9 @@ exports.initializePayment = async (req, res) => {
         );
 
         if (!orderResult.success) {
-            return res.status(500).json({ 
+            return res.status(500).json({
                 message: 'Failed to create payment order',
-                error: orderResult.error 
+                error: orderResult.error
             });
         }
 
@@ -100,9 +79,6 @@ exports.initializePayment = async (req, res) => {
             studentID: studentId,
             courseID: courseId,
             amount: finalAmount,
-            originalAmount: course.price,
-            discountAmount: discountAmount,
-            couponCode: appliedCoupon,
             currency: 'INR',
             paymentMethod: 'Card', // Will be updated after payment
             status: 'initiated',
@@ -126,11 +102,6 @@ exports.initializePayment = async (req, res) => {
                 price: course.price,
                 finalPrice: finalAmount
             },
-            coupon: appliedCoupon ? {
-                code: appliedCoupon,
-                discountAmount: discountAmount,
-                originalAmount: course.price
-            } : null,
             user: {
                 name: user.name,
                 email: user.email,
@@ -150,11 +121,11 @@ exports.initializePayment = async (req, res) => {
  */
 exports.verifyPayment = async (req, res) => {
     try {
-        const { 
-            razorpay_order_id, 
-            razorpay_payment_id, 
-            razorpay_signature, 
-            transaction_id 
+        const {
+            razorpay_order_id,
+            razorpay_payment_id,
+            razorpay_signature,
+            transaction_id
         } = req.body;
 
         // Find payment record
@@ -179,25 +150,25 @@ exports.verifyPayment = async (req, res) => {
             payment.failureReason = verificationResult.error || 'Signature verification failed';
             await payment.save();
 
-            return res.status(400).json({ 
+            return res.status(400).json({
                 message: 'Payment verification failed',
-                verified: false 
+                verified: false
             });
         }
 
         // Get payment details from Razorpay
         const paymentDetails = await razorpayService.getPaymentDetails(razorpay_payment_id);
-        
+
         if (paymentDetails.success) {
             const razorpayPayment = paymentDetails.payment;
-            
+
             // Update payment record with success details
             payment.razorpayPaymentId = razorpay_payment_id;
             payment.razorpaySignature = razorpay_signature;
             payment.status = 'completed';
             payment.completedAt = new Date();
             payment.paymentMethod = getPaymentMethodFromRazorpay(razorpayPayment.method);
-            
+
             await payment.save();
 
             // Create enrollment
@@ -257,9 +228,9 @@ exports.verifyPayment = async (req, res) => {
             payment.failureReason = 'Failed to fetch payment details from Razorpay';
             await payment.save();
 
-            res.status(500).json({ 
+            res.status(500).json({
                 message: 'Failed to verify payment details',
-                verified: false 
+                verified: false
             });
         }
 
@@ -304,9 +275,9 @@ exports.handlePaymentFailure = async (req, res) => {
             }
         }
 
-        res.status(200).json({ 
+        res.status(200).json({
             message: 'Payment failure recorded',
-            success: false 
+            success: false
         });
 
     } catch (err) {
@@ -340,14 +311,14 @@ exports.getMyPayments = async (req, res) => {
 exports.getPaymentDetails = async (req, res) => {
     try {
         const { transactionId } = req.params;
-        
-        const payment = await Payment.findOne({ 
+
+        const payment = await Payment.findOne({
             transactionID: transactionId,
-            studentID: req.user.id 
+            studentID: req.user.id
         })
-        .populate('courseID', 'title thumbnail category')
-        .populate('membershipID', 'packageName originalPrice offeredPrice')
-        .populate('studentID', 'name email studentID');
+            .populate('courseID', 'title thumbnail category')
+            .populate('membershipID', 'packageName originalPrice offeredPrice')
+            .populate('studentID', 'name email studentID');
 
         if (!payment) {
             return res.status(404).json({ message: 'Payment not found' });
@@ -362,33 +333,9 @@ exports.getPaymentDetails = async (req, res) => {
 
 // Legacy method for backwards compatibility
 exports.processPayment = async (req, res) => {
-    res.status(400).json({ 
-        message: 'This endpoint is deprecated. Please use /initialize and /verify endpoints.' 
+    res.status(400).json({
+        message: 'This endpoint is deprecated. Please use /initialize and /verify endpoints.'
     });
-};
-
-// Legacy method for backwards compatibility
-exports.validateCoupon = async (req, res) => {
-    try {
-        const { code } = req.body;
-        const { Coupon } = require('../models/index');
-        const coupon = await Coupon.findOne({ code: code.toUpperCase(), active: true });
-
-        if (!coupon) {
-            return res.status(404).json({ message: 'Invalid or expired coupon code.' });
-        }
-
-        if (coupon.expiryDate && new Date() > coupon.expiryDate) {
-            return res.status(400).json({ message: 'This coupon has expired.' });
-        }
-
-        res.status(200).json({
-            message: 'Coupon applied successfully!',
-            discountPercent: coupon.discountPercent
-        });
-    } catch (err) {
-        res.status(500).json({ message: 'Coupon validation failed' });
-    }
 };
 
 /**
@@ -407,10 +354,10 @@ function calculateProfileCompletion(user) {
 
     let completedFields = 0;
     requiredFields.forEach(field => {
-        const value = field.includes('.') ? 
-            field.split('.').reduce((obj, key) => obj?.[key], user) : 
+        const value = field.includes('.') ?
+            field.split('.').reduce((obj, key) => obj?.[key], user) :
             user[field];
-        
+
         if (value && value.toString().trim() !== '') {
             completedFields++;
         }
@@ -427,7 +374,7 @@ function getPaymentMethodFromRazorpay(method) {
         'upi': 'UPI',
         'wallet': 'Wallet'
     };
-    
+
     return methodMap[method] || 'Card';
 }
 
@@ -441,9 +388,9 @@ exports.createOrder = async (req, res) => {
         const studentId = req.user.id;
 
         if (!amount || !packageName || !packageType || !packageId) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: 'Missing required fields' 
+                message: 'Missing required fields'
             });
         }
 
@@ -479,9 +426,9 @@ exports.createOrder = async (req, res) => {
 
         // Validate amount (minimum ₹1.00)
         if (amount < 1) {
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
-                message: 'Invalid payment amount. Minimum amount is ₹1.00' 
+                message: 'Invalid payment amount. Minimum amount is ₹1.00'
             });
         }
 
@@ -490,7 +437,7 @@ exports.createOrder = async (req, res) => {
 
         // Generate receipt ID
         const receiptId = razorpayService.generateReceiptId(studentId, packageId);
-        
+
         // Create Razorpay order
         const orderResult = await razorpayService.createOrder(
             finalAmount,
@@ -499,10 +446,10 @@ exports.createOrder = async (req, res) => {
         );
 
         if (!orderResult.success) {
-            return res.status(500).json({ 
+            return res.status(500).json({
                 success: false,
                 message: 'Failed to create payment order',
-                error: orderResult.error 
+                error: orderResult.error
             });
         }
 
@@ -547,10 +494,10 @@ exports.createOrder = async (req, res) => {
 
     } catch (err) {
         console.error('Create order error:', err);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: 'Failed to create order', 
-            error: err.message 
+            message: 'Failed to create order',
+            error: err.message
         });
     }
 };
@@ -561,9 +508,9 @@ exports.createOrder = async (req, res) => {
  */
 exports.verifyPaymentGeneric = async (req, res) => {
     try {
-        const { 
-            razorpay_order_id, 
-            razorpay_payment_id, 
+        const {
+            razorpay_order_id,
+            razorpay_payment_id,
             razorpay_signature,
             packageType,
             packageId
@@ -599,19 +546,19 @@ exports.verifyPaymentGeneric = async (req, res) => {
             payment.failureReason = verificationResult.error || 'Signature verification failed';
             await payment.save();
 
-            return res.status(400).json({ 
+            return res.status(400).json({
                 success: false,
                 message: 'Payment verification failed',
-                verified: false 
+                verified: false
             });
         }
 
         // Get payment details from Razorpay
         const paymentDetails = await razorpayService.getPaymentDetails(razorpay_payment_id);
-        
+
         if (paymentDetails.success) {
             const razorpayPayment = paymentDetails.payment;
-            
+
             // Update payment record
             payment.razorpayPaymentId = razorpay_payment_id;
             payment.razorpaySignature = razorpay_signature;
@@ -691,10 +638,10 @@ exports.verifyPaymentGeneric = async (req, res) => {
 
     } catch (err) {
         console.error('Payment verification error:', err);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
-            message: 'Payment verification failed', 
-            error: err.message 
+            message: 'Payment verification failed',
+            error: err.message
         });
     }
 };

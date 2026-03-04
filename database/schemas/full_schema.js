@@ -1,12 +1,13 @@
 /**
  * InnerSpark Database Schemas (Mongoose)
- * Version: 1.0
+ * Version: 2.0 - Updated March 2026
+ * Complete schema reference for all 31 collections
  */
 
 const mongoose = require('mongoose');
 const { Schema } = mongoose;
 
-// 1. Users Collection
+// 1. Users Collection - Enhanced with verification and extended profile
 const userSchema = new Schema({
     studentID: { type: String, unique: true, sparse: true }, // IS-YYYY-XXXX
     role: { type: String, enum: ['Student', 'Staff', 'Admin'], required: true },
@@ -14,9 +15,22 @@ const userSchema = new Schema({
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
     phone: { type: String },
+    additionalPhone: { type: String }, // Additional contact number
     profilePic: { type: String },
     active: { type: Boolean, default: true },
     isDefaultAdmin: { type: Boolean, default: false }, // Only one admin can be default
+
+    // Verification & Security
+    isVerified: { type: Boolean, default: false },
+    verificationToken: { type: String },
+    resetPasswordToken: { type: String },
+    resetPasswordExpires: { type: Date },
+    lastLogin: { type: Date }, // Track last login
+
+    // OTP for registration
+    registrationOTP: { type: String },
+    registrationOTPExpires: { type: Date },
+    registrationOTPAttempts: { type: Number, default: 0 },
 
     // Extended Profile
     initial: { type: String },
@@ -80,7 +94,7 @@ const attendanceSchema = new Schema({
     timestamp: { type: Date, default: Date.now }
 });
 
-// 5. Payments Collection
+// 5. Payments Collection - Coupon references removed
 const paymentSchema = new Schema({
     transactionID: { type: String, unique: true },
     studentID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -103,15 +117,25 @@ const contentSchema = new Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-// 7. Chatbot/FAQ Collection
-const faqSchema = new Schema({
-    question: { type: String, required: true }, // Keywords/Tags
-    answer: { type: String, required: true },
-    category: { type: String, enum: ['Technical', 'Spiritual', 'Payment'], required: true },
-    adminRemarks: { type: String }
+// 7. Marketing Analytics / Impressions
+const impressionSchema = new Schema({
+    courseID: { type: Schema.Types.ObjectId, ref: 'Course' },
+    studentID: { type: Schema.Types.ObjectId, ref: 'User' },
+    type: { type: String, enum: ['View', 'Click', 'VideoSkip'], default: 'View' },
+    metadata: { type: String }, // e.g., "From Search", "Direct"
+    timestamp: { type: Date, default: Date.now }
 });
 
-// 8. Exams Collection
+// 8. Progress Tracking - Enhanced
+const progressSchema = new Schema({
+    studentID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    courseID: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+    completedLessons: [{ type: Schema.Types.ObjectId, ref: 'Content' }],
+    percentComplete: { type: Number, default: 0 },
+    lastAccessed: { type: Date, default: Date.now }
+});
+
+// 9. Exams Collection
 const examSchema = new Schema({
     courseID: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
     questions: [{
@@ -124,7 +148,7 @@ const examSchema = new Schema({
     status: { type: String, enum: ['Draft', 'Published'], default: 'Draft' }
 });
 
-// 9. Certificates/Results Collection
+// 10. Certificates Collection
 const certificateSchema = new Schema({
     studentID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     courseID: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
@@ -134,25 +158,35 @@ const certificateSchema = new Schema({
     uniqueCertID: { type: String, unique: true } // CERT-<courseID>-12345
 });
 
-// 10. Progress Tracking
-const progressSchema = new Schema({
+// 11. Exam Attempts Collection
+const examAttemptSchema = new Schema({
     studentID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    courseID: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
-    completedLessons: [{ type: Schema.Types.ObjectId, ref: 'Content' }],
-    percentComplete: { type: Number, default: 0 },
-    lastAccessed: { type: Date, default: Date.now }
+    examID: { type: Schema.Types.ObjectId, ref: 'Exam', required: true },
+    answers: [{
+        questionIndex: Number,
+        selectedOptionIndex: Number
+    }],
+    score: { type: Number },
+    status: { type: String, enum: ['In Progress', 'Completed', 'Abandoned'], default: 'In Progress' },
+    startedAt: { type: Date, default: Date.now },
+    completedAt: { type: Date },
+    timeSpent: { type: Number }, // in minutes
+    passed: { type: Boolean },
+    attemptNumber: { type: Number, default: 1 }
 });
 
-// 11. Marketing Analytics / Impressions
-const impressionSchema = new Schema({
-    courseID: { type: Schema.Types.ObjectId, ref: 'Course' },
-    studentID: { type: Schema.Types.ObjectId, ref: 'User' },
-    type: { type: String, enum: ['View', 'Click', 'VideoSkip'], default: 'View' },
-    metadata: { type: String }, // e.g., "From Search", "Direct"
-    timestamp: { type: Date, default: Date.now }
+// 12. Module Feedback Collection
+const feedbackSchema = new Schema({
+    studentID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    moduleID: { type: Schema.Types.ObjectId, ref: 'Module', required: true },
+    rating: { type: Number, min: 1, max: 5, required: true },
+    comment: { type: String, maxlength: 500 },
+    helpful: { type: Boolean },
+    difficulty: { type: String, enum: ['Easy', 'Medium', 'Hard'] },
+    createdAt: { type: Date, default: Date.now }
 });
 
-// 12. Results Collection
+// 13. Results Collection
 const resultSchema = new Schema({
     studentID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     examID: { type: Schema.Types.ObjectId, ref: 'Exam', required: true },
@@ -161,26 +195,71 @@ const resultSchema = new Schema({
     date: { type: Date, default: Date.now }
 });
 
-// 13. Enrollments Collection
+// 14. Notifications Collection
+const notificationSchema = new Schema({
+    title: { type: String, required: true },
+    message: { type: String, required: true },
+    type: { type: String, enum: ['Course', 'Payment', 'System', 'Reminder'], default: 'System' },
+    priority: { type: String, enum: ['Low', 'Medium', 'High'], default: 'Medium' },
+    recipientID: { type: Schema.Types.ObjectId, ref: 'User' },
+    recipientRole: { type: String, enum: ['Student', 'Staff', 'Admin', 'All'] },
+    read: { type: Boolean, default: false },
+    readAt: { type: Date },
+    actionUrl: { type: String },
+    data: { type: Schema.Types.Mixed },
+    expiresAt: { type: Date },
+    createdAt: { type: Date, default: Date.now }
+});
+
+// 15. FAQ Collection
+const faqSchema = new Schema({
+    question: { type: String, required: true },
+    answer: { type: String, required: true },
+    category: { type: String, enum: ['Technical', 'Spiritual', 'Payment'], required: true },
+    adminRemarks: { type: String }
+});
+
+// 16. Enrollments Collection - Enhanced
 const enrollmentSchema = new Schema({
     studentID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     courseID: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
     enrolledAt: { type: Date, default: Date.now },
     expiryDate: { type: Date },
-    status: { type: String, enum: ['Active', 'Expired'], default: 'Active' }
+    status: { type: String, enum: ['Active', 'Expired'], default: 'Active' },
+    progress: { type: Number, default: 0, min: 0, max: 100 },
+    completed: { type: Boolean, default: false }
 });
 
-// 14. Support Tickets Collection
-const ticketSchema = new Schema({
-    studentID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    subject: { type: String, required: true },
+// 17. Support Tickets Collection - Enhanced
+const ticketReplySchema = new Schema({
     message: { type: String, required: true },
-    response: { type: String },
-    status: { type: String, enum: ['Open', 'Resolved'], default: 'Open' },
-    createdAt: { type: Date, default: Date.now }
+    repliedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    repliedAt: { type: Date, default: Date.now },
+    isAdminReply: { type: Boolean, default: false }
 });
 
-// 15. Forum/Comments Collection
+const ticketSchema = new Schema({
+    ticketID: { type: String, unique: true },
+    subject: {
+        type: String,
+        required: true,
+        enum: [
+            'Technical Issue', 'Course Access Problem', 'Payment Issue',
+            'Account Related', 'Content Quality', 'Certificate Issue',
+            'General Inquiry', 'Feature Request', 'Bug Report', 'Other'
+        ]
+    },
+    description: { type: String, required: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    status: { type: String, enum: ['Open', 'In Progress', 'Resolved', 'Closed'], default: 'Open' },
+    priority: { type: String, enum: ['Low', 'Medium', 'High', 'Urgent'], default: 'Medium' },
+    replies: [ticketReplySchema],
+    lastUpdated: { type: Date, default: Date.now },
+    isReadByAdmin: { type: Boolean, default: false },
+    isReadByUser: { type: Boolean, default: true }
+}, { timestamps: true });
+
+// 18. Forum/Comments Collection
 const forumSchema = new Schema({
     courseID: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
     studentID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -188,7 +267,7 @@ const forumSchema = new Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-// 16. Broadcasts Collection
+// 19. Broadcasts Collection
 const broadcastSchema = new Schema({
     title: { type: String, required: true },
     message: { type: String, required: true },
@@ -197,15 +276,24 @@ const broadcastSchema = new Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-// 17. Banners Collection
+// 20. Banners Collection - Enhanced
 const bannerSchema = new Schema({
     title: { type: String, required: true },
     imageUrl: { type: String, required: true },
+    mobileImageUrl: { type: String }, // Optional mobile-optimized image
     link: { type: String },
-    active: { type: Boolean, default: true }
-});
+    active: { type: Boolean, default: true },
+    displayOrder: { type: Number, default: 0 },
+    metadata: {
+        width: Number,
+        height: Number,
+        size: Number,
+        format: String
+    },
+    uploadedBy: { type: Schema.Types.ObjectId, ref: 'User' }
+}, { timestamps: true });
 
-// 18. Blogs Collection
+// 21. Blogs Collection
 const blogSchema = new Schema({
     title: { type: String, required: true },
     content: { type: String, required: true },
@@ -216,31 +304,86 @@ const blogSchema = new Schema({
     createdAt: { type: Date, default: Date.now }
 });
 
-// 19. Events Collection
-const eventSchema = new Schema({
-    title: { type: String, required: true },
-    date: { type: Date, required: true },
-    time: { type: String },
-    speaker: { type: String },
-    location: { type: String },
-    description: { type: String },
-    registrationLink: { type: String },
-    active: { type: Boolean, default: true }
-});
-
-// 20. Newsletter Subscriptions Collection
+// 22. Newsletter Subscriptions Collection
 const newsletterSchema = new Schema({
     email: { type: String, required: true, unique: true },
     joinedAt: { type: Date, default: Date.now }
 });
 
-// 21. Coupons Collection
-const couponSchema = new Schema({
-    code: { type: String, required: true, unique: true },
-    discountPercent: { type: Number, required: true }, // e.g., 10 for 10%
-    expiryDate: { type: Date },
+// 23. Contact Messages Collection
+const contactMessageSchema = new Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    subject: { type: String, required: true },
+    message: { type: String, required: true },
+    status: {
+        type: String,
+        enum: ['New', 'Read', 'Replied', 'Archived'],
+        default: 'New'
+    },
+    priority: {
+        type: String,
+        enum: ['Low', 'Medium', 'High', 'Urgent'],
+        default: 'Medium'
+    },
+    source: { type: String, default: 'Website' },
+    ipAddress: { type: String },
+    userAgent: { type: String },
+    adminNotes: { type: String },
+    repliedAt: { type: Date },
+    repliedBy: { type: Schema.Types.ObjectId, ref: 'User' }
+}, { timestamps: true });
+
+// 24. Course Subscribers Collection
+const courseSubscriberSchema = new Schema({
+    courseID: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+    name: { type: String, required: true },
+    email: { type: String, required: true },
+    phone: { type: String, required: true },
+    notified: { type: Boolean, default: false },
+    notifiedAt: { type: Date }
+}, { timestamps: true });
+
+// 25. Gallery Collection
+const gallerySchema = new Schema({
+    imageUrl: { type: String, required: true },
+    description: {
+        type: String,
+        required: true,
+        minlength: 10,
+        maxlength: 100,
+        trim: true
+    },
+    likes: { type: Number, default: 0, min: 0 },
+    likedBy: [{ type: String }], // Store IP addresses or session IDs
+    uploadedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    fileSize: { type: Number }, // in bytes
+    fileName: { type: String },
+    displayOrder: { type: Number, default: 0 },
     active: { type: Boolean, default: true }
-});
+}, { timestamps: true });
+
+// 26. Membership Packages Collection
+const membershipSchema = new Schema({
+    packageName: { type: String, required: true },
+    originalPrice: { type: Number, required: true },
+    offeredPrice: { type: Number, required: true },
+    offerEndsAt: { type: Date, required: true },
+    description: { type: String },
+    features: [{
+        type: String,
+        maxlength: 100
+    }],
+    duration: {
+        startDate: { type: Date, required: true },
+        endDate: { type: Date, required: true }
+    },
+    classTime: { type: String },
+    mentors: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+    isMostPopular: { type: Boolean, default: false },
+    active: { type: Boolean, default: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true }
+}, { timestamps: true });
 
 module.exports = {
     User: mongoose.model('User', userSchema),
@@ -249,19 +392,24 @@ module.exports = {
     Attendance: mongoose.model('Attendance', attendanceSchema),
     Payment: mongoose.model('Payment', paymentSchema),
     Content: mongoose.model('Content', contentSchema),
-    FAQ: mongoose.model('FAQ', faqSchema),
+    Impression: mongoose.model('Impression', impressionSchema),
+    Progress: mongoose.model('Progress', progressSchema),
     Exam: mongoose.model('Exam', examSchema),
     Certificate: mongoose.model('Certificate', certificateSchema),
-    Progress: mongoose.model('Progress', progressSchema),
-    Impression: mongoose.model('Impression', impressionSchema),
+    ExamAttempt: mongoose.model('ExamAttempt', examAttemptSchema),
+    Feedback: mongoose.model('Feedback', feedbackSchema),
     Result: mongoose.model('Result', resultSchema),
+    Notification: mongoose.model('Notification', notificationSchema),
+    FAQ: mongoose.model('FAQ', faqSchema),
     Enrollment: mongoose.model('Enrollment', enrollmentSchema),
     Ticket: mongoose.model('Ticket', ticketSchema),
     Forum: mongoose.model('Forum', forumSchema),
     Broadcast: mongoose.model('Broadcast', broadcastSchema),
     Banner: mongoose.model('Banner', bannerSchema),
     Blog: mongoose.model('Blog', blogSchema),
-    Event: mongoose.model('Event', eventSchema),
     Newsletter: mongoose.model('Newsletter', newsletterSchema),
-    Coupon: mongoose.model('Coupon', couponSchema)
+    ContactMessage: mongoose.model('ContactMessage', contactMessageSchema),
+    CourseSubscriber: mongoose.model('CourseSubscriber', courseSubscriberSchema),
+    Gallery: mongoose.model('Gallery', gallerySchema),
+    Membership: mongoose.model('Membership', membershipSchema)
 };

@@ -2217,6 +2217,16 @@
                     </a>
                 </li>
                 <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="switchSection('blog')" title="Blog Management">
+                        <i class="fas fa-blog"></i> <span class="link-text">Blogs</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="switchSection('faq')" title="FAQ Management">
+                        <i class="fas fa-question-circle"></i> <span class="link-text">FAQ</span>
+                    </a>
+                </li>
+                <li class="nav-item">
                     <a href="#" class="nav-link" onclick="switchSection('settings')" title="System Settings">
                         <i class="fas fa-cog"></i> <span class="link-text">Settings</span>
                     </a>
@@ -3034,7 +3044,6 @@
                         <div class="tabs" style="margin-bottom: 20px; border-bottom: 1px solid #ddd;">
                             <button class="tab-btn active" onclick="showContentSubSection('banners')">Banners</button>
                             <button class="tab-btn" onclick="showContentSubSection('blogs')">Blogs</button>
-                            <button class="tab-btn" onclick="showContentSubSection('events')">Events</button>
                         </div>
 
                         <div id="contentBannersSub" class="sub-section">
@@ -3065,21 +3074,6 @@
                                         <textarea name="content" class="form-control" rows="5" required></textarea>
                                     </div>
                                     <button type="submit" class="btn-primary">Publish</button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <div id="contentEventsSub" class="sub-section" style="display: none;">
-                            <div class="glass-card" style="padding: 30px; max-width: 800px;">
-                                <form id="eventForm">
-                                    <h3>Create Event</h3>
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                                        <div class="form-group"><label>Title</label><input type="text" name="title"
-                                                class="form-control" required></div>
-                                        <div class="form-group"><label>Date</label><input type="date" name="date"
-                                                class="form-control" required></div>
-                                    </div>
-                                    <button type="submit" class="btn-primary">Create Event</button>
                                 </form>
                             </div>
                         </div>
@@ -3998,6 +3992,54 @@
                             </button>
                         </div>
                     </div>
+
+                    <!-- BLOG MANAGEMENT SECTION -->
+                    <section id="blogSection" class="dashboard-content-section" style="display: none;">
+                        <div class="glass-ultra" style="padding: 30px; border-radius: 20px; margin-bottom: 30px;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 25px;">
+                                <h3
+                                    style="margin: 0; font-size: 1.5rem; background: var(--primary-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                                    <i class="fas fa-blog"
+                                        style="margin-right: 10px; background: var(--primary-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                                    Blog Management
+                                </h3>
+                                <button onclick="openBlogModal()" class="btn-primary"
+                                    style="padding: 10px 20px; border-radius: 10px;">
+                                    <i class="fas fa-plus"></i> Add Blog
+                                </button>
+                            </div>
+
+                            <div id="blogsContainer" class="cards-grid"
+                                style="display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));">
+                                <!-- Blogs will be loaded here -->
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- FAQ MANAGEMENT SECTION -->
+                    <section id="faqSection" class="dashboard-content-section" style="display: none;">
+                        <div class="glass-ultra" style="padding: 30px; border-radius: 20px; margin-bottom: 30px;">
+                            <div
+                                style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px; margin-bottom: 25px;">
+                                <h3
+                                    style="margin: 0; font-size: 1.5rem; background: var(--primary-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">
+                                    <i class="fas fa-question-circle"
+                                        style="margin-right: 10px; background: var(--primary-gradient); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                                    FAQ Management
+                                </h3>
+                                <button onclick="openFAQModal()" class="btn-primary"
+                                    style="padding: 10px 20px; border-radius: 10px;">
+                                    <i class="fas fa-plus"></i> Add FAQ
+                                </button>
+                            </div>
+
+                            <div id="faqContainer" class="cards-grid" style="display: grid; gap: 15px;">
+                                <!-- FAQs will be loaded here -->
+                            </div>
+                        </div>
+                    </section>
+
                 </div> <!-- End scrollable-content -->
             </div> <!-- End scrollable-wrapper -->
         </main>
@@ -6273,10 +6315,511 @@
         }
     </style>
 
+    <!-- BLOG MODAL -->
+    <div id="blogModal" class="modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="glass-card"
+            style="background: white; border-radius: 20px; width: 90%; max-width: 600px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto;">
+            <span class="close-modal-x" onclick="closeBlogModal()"
+                style="position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</span>
+
+            <h3 id="blogModalTitle" style="margin-bottom: 25px; color: #333;">Add New Blog</h3>
+
+            <form id="blogForm" onsubmit="saveBlog(event)">
+                <input type="hidden" id="blogId" value="">
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Title *</label>
+                    <input type="text" id="blogTitle" required
+                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Category</label>
+                    <select id="blogCategory"
+                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
+                        <option value="">Select Category</option>
+                        <option value="Spiritual">Spiritual</option>
+                        <option value="Meditation">Meditation</option>
+                        <option value="Wellness">Wellness</option>
+                        <option value="News">News</option>
+                        <option value="Events">Events</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Author</label>
+                    <input type="text" id="blogAuthor" placeholder="Default: InnerSpark"
+                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
+                </div>
+
+
+                <div style="margin-bottom: 25px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Content *</label>
+                    <textarea id="blogContent" required rows="8"
+                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; resize: vertical;"
+                        placeholder="Write your blog content here..."></textarea>
+                </div>
+
+                <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                    <button type="button" onclick="closeBlogModal()" class="btn-secondary"
+                        style="padding: 12px 24px; border-radius: 8px;">Cancel</button>
+                    <button type="submit" class="btn-primary" style="padding: 12px 24px; border-radius: 8px;">
+                        <i class="fas fa-save"></i> Save Blog
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FAQ MODAL -->
+    <div id="faqModal" class="modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000; align-items: center; justify-content: center;">
+        <div class="glass-card"
+            style="background: white; border-radius: 20px; width: 90%; max-width: 600px; padding: 30px; position: relative; max-height: 90vh; overflow-y: auto;">
+            <span class="close-modal-x" onclick="closeFAQModal()"
+                style="position: absolute; top: 15px; right: 20px; font-size: 1.5rem; cursor: pointer; color: #666;">&times;</span>
+
+            <h3 id="faqModalTitle" style="margin-bottom: 25px; color: #333;">Add New FAQ</h3>
+
+            <form id="faqForm" onsubmit="saveFAQ(event)">
+                <input type="hidden" id="faqId" value="">
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Question *</label>
+                    <input type="text" id="faqQuestion" required
+                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;"
+                        placeholder="Enter the frequently asked question">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Category</label>
+                    <select id="faqCategory" required
+                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;">
+                        <option value="General">General</option>
+                        <option value="Technical">Technical</option>
+                        <option value="Spiritual">Spiritual</option>
+                        <option value="Payment">Payment</option>
+                    </select>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Answer *</label>
+                    <textarea id="faqAnswer" required rows="6"
+                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; resize: vertical;"
+                        placeholder="Provide a comprehensive answer..."></textarea>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; margin-bottom: 5px; font-weight: 600;">Admin Remarks</label>
+                    <input type="text" id="faqRemarks"
+                        style="width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px;"
+                        placeholder="Internal notes (optional)">
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <label style="display: flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer;">
+                        <input type="checkbox" id="faqActive" checked style="width: 16px; height: 16px;">
+                        <span>Active (visible to users)</span>
+                    </label>
+                </div>
+
+
+                <div style="display: flex; gap: 15px; justify-content: flex-end;">
+                    <button type="button" onclick="closeFAQModal()" class="btn-secondary"
+                        style="padding: 12px 24px; border-radius: 8px;">Cancel</button>
+                    <button type="submit" class="btn-primary" style="padding: 12px 24px; border-radius: 8px;">
+                        <i class="fas fa-save"></i> Save FAQ
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Cropper.js & Banner Management Scripts -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.6.1/cropper.min.js"></script>
     <script src="../js/banner-management.js"></script>
     <script src="../js/membership-management.js"></script>
+
+    <!-- Blog & FAQ Management Scripts -->
+    <script>
+        // Simple notification function
+        function showNotification(message, type = 'info') {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 10000;
+                min-width: 250px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+                animation: slideIn 0.3s ease-out;
+            `;
+
+            // Set background color based on type
+            switch (type) {
+                case 'success':
+                    notification.style.backgroundColor = '#10b981';
+                    break;
+                case 'error':
+                    notification.style.backgroundColor = '#ef4444';
+                    break;
+                case 'warning':
+                    notification.style.backgroundColor = '#f59e0b';
+                    break;
+                default:
+                    notification.style.backgroundColor = '#3b82f6';
+            }
+
+            notification.textContent = message;
+            document.body.appendChild(notification);
+
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => {
+                    if (document.body.contains(notification)) {
+                        document.body.removeChild(notification);
+                    }
+                }, 300);
+            }, 5000);
+        }
+
+        // Add CSS animations
+        if (!document.getElementById('notificationStyles')) {
+            const style = document.createElement('style');
+            style.id = 'notificationStyles';
+            style.textContent = `
+                @keyframes slideIn {
+                    from { transform: translateX(100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes slideOut {
+                    from { transform: translateX(0); opacity: 1; }
+                    to { transform: translateX(100%); opacity: 0; }
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Blog Management
+        let currentBlogId = null;
+
+        async function loadBlogs() {
+            try {
+                const response = await fetch(`${Auth.apiBase}/blogs`);
+
+                // Check if the response is OK
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    throw new Error(`Expected JSON but received ${contentType}. Response: ${text.substring(0, 100)}...`);
+                }
+
+                const data = await response.json();
+
+                const container = document.getElementById('blogsContainer');
+                if (data.data.blogs.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #666; grid-column: 1/-1;">No blogs found. Create your first blog!</p>';
+                    return;
+                }
+
+                container.innerHTML = data.data.blogs.map(blog => `
+                    <div class="glass-card" style="padding: 20px; border-radius: 15px;">
+                        <h4 style="margin: 0 0 10px 0; color: #333;">${blog.title}</h4>
+                        <p style="color: #666; margin: 0 0 10px 0; font-size: 14px;">
+                            By ${blog.author} ${blog.category ? `• ${blog.category}` : ''}<br>
+                            <small>${new Date(blog.createdAt).toLocaleDateString()}</small>
+                        </p>
+                        <p style="color: #777; margin: 0 0 15px 0; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                            ${blog.content.substring(0, 120)}...
+                        </p>
+                        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                            <button onclick="editBlog('${blog._id}')" class="btn-secondary" style="padding: 8px 16px; border-radius: 6px; font-size: 14px;">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button onclick="deleteBlog('${blog._id}')" class="btn-danger" style="padding: 8px 16px; border-radius: 6px; font-size: 14px;">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading blogs:', error);
+                showNotification('Failed to load blogs', 'error');
+            }
+        }
+
+        function openBlogModal(blogData = null) {
+            currentBlogId = blogData ? blogData._id : null;
+            const modal = document.getElementById('blogModal');
+            const title = document.getElementById('blogModalTitle');
+
+            if (blogData) {
+                title.textContent = 'Edit Blog';
+                document.getElementById('blogId').value = blogData._id;
+                document.getElementById('blogTitle').value = blogData.title;
+                document.getElementById('blogCategory').value = blogData.category || '';
+                document.getElementById('blogAuthor').value = blogData.author;
+                document.getElementById('blogContent').value = blogData.content;
+            } else {
+                title.textContent = 'Add New Blog';
+                document.getElementById('blogForm').reset();
+                document.getElementById('blogId').value = '';
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeBlogModal() {
+            document.getElementById('blogModal').style.display = 'none';
+            currentBlogId = null;
+        }
+
+        async function editBlog(blogId) {
+            try {
+                const response = await fetch(`${Auth.apiBase}/blogs/${blogId}`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    openBlogModal(data.data.blog);
+                }
+            } catch (error) {
+                console.error('Error fetching blog:', error);
+                showNotification('Failed to fetch blog data', 'error');
+            }
+        }
+
+        async function saveBlog(event) {
+            event.preventDefault();
+
+            const blogData = {
+                title: document.getElementById('blogTitle').value,
+                category: document.getElementById('blogCategory').value,
+                author: document.getElementById('blogAuthor').value || 'InnerSpark',
+                content: document.getElementById('blogContent').value
+            };
+
+            try {
+                const url = currentBlogId ? `${Auth.apiBase}/blogs/${currentBlogId}` : `${Auth.apiBase}/blogs`;
+                const method = currentBlogId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(blogData)
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showNotification(`Blog ${currentBlogId ? 'updated' : 'created'} successfully!`, 'success');
+                    closeBlogModal();
+                    loadBlogs();
+                } else {
+                    showNotification(result.message || 'Failed to save blog', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving blog:', error);
+                showNotification('Error saving blog', 'error');
+            }
+        }
+
+        async function deleteBlog(blogId) {
+            if (!confirm('Are you sure you want to delete this blog?')) return;
+
+            try {
+                const response = await fetch(`${Auth.apiBase}/blogs/${blogId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    showNotification('Blog deleted successfully!', 'success');
+                    loadBlogs();
+                } else {
+                    showNotification('Failed to delete blog', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting blog:', error);
+                showNotification('Error deleting blog', 'error');
+            }
+        }
+
+        // FAQ Management
+        let currentFAQId = null;
+
+        async function loadFAQs() {
+            try {
+                const response = await fetch(`${Auth.apiBase}/faq`);
+                const data = await response.json();
+
+                const container = document.getElementById('faqContainer');
+                if (data.data.faqs.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #666;">No FAQs found. Create your first FAQ!</p>';
+                    return;
+                }
+
+                container.innerHTML = data.data.faqs.map(faq => `
+                    <div class="glass-card" style="padding: 20px; border-radius: 15px; ${!faq.isActive ? 'opacity: 0.6;' : ''}">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 200px;">
+                                <h4 style="margin: 0 0 10px 0; color: #333; word-break: break-word;">${faq.question}</h4>
+                                <p style="color: #666; margin: 0 0 10px 0; line-height: 1.5; word-break: break-word;">${faq.answer}</p>
+                                <div style="display: flex; gap: 15px; font-size: 14px; color: #888; flex-wrap: wrap;">
+                                    <span><i class="fas fa-tag"></i> ${faq.category}</span>
+                                    ${!faq.isActive ? '<span style="color: #ff6b6b;"><i class="fas fa-eye-slash"></i> Inactive</span>' : ''}
+                                    ${faq.order !== 0 ? `<span><i class="fas fa-sort"></i> Order: ${faq.order}</span>` : ''}
+                                </div>
+                                ${faq.adminRemarks ? `<p style="font-size: 12px; color: #999; margin-top: 8px; font-style: italic;"><i class="fas fa-sticky-note"></i> ${faq.adminRemarks}</p>` : ''}
+                            </div>
+                            <div style="display: flex; gap: 8px; flex-shrink: 0;">
+                                <button onclick="editFAQ('${faq._id}')" class="btn-secondary" style="padding: 6px 12px; border-radius: 6px; font-size: 12px;">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button onclick="deleteFAQ('${faq._id}')" class="btn-danger" style="padding: 6px 12px; border-radius: 6px; font-size: 12px;">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading FAQs:', error);
+                showNotification('Failed to load FAQs', 'error');
+            }
+        }
+
+        function openFAQModal(faqData = null) {
+            currentFAQId = faqData ? faqData._id : null;
+            const modal = document.getElementById('faqModal');
+            const title = document.getElementById('faqModalTitle');
+
+            if (faqData) {
+                title.textContent = 'Edit FAQ';
+                document.getElementById('faqId').value = faqData._id;
+                document.getElementById('faqQuestion').value = faqData.question;
+                document.getElementById('faqCategory').value = faqData.category;
+                document.getElementById('faqAnswer').value = faqData.answer;
+                document.getElementById('faqRemarks').value = faqData.adminRemarks || '';
+                document.getElementById('faqActive').checked = faqData.isActive;
+            } else {
+                title.textContent = 'Add New FAQ';
+                document.getElementById('faqForm').reset();
+                document.getElementById('faqId').value = '';
+                document.getElementById('faqActive').checked = true;
+            }
+
+            modal.style.display = 'flex';
+        }
+
+        function closeFAQModal() {
+            document.getElementById('faqModal').style.display = 'none';
+            currentFAQId = null;
+        }
+
+        async function editFAQ(faqId) {
+            try {
+                const response = await fetch(`${Auth.apiBase}/faq/${faqId}`);
+                const data = await response.json();
+
+                if (data.status === 'success') {
+                    openFAQModal(data.data.faq);
+                }
+            } catch (error) {
+                console.error('Error fetching FAQ:', error);
+                showNotification('Failed to fetch FAQ data', 'error');
+            }
+        }
+
+        async function saveFAQ(event) {
+            event.preventDefault();
+
+            const faqData = {
+                question: document.getElementById('faqQuestion').value,
+                answer: document.getElementById('faqAnswer').value,
+                category: document.getElementById('faqCategory').value,
+                adminRemarks: document.getElementById('faqRemarks').value,
+                isActive: document.getElementById('faqActive').checked
+            };
+
+            try {
+                const url = currentFAQId ? `${Auth.apiBase}/faq/${currentFAQId}` : `${Auth.apiBase}/faq`;
+                const method = currentFAQId ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    },
+                    body: JSON.stringify(faqData)
+                });
+
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    showNotification(`FAQ ${currentFAQId ? 'updated' : 'created'} successfully!`, 'success');
+                    closeFAQModal();
+                    loadFAQs();
+                } else {
+                    showNotification(result.message || 'Failed to save FAQ', 'error');
+                }
+            } catch (error) {
+                console.error('Error saving FAQ:', error);
+                showNotification('Error saving FAQ', 'error');
+            }
+        }
+
+        async function deleteFAQ(faqId) {
+            if (!confirm('Are you sure you want to delete this FAQ?')) return;
+
+            try {
+                const response = await fetch(`${Auth.apiBase}/faq/${faqId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    }
+                });
+
+                if (response.ok) {
+                    showNotification('FAQ deleted successfully!', 'success');
+                    loadFAQs();
+                } else {
+                    showNotification('Failed to delete FAQ', 'error');
+                }
+            } catch (error) {
+                console.error('Error deleting FAQ:', error);
+                showNotification('Error deleting FAQ', 'error');
+            }
+        }
+
+        // Add to the existing switchSection function
+        const originalSwitchSection = window.switchSection;
+        window.switchSection = function (section) {
+            originalSwitchSection(section);
+
+            if (section === 'blog') {
+                loadBlogs();
+            } else if (section === 'faq') {
+                loadFAQs();
+            }
+        };
+    </script>
 </body>
 
 </html>

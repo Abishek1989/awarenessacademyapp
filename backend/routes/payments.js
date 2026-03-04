@@ -79,7 +79,4 @@ router.get('/:transactionId', paymentController.getPaymentDetails);
 // @desc    Process a course payment and enroll student (DEPRECATED)
 router.post('/process', paymentController.processPayment);
 
-// @route   POST /api/payments/validate-coupon
-router.post('/validate-coupon', paymentController.validateCoupon);
-
 module.exports = router;

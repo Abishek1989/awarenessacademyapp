@@ -142,6 +142,8 @@ app.use('/api/enrollments', require('./backend/routes/enrollments'));
 app.use('/api/students', require('./backend/routes/students'));
 app.use('/api/feedback', require('./backend/routes/feedback'));
 app.use('/api/developer', require('./backend/routes/developer'));
+app.use('/api/blogs', require('./backend/routes/blog'));
+app.use('/api/faq', require('./backend/routes/faq'));
 
 // New modular content system routes
 app.use('/api', require('./backend/routes/modules'));

@@ -1,34 +1,4 @@
-const { Blog, Event, Newsletter } = require('../models/index');
-
-// Blog Controllers
-exports.getBlogs = async (req, res) => {
-    try {
-        const blogs = await Blog.find().sort({ createdAt: -1 });
-        res.status(200).json(blogs);
-    } catch (err) {
-        res.status(500).json({ message: 'Failed to fetch blogs' });
-    }
-};
-
-exports.getBlogById = async (req, res) => {
-    try {
-        const blog = await Blog.findById(req.params.id);
-        if (!blog) return res.status(404).json({ message: 'Blog not found' });
-        res.status(200).json(blog);
-    } catch (err) {
-        res.status(500).json({ message: 'Failed to fetch blog' });
-    }
-};
-
-exports.createBlog = async (req, res) => {
-    try {
-        const blog = new Blog(req.body);
-        await blog.save();
-        res.status(201).json(blog);
-    } catch (err) {
-        res.status(500).json({ message: 'Failed to create blog' });
-    }
-};
+const { Event, Newsletter } = require('../models/index');
 
 // Event Controllers
 exports.getEvents = async (req, res) => {

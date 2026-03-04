@@ -1193,6 +1193,130 @@
             background: white;
         }
 
+        /* --- Blog Section --- */
+        .blog-section {
+            padding: 120px 50px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+        }
+
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .blog-card {
+            background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+        }
+
+        .blog-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+        }
+
+        .blog-card-image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .blog-card-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .blog-card:hover .blog-card-image img {
+            transform: scale(1.05);
+        }
+
+        .blog-card-image::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(45deg, rgba(255, 107, 53, 0.1), rgba(247, 147, 30, 0.1));
+            z-index: 1;
+        }
+
+        .blog-card-content {
+            padding: 30px;
+        }
+
+        .blog-card-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .blog-card-category {
+            background: linear-gradient(135deg, #FF6B35, #F7931E);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-weight: 500;
+            font-size: 12px;
+        }
+
+        .blog-card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: var(--color-text-primary);
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .blog-card-excerpt {
+            color: var(--color-text-secondary);
+            line-height: 1.6;
+            margin-bottom: 20px;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .blog-card-author {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .blog-empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #666;
+            grid-column: 1 / -1;
+        }
+
+        .blog-empty-state i {
+            font-size: 3rem;
+            color: #ddd;
+            margin-bottom: 20px;
+        }
+
         .why-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -2337,6 +2461,119 @@
                 flex: 1 1 45%;
             }
         }
+
+        /* Blog Modal Styles */
+        .blog-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 9999;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .blog-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .blog-modal-content {
+            background: white;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(20px);
+            transition: transform 0.3s ease;
+        }
+
+        .blog-modal.active .blog-modal-content {
+            transform: translateY(0);
+        }
+
+        .blog-modal-header {
+            padding: 30px 40px 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .blog-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #666;
+            cursor: pointer;
+            transition: color 0.2s ease;
+        }
+
+        .blog-modal-close:hover {
+            color: var(--color-saffron);
+        }
+
+        .blog-modal-title {
+            font-size: 2rem;
+            font-family: var(--font-heading);
+            color: var(--color-primary);
+            margin-bottom: 15px;
+            padding-right: 30px;
+        }
+
+        .blog-modal-meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        .blog-modal-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .blog-modal-body {
+            padding: 30px 40px;
+            overflow-y: auto;
+            line-height: 1.8;
+            font-size: 1.05rem;
+            color: #444;
+        }
+
+        .blog-modal-body p {
+            margin-bottom: 20px;
+        }
+
+        /* Responsive Modal */
+        @media (max-width: 768px) {
+            .blog-modal-header {
+                padding: 25px 20px 15px;
+            }
+
+            .blog-modal-body {
+                padding: 20px;
+                font-size: 1rem;
+            }
+
+            .blog-modal-title {
+                font-size: 1.5rem;
+            }
+        }
     </style>
 </head>
 
@@ -2732,6 +2969,25 @@
         </div>
     </section>
 
+    <!-- Blog Section -->
+    <section class="blog-section" style="padding: 80px 20px; background: #f8f9fa;">
+        <div class="container" style="max-width: 1200px; margin: 0 auto;">
+            <div class="section-header" style="text-align: center; margin-bottom: 50px;">
+                <span class="section-tag">Latest Insights</span>
+                <h2 class="section-title">Our Blog</h2>
+                <p class="section-description">
+                    Explore our latest thoughts, insights, and wisdom on spiritual growth, meditation, and personal
+                    transformation.
+                </p>
+            </div>
+
+            <div id="blogGrid" class="blog-grid"
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; margin-bottom: 40px;">
+                <!-- Blogs will be loaded here dynamically -->
+            </div>
+        </div>
+    </section>
+
     <!-- CTA Section -->
     <section class="cta-section">
         <div class="cta-content">
@@ -2744,6 +3000,25 @@
             </div>
         </div>
     </section>
+
+    <!-- Blog Modal -->
+    <div class="blog-modal" id="blogModalOverlay">
+        <div class="blog-modal-content">
+            <div class="blog-modal-header">
+                <button class="blog-modal-close" onclick="closeBlogModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+                <div class="blog-modal-meta" id="modalBlogMeta">
+                    <span id="modalBlogCategory"
+                        style="background: linear-gradient(135deg, #FF6B35, #F7931E); color: white; padding: 4px 12px; border-radius: 20px; font-weight: 500;"></span>
+                    <span id="modalBlogDate"><i class="fas fa-calendar"></i> </span>
+                    <span id="modalBlogAuthor"><i class="fas fa-user"></i> </span>
+                </div>
+                <h2 class="blog-modal-title" id="modalBlogTitle" style="margin-top: 15px; margin-bottom: 0;"></h2>
+            </div>
+            <div class="blog-modal-body" id="modalBlogBody"></div>
+        </div>
+    </div>
 
     <!-- Footer -->
     <footer class="footer">
@@ -2897,6 +3172,117 @@
 
             // Removed founder sticky handlers - handled by pure CSS
         });
+
+        // Blog Caching System
+        window.allBlogs = [];
+
+        // Blog Loading Function
+        async function loadBlogs() {
+            try {
+                const response = await fetch(`${CONFIG.API_BASE_URL}/blogs`);
+                const data = await response.json();
+
+                const blogGrid = document.getElementById('blogGrid');
+
+                if (data.status === 'success' && data.data.blogs.length > 0) {
+                    window.allBlogs = data.data.blogs; // Cache the blogs for the modals
+
+                    blogGrid.innerHTML = data.data.blogs.map(blog => `
+                        <div class="blog-card" style="display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+                            <div>
+                                <div class="blog-card-image" style="height: 120px;">
+                                    <div style="display:flex;align-items:center;justify-content:center;height:100%;background:linear-gradient(135deg,#FF6B35,#F7931E);color:white;font-size:2.5rem; border-top-left-radius: 12px; border-top-right-radius: 12px;">
+                                        <i class="fas fa-blog"></i>
+                                    </div>
+                                </div>
+                                <div class="blog-card-content">
+                                    <div class="blog-card-meta">
+                                        ${blog.category ? `<span class="blog-card-category">${blog.category}</span>` : ''}
+                                        <span><i class="fas fa-calendar"></i> ${new Date(blog.createdAt).toLocaleDateString()}</span>
+                                    </div>
+                                    <h3 class="blog-card-title">${blog.title}</h3>
+                                    <p class="blog-card-excerpt">${blog.content.substring(0, 150)}...</p>
+                                    <div class="blog-card-author">
+                                        <i class="fas fa-user"></i>
+                                        <span>By ${blog.author}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="padding: 0 30px 30px; text-align: center; margin-top: auto;">
+                                <button onclick="openBlogModal('${blog._id}')" style="background: rgba(255,107,53,0.1); color: var(--color-primary); border: 1px solid rgba(255,107,53,0.2); padding: 10px 25px; border-radius: 20px; font-weight: 600; cursor: pointer; transition: all 0.3s ease; width: 100%;">
+                                    Read More <i class="fas fa-arrow-right" style="margin-left: 5px; font-size: 0.8rem;"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `).join('');
+                } else {
+                    blogGrid.innerHTML = `
+                        <div class="blog-empty-state">
+                            <i class="fas fa-blog"></i>
+                            <h3>No blogs available yet</h3>
+                            <p>We're working on creating amazing content for you. Check back soon!</p>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Error loading blogs:', error);
+                document.getElementById('blogGrid').innerHTML = `
+                    <div class="blog-empty-state">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <h3>Unable to load blogs</h3>
+                        <p>Please try again later.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Load blogs when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            // Existing code...
+            loadBlogs();
+
+            // Background click to close modal
+            document.getElementById('blogModalOverlay').addEventListener('click', function (e) {
+                if (e.target === this) {
+                    closeBlogModal();
+                }
+            });
+        });
+
+        // Blog Modal Controllers
+        function openBlogModal(blogId) {
+            const blog = window.allBlogs.find(b => b._id === blogId);
+            if (!blog) return;
+
+            document.getElementById('modalBlogTitle').innerText = blog.title;
+
+            const categorySpan = document.getElementById('modalBlogCategory');
+            if (blog.category) {
+                categorySpan.style.display = 'inline-block';
+                categorySpan.innerText = blog.category;
+            } else {
+                categorySpan.style.display = 'none';
+            }
+
+            document.getElementById('modalBlogDate').innerHTML = `<i class="fas fa-calendar"></i> ${new Date(blog.createdAt).toLocaleDateString()}`;
+            document.getElementById('modalBlogAuthor').innerHTML = `<i class="fas fa-user"></i> By ${blog.author}`;
+
+            // Format blog body - Preserve explicit newlines by converting them to <br> if not already HTML
+            let contentHtml = blog.content;
+            if (!contentHtml.includes('<p>') && !contentHtml.includes('<br>')) {
+                contentHtml = contentHtml.split('\\n').map(p => `<p>${p}</p>`).join('');
+            }
+            document.getElementById('modalBlogBody').innerHTML = contentHtml;
+
+            const modalInfoContainer = document.getElementById('blogModalOverlay');
+            modalInfoContainer.classList.add('active');
+            document.body.style.overflow = 'hidden'; // Stop background scrolling
+        }
+
+        function closeBlogModal() {
+            document.getElementById('blogModalOverlay').classList.remove('active');
+            document.body.style.overflow = ''; // Restore background scrolling
+        }
     </script>
 </body>
 

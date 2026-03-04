@@ -125,7 +125,7 @@ const scheduleSchema = new Schema({
 }, {
     // Custom validation to ensure at least one of courseID or membershipID is present
     validate: {
-        validator: function() {
+        validator: function () {
             return this.courseID || this.membershipID;
         },
         message: 'Either courseID or membershipID must be provided'
@@ -183,12 +183,7 @@ const paymentSchema = new Schema({
 
     // Audit trail
     ipAddress: { type: String },
-    userAgent: { type: String },
-
-    // Coupon information
-    couponCode: { type: String },
-    originalAmount: { type: Number },
-    discountAmount: { type: Number, default: 0 }
+    userAgent: { type: String }
 });
 
 
@@ -197,9 +192,16 @@ const paymentSchema = new Schema({
 const faqSchema = new Schema({
     question: { type: String, required: true }, // Keywords/Tags
     answer: { type: String, required: true },
-    category: { type: String, enum: ['Technical', 'Spiritual', 'Payment'], required: true },
-    adminRemarks: { type: String }
-});
+    category: {
+        type: String,
+        enum: ['Technical', 'Spiritual', 'Payment', 'General'],
+        required: true,
+        default: 'General'
+    },
+    adminRemarks: { type: String },
+    isActive: { type: Boolean, default: true },
+    order: { type: Number, default: 0 }
+}, { timestamps: true });
 
 // 8. Exams Collection
 const examSchema = new Schema({
@@ -338,6 +340,7 @@ module.exports = {
         date: { type: Date, default: Date.now }
     })),
     Notification: mongoose.model('Notification', notificationSchema),
+    FAQ: mongoose.model('FAQ', faqSchema),
     Enrollment: mongoose.model('Enrollment', new Schema({
         studentID: { type: Schema.Types.ObjectId, ref: 'User', required: true },
         courseID: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
@@ -393,27 +396,12 @@ module.exports = {
         title: { type: String, required: true },
         content: { type: String, required: true },
         author: { type: String, default: 'InnerSpark' },
-        thumbnail: { type: String },
         category: { type: String },
         createdAt: { type: Date, default: Date.now }
-    })),
-    Event: mongoose.model('Event', new Schema({
-        title: { type: String, required: true },
-        date: { type: Date, required: true },
-        location: { type: String },
-        description: { type: String },
-        registrationLink: { type: String },
-        active: { type: Boolean, default: true }
     })),
     Newsletter: mongoose.model('Newsletter', new Schema({
         email: { type: String, required: true, unique: true },
         joinedAt: { type: Date, default: Date.now }
-    })),
-    Coupon: mongoose.model('Coupon', new Schema({
-        code: { type: String, required: true, unique: true },
-        discountPercent: { type: Number, required: true }, // e.g., 10 for 10%
-        expiryDate: { type: Date },
-        active: { type: Boolean, default: true }
     })),
     // Ticket System - defined AFTER User model to ensure populate works
     Ticket: (() => {
@@ -550,9 +538,9 @@ module.exports = {
             offeredPrice: { type: Number, required: true },
             offerEndsAt: { type: Date, required: true }, // Offer end date and time
             description: { type: String }, // Legacy field - kept for backward compatibility
-            features: [{ 
-                type: String, 
-                maxlength: 100 
+            features: [{
+                type: String,
+                maxlength: 100
             }], // Array of feature points (max 100 chars each, 1-20 points)
             duration: {
                 startDate: { type: Date, required: true },
