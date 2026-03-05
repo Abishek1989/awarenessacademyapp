@@ -591,22 +591,22 @@ exports.getStaffCourses = async (req, res) => {
     try {
         const mongoose = require('mongoose');
         const staffId = req.user.id;
-        
+
         console.log('Staff requesting courses:', staffId);
         console.log('Staff ID type:', typeof staffId);
-        
+
         // Convert to ObjectId if it's a string
-        const staffObjectId = mongoose.Types.ObjectId.isValid(staffId) ? 
+        const staffObjectId = mongoose.Types.ObjectId.isValid(staffId) ?
             new mongoose.Types.ObjectId(staffId) : staffId;
-        
+
         const courses = await Course.find({
             mentors: { $in: [staffId, staffObjectId] }, // Try both string and ObjectId
             status: { $ne: 'Archived' } // Exclude archived courses
         });
-        
+
         console.log('Found courses for staff:', courses.length);
         console.log('Course details:', courses.map(c => ({ id: c._id, title: c.title, mentors: c.mentors })));
-        
+
         res.status(200).json(courses);
     } catch (err) {
         console.error('Error fetching staff courses:', err);
@@ -666,39 +666,61 @@ exports.updateProfile = async (req, res) => {
             accountHolderName, accountNumber, bankName, ifscCode, branchName
         } = req.body;
 
-        const updateData = {
-            name,
-            fatherName,
-            motherName,
-            dob,
-            phone,
-            additionalPhone,
-            'address.doorNumber': doorNumber,
-            'address.streetName': streetName,
-            'address.town': town,
-            'address.district': district,
-            'address.pincode': pincode,
-            'bankDetails.accountHolderName': accountHolderName,
-            'bankDetails.accountNumber': accountNumber,
-            'bankDetails.bankName': bankName,
-            'bankDetails.ifscCode': ifscCode,
-            'bankDetails.branchName': branchName,
-            lastEditedAt: Date.now()
-        };
+        const userDoc = await User.findById(req.user.id);
+        if (!userDoc) {
+            return res.status(404).json({ message: 'User not found' });
+        }
 
-        // Remove undefined values
-        Object.keys(updateData).forEach(key =>
-            updateData[key] === undefined && delete updateData[key]
-        );
+        const updateData = {};
 
-        const user = await User.findByIdAndUpdate(
-            req.user.id,
-            updateData,
-            { new: true, runValidators: true }
-        ).select('-password -verificationToken -resetPasswordToken');
+        // 1. Personal Details
+        if (name !== undefined) userDoc.name = name;
+        if (fatherName !== undefined) userDoc.fatherName = fatherName;
+        if (motherName !== undefined) userDoc.motherName = motherName;
+        if (dob !== undefined) userDoc.dob = dob === '' ? null : dob;
 
-        res.status(200).json({ message: 'Profile updated successfully', user });
+        // 2. Contact Details
+        if (phone !== undefined) userDoc.phone = phone;
+        if (additionalPhone !== undefined) userDoc.additionalPhone = additionalPhone;
+
+        // 3. Address Details - Assign to subdocument directly
+        if (doorNumber !== undefined || streetName !== undefined || town !== undefined || district !== undefined || pincode !== undefined) {
+            // Because legacy data might be a string, Mongoose will crash on userDoc.address.doorNumber. We must assign a complete object!
+            const newAddress = (typeof userDoc.address === 'object' && userDoc.address) ? { ...userDoc.address.toObject() } : {};
+
+            if (doorNumber !== undefined) newAddress.doorNumber = doorNumber;
+            if (streetName !== undefined) newAddress.streetName = streetName;
+            if (town !== undefined) newAddress.town = town;
+            if (district !== undefined) newAddress.district = district;
+            if (pincode !== undefined) newAddress.pincode = pincode;
+
+            userDoc.address = newAddress;
+        }
+
+        // 4. Bank Details
+        if (accountHolderName !== undefined || accountNumber !== undefined || bankName !== undefined || ifscCode !== undefined || branchName !== undefined) {
+            const newBank = (typeof userDoc.bankDetails === 'object' && userDoc.bankDetails) ? { ...userDoc.bankDetails.toObject() } : {};
+
+            if (accountHolderName !== undefined) newBank.accountHolderName = accountHolderName;
+            if (accountNumber !== undefined) newBank.accountNumber = accountNumber;
+            if (bankName !== undefined) newBank.bankName = bankName;
+            if (ifscCode !== undefined) newBank.ifscCode = ifscCode;
+            if (branchName !== undefined) newBank.branchName = branchName;
+
+            userDoc.bankDetails = newBank;
+        }
+
+        userDoc.lastEditedAt = Date.now();
+        await userDoc.save();
+
+        const userObj = userDoc.toObject();
+        delete userObj.password;
+        delete userObj.verificationToken;
+        delete userObj.resetPasswordToken;
+
+        res.status(200).json({ message: 'Profile updated successfully', user: userObj });
     } catch (err) {
+        console.error('Error updating profile:', err);
         res.status(500).json({ message: 'Failed to update profile', error: err.message });
     }
 };
