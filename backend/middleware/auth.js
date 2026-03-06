@@ -25,12 +25,11 @@ const authorize = (roles = []) => {
     }
 
     try {
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET ||
-          process.env.JWT_SECRET ||
-          "generate_a_secure_random_key_here",
-      );
+      if (!process.env.JWT_SECRET) {
+        throw new Error('JWT_SECRET not configured');
+      }
+      
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
       // SECURITY CHECK: Verify user still exists and is active
       const user = await User.findById(decoded.id).select(

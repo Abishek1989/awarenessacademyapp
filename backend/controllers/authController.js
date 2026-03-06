@@ -96,7 +96,7 @@ exports.sendRegistrationOTP = catchAsync(async (req, res, next) => {
             registrationOTPExpires: otpExpires,
             registrationOTPAttempts: 0,
             role: 'Student', // Default role
-            password: 'temp_password_to_be_set', // Temporary password
+            password: crypto.randomBytes(16).toString('hex'), // Secure random temp password
             isVerified: false
         });
         await tempUser.save();
@@ -331,9 +331,13 @@ exports.login = catchAsync(async (req, res, next) => {
     user.lastLogin = new Date();
     await user.save();
 
+    if (!process.env.JWT_SECRET) {
+        return next(new AppError('Server configuration error', 500));
+    }
+    
     const token = jwt.sign(
         { id: user._id, role: user.role, name: user.name },
-        process.env.JWT_SECRET || process.env.JWT_SECRET || 'generate_a_secure_random_key_here',
+        process.env.JWT_SECRET,
         { expiresIn: '24h' }
     );
 

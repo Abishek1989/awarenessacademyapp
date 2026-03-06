@@ -491,10 +491,18 @@ function startWebSocket() {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   // Use the apiBase host or default to current window host
   let host = window.location.host;
-  if (typeof CONFIG !== "undefined" && CONFIG.API_BASE_URL) {
-    const urlObj = new URL(CONFIG.API_BASE_URL);
-    host = urlObj.host;
+  
+  // Handle CONFIG.API_BASE_URL safely - only use if it's a full URL
+  if (typeof CONFIG !== "undefined" && CONFIG.API_BASE_URL && !CONFIG.API_BASE_URL.startsWith('/')) {
+    try {
+      const urlObj = new URL(CONFIG.API_BASE_URL);
+      host = urlObj.host;
+    } catch (error) {
+      console.warn('Invalid CONFIG.API_BASE_URL for WebSocket:', CONFIG.API_BASE_URL);
+      // Fall back to using current host
+    }
   }
+  
   const wsUrl = `${protocol}//${host}/api/developer/metrics/ws`;
 
   // Connect to WS

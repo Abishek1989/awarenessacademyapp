@@ -28,10 +28,14 @@ if (!MONGO_URI) {
 }
 
 // Single Admin User
+// Generate a random password for admin user
+const crypto = require('crypto');
+const randomPassword = crypto.randomBytes(16).toString('hex');
+
 const adminUser = {
     name: 'System Administrator',
     email: 'admin@innerspark.com',
-    password: 'admin123',
+    password: process.env.DEFAULT_ADMIN_PASSWORD || randomPassword,
     role: 'Admin',
     phone: '+1234567890',
     isVerified: true,

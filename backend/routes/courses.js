@@ -10,7 +10,10 @@ const optionalAuth = (req, res, next) => {
     const token = req.headers.authorization?.split(' ')[1];
     if (token) {
         try {
-            const decoded = jwt.verify(token, process.env.JWT_SECRET || process.env.JWT_SECRET || 'generate_a_secure_random_key_here');
+            if (!process.env.JWT_SECRET) {
+                throw new Error('JWT_SECRET not configured');
+            }
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
             req.user = decoded;
         } catch (err) {
             // Invalid token, proceed as guest

@@ -2522,6 +2522,7 @@ function getMockAnalyticsData() {
     };
 }
 
+// Set analytics default to 30 days instead of All Time
 window.currentAnalyticsDays = 30;
 
 window.setAnalyticsTimeframe = function (days, btnElement) {

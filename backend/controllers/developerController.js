@@ -445,7 +445,28 @@ exports.getAtlasClusterMetrics = async (req, res) => {
             const processResponse = await axios.get(processUrl, { auth });
             processData = processResponse.data.results?.[0]; // Get first process (primary)
         } catch (apiError) {
-            console.error('Atlas API Error:', apiError.response?.data || apiError.message);
+            console.error('Atlas API Error Details:');
+            console.error('- Status:', apiError.response?.status);
+            console.error('- Headers:', apiError.response?.headers);
+            console.error('- Data:', apiError.response?.data);
+            console.error('- URL:', clusterUrl);
+            console.error('- Auth Username:', auth.username);
+            console.error('- Project ID:', projectId);
+            console.error('- Cluster Name:', clusterName);
+            
+            let errorMessage = 'Unknown error';
+            if (apiError.response?.status === 401) {
+                errorMessage = 'Invalid API credentials or insufficient permissions';
+            } else if (apiError.response?.status === 403) {
+                errorMessage = 'Access forbidden - check API key permissions';
+            } else if (apiError.response?.status === 404) {
+                errorMessage = 'Project or cluster not found - check PROJECT_ID and cluster name';
+            } else if (apiError.response?.data?.detail) {
+                errorMessage = apiError.response.data.detail;
+            } else {
+                errorMessage = apiError.message;
+            }
+            
             return res.status(200).json({
                 status: 'success',
                 configured: true,
@@ -1078,4 +1099,63 @@ exports.exportMetricsPDF = async (req, res) => {
         }
     }
 };
+
+// Test Atlas API Credentials
+const testAtlasCredentials = async (req, res) => {
+    try {
+        const { projectId, clusterName } = getMongoConnectionDetails();
+        const auth = getMongoAtlasAuth();
+
+        console.log('Testing Atlas API credentials...');
+        console.log('- Username (Public Key):', auth.username?.substring(0, 5) + '...' || 'Not set');
+        console.log('- Password length:', auth.password?.length || 'Not set');
+        console.log('- Project ID:', projectId || 'Not set');
+        console.log('- Cluster Name:', clusterName || 'Not set');
+
+        if (!auth.username || !auth.password || !projectId) {
+            return res.status(400).json({
+                status: 'error',
+                message: 'Missing Atlas API credentials. Please check MONGODB_PUBLIC_API_KEY, MONGODB_PRIVATE_API_KEY, and MONGODB_PROJECT_ID in your .env file.'
+            });
+        }
+
+        // Test basic API access with a simple request 
+        const testUrl = `https://cloud.mongodb.com/api/atlas/v1.0/groups/${projectId}`;
+        
+        try {
+            const response = await axios.get(testUrl, { auth });
+            console.log('Atlas API test successful:', response.data.name);
+            
+            res.json({
+                status: 'success',
+                message: 'Atlas API credentials are working',
+                project: {
+                    id: response.data.id,
+                    name: response.data.name,
+                    orgId: response.data.orgId
+                }
+            });
+        } catch (apiError) {
+            console.error('Atlas API test failed:', apiError.response?.status, apiError.response?.data);
+            res.status(400).json({
+                status: 'error',
+                message: 'Atlas API test failed',
+                details: {
+                    status: apiError.response?.status,
+                    error: apiError.response?.data || apiError.message
+                }
+            });
+        }
+    } catch (error) {
+        console.error('Test Atlas credentials error:', error);
+        res.status(500).json({
+            status: 'error',
+            message: 'Failed to test Atlas credentials',
+            error: error.message
+        });
+    }
+};
+
+// Export the test function
+exports.testAtlasCredentials = testAtlasCredentials;
 

@@ -234,7 +234,7 @@ exports.getAdminStats = async (req, res) => {
         const totalUsers = await User.countDocuments({ role: 'Student' });
         const totalMentors = await User.countDocuments({ role: 'Staff' });
         const totalCourses = await Course.countDocuments();
-        const payments = await Payment.find({ status: { $in: ['Success', 'completed'] } });
+        const payments = await Payment.find({ status: { $in: ['Success', 'success', 'completed', 'Completed', 'captured', 'Captured'] } });
         const revenue = payments.reduce((sum, p) => sum + p.amount, 0);
 
         res.status(200).json({
@@ -335,8 +335,10 @@ exports.getAdvancedAnalytics = async (req, res) => {
         });
 
         const filterDays = parseInt(req.query.days);
-        // If filterDays is 0, it means 'All Time', so we set the start date to 1970
-        const filterStartDate = filterDays > 0 ? new Date(Date.now() - filterDays * 24 * 60 * 60 * 1000) : new Date(0);
+        
+        // If filterDays is 0 or NaN (undefined), it means 'All Time', so we set the start date to 1970
+        // Use explicit check to ensure All Time works correctly
+        const filterStartDate = (filterDays && filterDays > 0) ? new Date(Date.now() - filterDays * 24 * 60 * 60 * 1000) : new Date(0);
 
         const dateFilter = { createdAt: { $gte: filterStartDate } };
 
@@ -426,7 +428,7 @@ exports.getAdvancedAnalytics = async (req, res) => {
 
         // Revenue Growth (Monthly)
         const revenueGrowth = await Payment.aggregate([
-            { $match: { status: { $in: ['Success', 'completed'] }, date: { $gte: filterStartDate } } },
+            { $match: { status: { $in: ['Success', 'success', 'completed', 'Completed', 'captured', 'Captured'] }, date: { $gte: filterStartDate } } },
             {
                 $group: {
                     _id: {
@@ -442,13 +444,13 @@ exports.getAdvancedAnalytics = async (req, res) => {
 
         // Total Revenue
         const totalRevenue = await Payment.aggregate([
-            { $match: { status: { $in: ['Success', 'completed'] }, date: { $gte: filterStartDate } } },
+            { $match: { status: { $in: ['Success', 'success', 'completed', 'Completed', 'captured', 'Captured'] }, date: { $gte: filterStartDate } } },
             { $group: { _id: null, total: { $sum: "$amount" } } }
         ]);
 
         // Revenue by Course
         const revenueByCourse = await Payment.aggregate([
-            { $match: { status: { $in: ['Success', 'completed'] }, date: { $gte: filterStartDate } } },
+            { $match: { status: { $in: ['Success', 'success', 'completed', 'Completed', 'captured', 'Captured'] }, date: { $gte: filterStartDate } } },
             {
                 $group: {
                     _id: "$courseID",
@@ -476,9 +478,9 @@ exports.getAdvancedAnalytics = async (req, res) => {
             { $limit: 10 }
         ]);
 
-        // Payment Success vs Failure
-        const successPayments = await Payment.countDocuments({ status: { $in: ['Success', 'completed'] }, date: { $gte: filterStartDate } });
-        const failedPayments = await Payment.countDocuments({ status: { $in: ['Failed', 'Pending', 'failed', 'pending'] }, date: { $gte: filterStartDate } });
+        // Payment Success vs Failure (excluding Pending to match Finance tab logic)
+        const successPayments = await Payment.countDocuments({ status: { $in: ['Success', 'success', 'completed', 'Completed', 'captured', 'Captured'] }, date: { $gte: filterStartDate } });
+        const failedPayments = await Payment.countDocuments({ status: { $in: ['Failed', 'failed', 'failure', 'refunded'] }, date: { $gte: filterStartDate } });
 
         // === 4. CONTENT & STAFF ANALYTICS ===
 
