@@ -1,5 +1,5 @@
 @echo off
-echo Starting InnerSpark Ecosystem...
+echo Starting Awareness Academy Ecosystem...
 
 :: Check for node_modules
 if not exist "node_modules\" (
@@ -8,7 +8,7 @@ if not exist "node_modules\" (
 )
 
 :: Start Backend
-start "InnerSpark Backend" cmd /k "npm start"
+start "Awareness Academy Backend" cmd /k "npm start"
 
 :: Wait a bit for server to start
 timeout /t 3 /nobreak > nul

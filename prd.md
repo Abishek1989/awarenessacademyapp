@@ -1,7 +1,7 @@
-# Product Requirements Document (PRD) – InnerSpark v1.0
+# Product Requirements Document (PRD) – Awareness Academy v1.0
 
 ## 1. Document Overview
-*   **Product Name:** InnerSpark
+*   **Product Name:** Awareness Academy
 *   **Version:** 1.0
 *   **Status:** Finalized for Development
 *   **Theme:** Spiritual, Motivational, Educational
@@ -161,7 +161,7 @@
     *   Orange buttons with subtle golden gradients.
     *   **Exam Interface:** A clean, distraction-free "Zen Mode" UI with a soft yellow background to reduce test anxiety.
     *   **Preview Overlay:** When a preview ends, a soft orange gradient overlay appears with a "Continue Learning - Enroll Now" call-to-action.
-    *   **Certificate Design:** Incorporate a gold-foil digital seal and the InnerSpark logo.
+    *   **Certificate Design:** Incorporate a gold-foil digital seal and the Awareness Academy logo.
 
 ---
 

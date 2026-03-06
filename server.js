@@ -1,5 +1,5 @@
 /**
- * InnerSpark Server
+ * Awareness Academy Server
  * Version: 1.0
  */
 
@@ -89,7 +89,7 @@ const connectDB = async () => {
             serverSelectionTimeoutMS: 30000, // Increased to 30s
             socketTimeoutMS: 45000,
         });
-        console.log('✅ InnerSpark Connected to MongoDB Cluster');
+        console.log('✅ Awareness Academy Connected to MongoDB Cluster');
     } catch (err) {
         console.error('❌ MongoDB Connection Error:', err.message);
         // Do not exit process immediately in dev, retry might happen
@@ -213,7 +213,7 @@ if (require.main === module) {
         app.locals.wss = wss;
 
         server.listen(PORT, () => {
-            console.log(`🚀 InnerSpark Server running on port ${PORT}`);
+            console.log(`🚀 Awareness Academy Server running on port ${PORT}`);
             console.log(`🔌 WebSocket Server initialized on /api/developer/metrics/ws`);
         });
     });

@@ -54,7 +54,7 @@ exports.createBlog = catchAsync(async (req, res, next) => {
     const blog = await Blog.create({
         title,
         content,
-        author: author || 'InnerSpark',
+        author: author || 'Awareness Academy',
         category
     });
 

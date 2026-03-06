@@ -1,5 +1,5 @@
 /**
- * InnerSpark Payment Integration with Razorpay
+ * Awareness Academy Payment Integration with Razorpay
  * Handles payment processing for course enrollments
  */
 
@@ -120,7 +120,7 @@ class PaymentManager {
             key: paymentData.key,
             amount: paymentData.amount,
             currency: paymentData.currency,
-            name: 'InnerSpark Academy',
+            name: 'Awareness Academy',
             description: `Enrollment for ${courseTitle}`,
             // Removed image to fix CORS issue with localhost
             order_id: paymentData.orderId,
@@ -312,7 +312,7 @@ class PaymentManager {
     }
 
     /**
-     * Show payment success modal with InnerSpark theme
+     * Show payment success modal with Awareness Academy theme
      */
     showPaymentSuccessModal(paymentData) {
         const modal = document.createElement('div');
@@ -373,7 +373,7 @@ class PaymentManager {
     }
 
     /**
-     * Show payment error modal with InnerSpark theme
+     * Show payment error modal with Awareness Academy theme
      */
     showPaymentErrorModal(errorMessage) {
         const modal = document.createElement('div');

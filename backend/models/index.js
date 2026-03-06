@@ -1,5 +1,5 @@
 /**
- * InnerSpark Database Schemas (Mongoose)
+ * Awareness Academy Database Schemas (Mongoose)
  * Version: 1.0
  */
 
@@ -395,7 +395,7 @@ module.exports = {
     Blog: mongoose.model('Blog', new Schema({
         title: { type: String, required: true },
         content: { type: String, required: true },
-        author: { type: String, default: 'InnerSpark' },
+        author: { type: String, default: 'Awareness Academy' },
         category: { type: String },
         createdAt: { type: Date, default: Date.now }
     })),

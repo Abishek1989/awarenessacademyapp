@@ -1,5 +1,5 @@
 /**
- * InnerSpark - Course Player & Tracking Logic (Refactored for Modules)
+ * Awareness Academy - Course Player & Tracking Logic (Refactored for Modules)
  */
 
 let currentCourseID = null;
@@ -110,7 +110,7 @@ async function loadPlayer() {
 
         hasFullAccess = data.hasFullAccess; // Access based on enrollment
         document.getElementById('courseTitle').textContent = data.course.title;
-        const mentorName = data.course.mentors && data.course.mentors.length > 0 ? data.course.mentors[0].name : 'InnerSpark Guides';
+        const mentorName = data.course.mentors && data.course.mentors.length > 0 ? data.course.mentors[0].name : 'Awareness Academy Guides';
         document.getElementById('mentorName').textContent = `By ${mentorName}`;
 
         // Cache data for optimization

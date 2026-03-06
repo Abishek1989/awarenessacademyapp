@@ -422,7 +422,7 @@ exports.updateCourse = async (req, res) => {
                             subscriberEmail: subscriber.email,
                             courseTitle: course.title,
                             courseCategory: course.category,
-                            courseMentor: course.mentors?.map(m => m.name).join(', ') || 'InnerSpark Team',
+                            courseMentor: course.mentors?.map(m => m.name).join(', ') || 'Awareness Academy Team',
                             coursePrice: course.price
                         });
 
@@ -459,7 +459,7 @@ exports.updateCourse = async (req, res) => {
                             subscriberEmail: sub.email,
                             courseTitle: course.title,
                             courseCategory: course.category,
-                            courseMentor: course.mentors?.map(m => m.name).join(', ') || 'InnerSpark Team',
+                            courseMentor: course.mentors?.map(m => m.name).join(', ') || 'Awareness Academy Team',
                             coursePrice: course.price
                         });
                         return { success: true };

@@ -1,5 +1,5 @@
 /**
- * InnerSpark - Marketplace Discovery Logic
+ * Awareness Academy - Marketplace Discovery Logic
  */
 
 document.addEventListener('DOMContentLoaded', () => {

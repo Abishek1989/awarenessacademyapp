@@ -1,5 +1,5 @@
 /**
- * InnerSpark Database Schemas (Mongoose)
+ * Awareness Academy Database Schemas (Mongoose)
  * Version: 2.0 - Updated March 2026
  * Complete schema reference for all 31 collections
  */
@@ -297,7 +297,7 @@ const bannerSchema = new Schema({
 const blogSchema = new Schema({
     title: { type: String, required: true },
     content: { type: String, required: true },
-    author: { type: String, default: 'InnerSpark' },
+    author: { type: String, default: 'Awareness Academy' },
     thumbnail: { type: String },
     category: { type: String },
     date: { type: Date, default: Date.now },

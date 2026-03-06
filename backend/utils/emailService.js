@@ -36,17 +36,20 @@ const transporter = nodemailer.createTransport({
  */
 exports.sendVerificationEmail = async (email, token) => {
   try {
-    const verifyLink = `${CLIENT_URL}/api/auth/verify-email?token=${token}`;
+    const verifyLink = `https://awarenessacademy.in/api/auth/verify-email?token=${token}`;
 
     await transporter.sendMail({
-      from: `"InnerSpark Support" <${process.env.SMTP_USER}>`,
+      from: `"Awareness Academy Support" <${process.env.SMTP_USER}>`,
       to: email,
-      subject: "Verify your InnerSpark Account",
+      subject: "Verify your Awareness Academy Account",
       html: `
                 <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                    <h2 style="color: #4a90e2;">Welcome to InnerSpark!</h2>
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <img src="https://awarenessacademy.in/assets/logo.png" alt="Awareness Academy" style="height: 60px; max-width: 200px;">
+                    </div>
+                    <h2 style="color: #FF9933;">Welcome to Awareness Academy!</h2>
                     <p>Please click the button below to verify your email address:</p>
-                    <a href="${verifyLink}" style="background-color: #4a90e2; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email</a>
+                    <a href="${verifyLink}" style="background-color: #FF9933; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Verify Email</a>
                     <p style="margin-top: 20px; font-size: 12px; color: #777;">If you didn't create an account, you can ignore this email.</p>
                 </div>
             `,
@@ -63,19 +66,23 @@ exports.sendVerificationEmail = async (email, token) => {
  */
 exports.sendPasswordResetEmail = async (email, token) => {
   try {
-    const resetLink = `${CLIENT_URL}/reset-password.html?token=${token}`;
+    const resetLink = `https://awarenessacademy.in/reset-password.html?token=${token}`;
 
     await transporter.sendMail({
-      from: `"InnerSpark Security" <${process.env.SMTP_USER}>`,
+      from: `"Awareness Academy Security" <${process.env.SMTP_USER}>`,
       to: email,
-      subject: "Reset your InnerSpark Password",
+      subject: "Reset your Awareness Academy Password",
       html: `
                 <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-                    <h2 style="color: #d9534f;">Password Reset Request</h2>
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <img src="https://awarenessacademy.in/assets/logo.png" alt="Awareness Academy" style="height: 60px; max-width: 200px;">
+                    </div>
+                    <h2 style="color: #FF9933;">Password Reset Request</h2>
                     <p>You requested a password reset. Click the button below to set a new password:</p>
-                    <a href="${resetLink}" style="background-color: #d9534f; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+                    <a href="${resetLink}" style="background-color: #FF9933; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
                     <p style="margin-top: 20px;">Or copy this link: <br> <a href="${resetLink}">${resetLink}</a></p>
                     <p style="margin-top: 20px; font-size: 12px; color: #777;">This link expires in 1 hour.</p>
+                    <p style="margin-top: 20px; font-size: 12px; color: #777;">For support, visit <a href="https://awarenessacademy.in/contact.html" style="color: #FF9933;">https://awarenessacademy.in</a></p>
                 </div>
             `,
     });
@@ -92,9 +99,9 @@ exports.sendPasswordResetEmail = async (email, token) => {
 exports.sendRegistrationOTP = async (email, otp, recipientName) => {
   try {
     const mailOptions = {
-      from: `"InnerSpark Registration" <${process.env.SMTP_USER}>`,
+      from: `"Awareness Academy Registration" <${process.env.SMTP_USER}>`,
       to: email,
-      subject: "Verify Your Email - InnerSpark Registration",
+      subject: "Verify Your Email - Awareness Academy Registration",
       html: `
                 <!DOCTYPE html>
                 <html>
@@ -131,13 +138,14 @@ exports.sendRegistrationOTP = async (email, otp, recipientName) => {
                     <div class="container">
                         <div class="header">
                             <div class="icon">✨</div>
-                            <h1>InnerSpark</h1>
-                            <p>Your Journey to Inner Light Begins Here</p>
+                            <img src="https://awarenessacademy.in/assets/logo.png" alt="Awareness Academy" style="height: 50px; margin-bottom: 10px;">
+                            <h1>Awareness Academy</h1>
+                            <p>Transform your life through ancient wisdom</p>
                         </div>
                         <div class="content">
                             <div class="greeting">Hello ${recipientName || "There"},</div>
                             <p class="message">
-                                Welcome to <span class="brand">InnerSpark</span>! We're excited to have you join our community of seekers and learners.
+                                Welcome to <span class="brand">Awareness Academy</span>! We're excited to have you join our community of spiritual growth and mindful learning.
                             </p>
                             <p class="message">
                                 To complete your registration, please verify your email address using the One-Time Password (OTP) below:
@@ -163,17 +171,20 @@ exports.sendRegistrationOTP = async (email, otp, recipientName) => {
                                 Enter this code on the registration page to verify your email and proceed with creating your account.
                             </p>
                             <div class="warning">
-                                <p>🔒 <strong>Security Notice:</strong> Never share this OTP with anyone. InnerSpark staff will never ask for your OTP.</p>
+                                <p>🔒 <strong>Security Notice:</strong> Never share this OTP with anyone. Awareness Academy staff will never ask for your OTP.</p>
                             </div>
                         </div>
                         <div class="footer">
-                            <p><strong>InnerSpark Sanctuary</strong></p>
-                            <p>A sacred space for ancient wisdom and modern mindfulness</p>
+                            <p><strong>Awareness Academy</strong></p>
+                            <p>Spiritual development center since 2014</p>
                             <p style="margin-top: 15px; font-size: 11px; opacity: 0.7;">
                                 If you didn't request this code, please ignore this email.
                             </p>
                             <p style="margin-top: 10px; font-size: 11px; opacity: 0.7;">
-                                This is an automated message from InnerSpark Registration System.
+                                This is an automated message from Awareness Academy Registration System.
+                            </p>
+                            <p style="margin-top: 10px; font-size: 11px; opacity: 0.7;">
+                                For support, visit <a href="https://awarenessacademy.in/contact.html" style="color: #D97706;">https://awarenessacademy.in</a>
                             </p>
                         </div>
                     </div>
@@ -203,7 +214,7 @@ exports.sendCoursePublishedNotification = async ({
 }) => {
   try {
     const mailOptions = {
-      from: `"InnerSpark" <${process.env.SMTP_USER}>`,
+      from: `"Awareness Academy" <${process.env.SMTP_USER}>`,
       to: subscriberEmail,
       subject: `🎉 ${courseTitle} is Now Available!`,
       html: `
@@ -251,7 +262,7 @@ exports.sendCoursePublishedNotification = async ({
                         <div class="content">
                             <div class="greeting">Hello ${subscriberName},</div>
                             <p class="message">
-                                Great news! The course you subscribed to is now available on <span class="brand">InnerSpark</span>.
+                                Great news! The course you subscribed to is now available on <span class="brand">Awareness Academy</span>.
                             </p>
                             <p class="message">
                                 We're excited to invite you to begin your transformative course with this newly published course.
@@ -280,30 +291,30 @@ exports.sendCoursePublishedNotification = async ({
                             </p>
 
                             <div style="text-align: center;">
-                                <a href="${process.env.CLIENT_URL}" class="cta-button">
+                                <a href="https://awarenessacademy.in" class="cta-button">
                                     🌟 Visit Our Website
                                 </a>
                             </div>
 
                             <div class="contact-box">
                                 <p>For further details or enrollment assistance, please:</p>
-                                <p class="contact-info">📧 Visit our website or contact our support team</p>
+                                <p class="contact-info">📧 Visit our website or contact our support team at <a href="https://awarenessacademy.in/contact.html" style="color: #D97706;">https://awarenessacademy.in</a></p>
                             </div>
 
                             <p class="message" style="margin-top: 25px; font-size: 14px; color: #6B7280;">
                                 We look forward to seeing you in class!<br>
                                 With light and wisdom,<br>
-                                <strong class="brand">The InnerSpark Team</strong>
+                                <strong class="brand">The Awareness Academy Team</strong>
                             </p>
                         </div>
                         <div class="footer">
-                            <p><strong>InnerSpark Sanctuary</strong></p>
-                            <p>A sacred space for ancient wisdom and modern mindfulness</p>
+                            <p><strong>Awareness Academy</strong></p>
+                            <p>Spiritual development center since 2014 in Tamil Nadu, India</p>
                             <p style="margin-top: 15px; font-size: 11px; opacity: 0.7;">
                                 You received this email because you subscribed to notifications for this course.
                             </p>
                             <p style="margin-top: 5px; font-size: 11px; opacity: 0.7;">
-                                This is an automated notification from InnerSpark Course System.
+                                This is an automated notification from Awareness Academy Course System.
                             </p>
                         </div>
                     </div>
@@ -339,7 +350,7 @@ exports.sendMail = async ({ to, subject, html }) => {
     }
 
     await transporter.sendMail({
-      from: `"InnerSpark Security" <${process.env.SMTP_USER}>`,
+      from: `"Awareness Academy Security" <${process.env.SMTP_USER}>`,
       to,
       subject,
       html,
@@ -386,14 +397,14 @@ exports.sendPaymentConfirmationEmail = async (email, paymentData) => {
     });
 
     await transporter.sendMail({
-      from: `"InnerSpark Academy" <${process.env.SMTP_USER}>`,
+      from: `"Awareness Academy" <${process.env.SMTP_USER}>`,
       to: email,
       subject: "✅ Payment Successful - Course Enrollment Confirmed",
       html: `
                 <div style="font-family: 'Arial', sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
                     <!-- Header -->
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; text-align: center; backdrop-filter: blur(10px);">
-                        <h1 style="margin: 0; font-size: 2rem; color: #FFD700;">InnerSpark Academy</h1>
+                        <h1 style="margin: 0; font-size: 2rem; color: #FFD700;">Awareness Academy</h1>
                         <p style="margin: 10px 0 0; font-size: 1.1rem; color: rgba(255,255,255,0.9);">Payment Confirmation</p>
                     </div>
 
@@ -469,7 +480,7 @@ exports.sendPaymentConfirmationEmail = async (email, paymentData) => {
 
                         <!-- CTA Button -->
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="${CLIENT_URL}/frontend/html/student-dashboard.html"
+                            <a href="https://awarenessacademy.in/student-dashboard.html"
                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                                       color: white;
                                       text-decoration: none;
@@ -490,7 +501,7 @@ exports.sendPaymentConfirmationEmail = async (email, paymentData) => {
 
                     <!-- Footer -->
                     <div style="padding: 20px; text-align: center; color: rgba(255,255,255,0.8);">
-                        <p style="margin: 0; font-size: 0.9rem;">© 2026 InnerSpark Academy. Empowering minds, transforming lives.</p>
+                        <p style="margin: 0; font-size: 0.9rem;">© 2026 Awareness Academy. Transforming lives through spiritual wisdom since 2014.</p>
                     </div>
                 </div>
             `,
@@ -524,14 +535,14 @@ exports.sendPaymentFailureEmail = async (email, paymentData) => {
     });
 
     await transporter.sendMail({
-      from: `"InnerSpark Academy" <${process.env.SMTP_USER}>`,
+      from: `"Awareness Academy" <${process.env.SMTP_USER}>`,
       to: email,
-      subject: "⚠️ Payment Failed - InnerSpark Academy",
+      subject: "⚠️ Payment Failed - Awareness Academy",
       html: `
                 <div style="font-family: 'Arial', sans-serif; max-width: 600px; margin: 0 auto; background: linear-gradient(135deg, #ff6b6b 0%, #ffdde1 100%); color: white;">
                     <!-- Header -->
                     <div style="background: rgba(255,255,255,0.1); padding: 30px; text-align: center; backdrop-filter: blur(10px);">
-                        <h1 style="margin: 0; font-size: 2rem; color: #FFD700;">InnerSpark Academy</h1>
+                        <h1 style="margin: 0; font-size: 2rem; color: #FFD700;">Awareness Academy</h1>
                         <p style="margin: 10px 0 0; font-size: 1.1rem; color: rgba(255,255,255,0.9);">Payment Failed</p>
                     </div>
 
@@ -599,7 +610,7 @@ exports.sendPaymentFailureEmail = async (email, paymentData) => {
 
                         <!-- CTA Button -->
                         <div style="text-align: center; margin: 30px 0;">
-                            <a href="${CLIENT_URL}/frontend/html/student-dashboard.html"
+                            <a href="https://awarenessacademy.in/student-dashboard.html"
                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
                                       color: white;
                                       text-decoration: none;
@@ -620,7 +631,7 @@ exports.sendPaymentFailureEmail = async (email, paymentData) => {
 
                     <!-- Footer -->
                     <div style="padding: 20px; text-align: center; color: rgba(255,255,255,0.8);">
-                        <p style="margin: 0; font-size: 0.9rem;">© 2026 InnerSpark Academy. We're here to help you succeed.</p>
+                        <p style="margin: 0; font-size: 0.9rem;">© 2026 Awareness Academy. We're here to help you succeed.</p>
                     </div>
                 </div>
             `,
@@ -644,13 +655,13 @@ exports.sendAdminR2Warning = async (
 ) => {
   try {
     await transporter.sendMail({
-      from: `"InnerSpark System Alert" <${process.env.SMTP_USER}>`,
+      from: `"Awareness Academy System Alert" <${process.env.SMTP_USER}>`,
       to: adminEmail,
       subject: `⚠️ URGENT: R2 ${operationType} Limit Warning`,
       html: `
                 <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
                     <h2 style="color: #d9534f;">⚠️ R2 Operational Limit Warning</h2>
-                    <p>This is an automated system alert from InnerSpark.</p>
+                    <p>This is an automated system alert from Awareness Academy.</p>
                     <p>The Cloudflare R2 <strong>${operationType}</strong> operations have crossed the warning threshold.</p>
                     <ul>
                         <li><strong>Current Count:</strong> ${currentCount.toLocaleString()}</li>

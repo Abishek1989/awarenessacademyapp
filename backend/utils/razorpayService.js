@@ -1,5 +1,5 @@
 /**
- * Razorpay Service for InnerSpark
+ * Razorpay Service for Awareness Academy
  * Handles payment processing, verification, and order creation
  */
 

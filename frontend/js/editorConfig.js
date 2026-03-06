@@ -1,5 +1,5 @@
 /**
- * EditorJS Configuration for InnerSpark LMS
+ * EditorJS Configuration for Awareness Academy LMS
  * Configures EditorJS with Cloudinary integration
  */
 

@@ -1281,7 +1281,7 @@ async function exportMetricsPDF(buttonElement) {
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.download = `InnerSpark_Developer_Report_${new Date().toISOString().split("T")[0]}.pdf`;
+    link.download = `Awareness_Academy_Developer_Report_${new Date().toISOString().split("T")[0]}.pdf`;
     document.body.appendChild(link);
     link.click();
 

@@ -1,5 +1,5 @@
 /**
- * InnerSpark - Parallax & Scroll Logic
+ * Awareness Academy - Parallax & Scroll Logic
  */
 
 const API_URL = (typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : (typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api'));

@@ -1,5 +1,5 @@
 /**
- * InnerSpark - Staff Dashboard Logic
+ * Awareness Academy - Staff Dashboard Logic
  */
 
 // Navigation function to switch between sections
@@ -1057,7 +1057,7 @@ async function loadSchedules() {
 
 function startLiveSession(room) {
     const domain = 'meet.jit.si';
-    const roomName = room || 'InnerSpark-General';
+    const roomName = room || 'Awareness-Academy-General';
     const url = `https://${domain}/${roomName}`;
     window.open(url, '_blank');
 }

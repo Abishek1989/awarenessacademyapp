@@ -1,5 +1,5 @@
 /**
- * InnerSpark - Exam & Assessment Logic
+ * Awareness Academy - Exam & Assessment Logic
  */
 
 let examData = null;

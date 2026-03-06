@@ -1,5 +1,5 @@
 /**
- * InnerSpark Database Seeder
+ * Awareness Academy Database Seeder
  * Creates empty database collections with proper schemas and one admin user
  */
 

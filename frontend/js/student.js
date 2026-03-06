@@ -1,5 +1,5 @@
 /**
- * InnerSpark - Student Dashboard Logic
+ * Awareness Academy - Student Dashboard Logic
  */
 
 // Global Error Handler
@@ -1094,7 +1094,7 @@ async function generateIDCard(paramUser) {
         const btn = document.getElementById('confirmDownloadIDBtn');
         if (btn) {
             btn.onclick = () => {
-                doc.save(`InnerSpark_ID_${user.studentID}.pdf`);
+                doc.save(`Awareness_Academy_ID_${user.studentID}.pdf`);
             };
         }
 
@@ -1564,7 +1564,7 @@ async function downloadCertificate(certID) {
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `InnerSpark_Certificate_${cert.studentID?.name?.replace(/\s+/g, '_') || 'Student'}.pdf`;
+        a.download = `Awareness_Academy_Certificate_${cert.studentID?.name?.replace(/\s+/g, '_') || 'Student'}.pdf`;
         document.body.appendChild(a);
         a.click();
 

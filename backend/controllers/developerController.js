@@ -834,7 +834,7 @@ exports.exportMetricsPDF = async (req, res) => {
         const doc = new PDFDocument({ margin: 40, size: 'A4', bufferPages: true });
 
         // Set response headers
-        const filename = `InnerSpark_Server_Report_${new Date().toISOString().split('T')[0]}.pdf`;
+        const filename = `Awareness_Academy_Server_Report_${new Date().toISOString().split('T')[0]}.pdf`;
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 

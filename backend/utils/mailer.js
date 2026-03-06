@@ -16,19 +16,19 @@ exports.sendNewsletter = async (emails, title, message) => {
         console.log(`[MAILER] Preparing to send "${title}" to ${emails.length} subscribers.`);
 
         // In a real app, use a for-loop or batching service
-        // For InnerSpark, we log the action locally
+        // For Awareness Academy, we log the action locally
         const mailOptions = {
-            from: '"InnerSpark Sanctuary" <support@innerspark.com>',
-            to: 'the-inner-circle@innerspark.com', // List suppression or BCC
+            from: '"Awareness Academy" <support@awarenessacademy.in>',
+            to: 'notifications@awarenessacademy.in', // List suppression or BCC
             bcc: emails.join(','),
-            subject: `✨ InnerSpark Insight: ${title}`,
+            subject: `✨ Awareness Academy Insight: ${title}`,
             text: message,
             html: `
                 <div style="font-family: 'Playfair Display', serif; padding: 40px; color: #333;">
-                    <h1 style="color: #FF9933;">InnerSpark Insight</h1>
+                    <h1 style="color: #FF9933;">Awareness Academy Insight</h1>
                     <p style="font-size: 1.1rem; line-height: 1.6;">${message}</p>
                     <hr style="margin: 30px 0; border-top: 1px solid #eee;">
-                    <p style="font-size: 0.8rem; color: #999;">You are receiving this because you joined the Inner Circle sanctuary.</p>
+                    <p style="font-size: 0.8rem; color: #999;">You are receiving this because you joined the Awareness Academy community.</p>
                 </div>
             `
         };

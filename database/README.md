@@ -1,4 +1,4 @@
-# InnerSpark Database Seeding
+# Awareness Academy Database Seeding
 
 ## Quick Start
 

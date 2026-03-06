@@ -9,7 +9,7 @@ const CONFIG = {
     ENABLE_CHATBOT: true,
 
     // Other Constants
-    APP_NAME: 'InnerSpark',
+    APP_NAME: 'Awareness Academy',
 
     // API URLs - will be set based on environment below
     API_BASE_URL: '',

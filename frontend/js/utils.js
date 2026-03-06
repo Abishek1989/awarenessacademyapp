@@ -1,5 +1,5 @@
 /**
- * InnerSpark - Global UI Utilities
+ * Awareness Academy - Global UI Utilities
  */
 
 const UI = {
