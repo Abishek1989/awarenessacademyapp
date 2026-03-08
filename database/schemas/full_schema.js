@@ -225,7 +225,7 @@ const enrollmentSchema = new Schema({
     courseID: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
     enrolledAt: { type: Date, default: Date.now },
     expiryDate: { type: Date },
-    status: { type: String, enum: ['Active', 'Expired'], default: 'Active' },
+    status: { type: String, enum: ['Active', 'Expired', 'Disabled'], default: 'Active' },
     progress: { type: Number, default: 0, min: 0, max: 100 },
     completed: { type: Boolean, default: false }
 });

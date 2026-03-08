@@ -171,11 +171,20 @@ exports.verifyPayment = async (req, res) => {
 
             await payment.save();
 
+            // Calculate Expiry Date
+            let expiryDate = null;
+            const enrolledCourse = await Course.findById(payment.courseID._id);
+            if (enrolledCourse && enrolledCourse.validityType === 'Limited' && enrolledCourse.validityDays > 0) {
+                expiryDate = new Date();
+                expiryDate.setDate(expiryDate.getDate() + enrolledCourse.validityDays);
+            }
+
             // Create enrollment
             const enrollment = new Enrollment({
                 studentID: payment.studentID._id,
                 courseID: payment.courseID._id,
                 enrolledAt: new Date(),
+                expiryDate: expiryDate,
                 status: 'Active',
                 progress: 0,
                 completed: false
@@ -577,10 +586,19 @@ exports.verifyPaymentGeneric = async (req, res) => {
                 });
 
                 if (!existingEnrollment) {
+                    // Calculate Expiry Date
+                    let expiryDate = null;
+                    const enrolledCourse = await Course.findById(packageId);
+                    if (enrolledCourse && enrolledCourse.validityType === 'Limited' && enrolledCourse.validityDays > 0) {
+                        expiryDate = new Date();
+                        expiryDate.setDate(expiryDate.getDate() + enrolledCourse.validityDays);
+                    }
+
                     const enrollment = new Enrollment({
                         studentID: payment.studentID._id,
                         courseID: packageId,
-                        enrollmentDate: new Date(),
+                        enrolledAt: new Date(),
+                        expiryDate: expiryDate,
                         status: 'Active'
                     });
                     await enrollment.save();

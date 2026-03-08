@@ -20,4 +20,9 @@ router.get('/my', enrollmentController.getMyEnrollments);
 // Check if enrolled in a specific course
 router.get('/check/:courseId', enrollmentController.checkEnrollment);
 
+// Admin/Staff routes for managing enrollments in a course
+router.get('/course/:courseId', enrollmentController.getCourseEnrollments);
+router.put('/:id', enrollmentController.updateEnrollment);
+router.delete('/:id', enrollmentController.deleteEnrollment);
+
 module.exports = router;

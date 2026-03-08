@@ -965,7 +965,14 @@
                             <span>Begin Your Journey</span>
                         </button>
 
-                        <div style="padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.05);">
+                        <!-- WhatsApp Join Group Button (Hidden by default) -->
+                        <a id="joinWhatsappBtnCourse" href="#" target="_blank" class="enroll-btn-main"
+                            style="display: none; background: #25D366; margin-top: 10px; color: white; text-decoration: none;">
+                            <i class="fab fa-whatsapp"></i>
+                            <span>Join WhatsApp Group</span>
+                        </a>
+
+                        <div style="padding-top: 10px; border-top: 1px solid rgba(0,0,0,0.05); margin-top: 20px;">
                             <h4
                                 style="font-size: 0.9rem; margin-bottom: 20px; color: var(--color-text-primary); text-transform: uppercase; letter-spacing: 1px;">
                                 Includes:</h4>
@@ -1123,6 +1130,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         const courseId = urlParams.get('id');
         let previewDuration = 30;
+        let currentCourseData = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (!courseId) {
@@ -1146,6 +1154,7 @@
                 if (!res.ok) throw new Error();
 
                 const data = await res.json();
+                currentCourseData = data.course;
                 renderPage(data);
 
                 if (auth && auth.user && auth.user.role === 'Student') {
@@ -1177,6 +1186,14 @@
                         btn.onclick = () => window.location.href = `player.html?course=${courseId}`;
                         btn.style.background = 'linear-gradient(135deg, #10B981, #059669)';
                         btn.style.boxShadow = '0 15px 35px rgba(16, 185, 129, 0.3)';
+
+                        if (currentCourseData && currentCourseData.whatsappGroupLink) {
+                            const waBtn = document.getElementById('joinWhatsappBtnCourse');
+                            if (waBtn) {
+                                waBtn.style.display = 'flex';
+                                waBtn.href = currentCourseData.whatsappGroupLink;
+                            }
+                        }
                     }
                 }
             } catch (err) { }

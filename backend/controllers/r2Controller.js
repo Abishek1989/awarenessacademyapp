@@ -12,7 +12,9 @@ const s3Client = new S3Client({
     credentials: {
         accessKeyId: process.env.R2_ACCESS_KEY_ID,
         secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
-    }
+    },
+    requestChecksumCalculation: "WHEN_REQUIRED",
+    responseChecksumValidation: "WHEN_REQUIRED"
 });
 
 const getAdminEmail = async () => {
@@ -172,5 +174,41 @@ exports.uploadThumbnail = catchAsync(async (req, res, next) => {
     res.status(200).json({
         status: 'success',
         url: fileUrl
+    });
+});
+
+/**
+ * Handle direct video upload via backend (Bypasses Browser CORS)
+ */
+exports.uploadVideoDirect = catchAsync(async (req, res, next) => {
+    if (!req.file) {
+        return next(new AppError('No video file provided.', 400));
+    }
+
+    // 1 op for PutObject
+    await checkClassALimits(1);
+
+    const uniqueKey = `videos/${Date.now()}-${req.file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '_')}`;
+
+    const command = new PutObjectCommand({
+        Bucket: process.env.R2_BUCKET_NAME,
+        Key: uniqueKey,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype
+    });
+
+    await s3Client.send(command);
+
+    const fileUrl = `${process.env.R2_CUSTOM_DOMAIN}/${uniqueKey}`;
+
+    res.status(200).json({
+        status: 'success',
+        fileUrl: fileUrl,
+        fileMetadata: {
+            originalName: req.file.originalname,
+            fileSize: req.file.size,
+            mimeType: req.file.mimetype,
+            uploadedAt: new Date()
+        }
     });
 });

@@ -5,11 +5,12 @@ const { sendCoursePublishedNotification } = require('../utils/emailService');
 exports.getEnrolledCourses = async (req, res) => {
     try {
         console.log('getEnrolledCourses - User ID:', req.user?.id);
-        const { Module } = require('../models/index');
+        const { Module, Enrollment } = require('../models/index');
 
         const user = await User.findById(req.user.id).populate({
             path: 'enrolledCourses',
-            populate: { path: 'mentors', select: 'name' }
+            populate: { path: 'mentors', select: 'name' },
+            select: '+validityType +validityDays'
         });
 
         console.log('User found:', user ? 'Yes' : 'No');
@@ -55,12 +56,52 @@ exports.getEnrolledCourses = async (req, res) => {
             };
         });
 
+        // Fetch Enrollments to check validity/expired status
+        const enrollments = await Enrollment.find({ studentID: req.user.id }).lean();
+        const enrollmentMap = {};
+        enrollments.forEach(e => {
+            enrollmentMap[e.courseID.toString()] = e;
+        });
+
         // Attach progress data and module counts to each course
         const coursesWithProgress = user.enrolledCourses.map(course => {
             const courseObj = course.toObject ? course.toObject() : course;
             const courseId = courseObj._id.toString();
             courseObj.progress = progressMap[courseId] || { percentage: 0, completedLessons: [], lastAccessed: null };
             courseObj.totalLessons = moduleMap[courseId] || 0;
+
+            const enrolObj = enrollmentMap[courseId];
+            if (enrolObj) {
+                courseObj.enrollmentStatus = enrolObj.status; // Pass status to frontend to handle "Disabled"
+            } else {
+                courseObj.enrollmentStatus = 'Active';
+            }
+
+            // Self-healing missing expiry dates for limited validities
+            let effectiveExpiryDate = enrolObj ? enrolObj.expiryDate : null;
+            if (enrolObj && !effectiveExpiryDate && courseObj.validityType === 'Limited' && courseObj.validityDays > 0) {
+                const calculatedExpiry = new Date(enrolObj.enrolledAt || Date.now());
+                calculatedExpiry.setDate(calculatedExpiry.getDate() + courseObj.validityDays);
+                effectiveExpiryDate = calculatedExpiry;
+
+                // Fire-and-forget save back to DB to fix the data
+                Enrollment.findByIdAndUpdate(enrolObj._id, { expiryDate: effectiveExpiryDate }).exec().catch(e => console.error('Self-heal failed:', e));
+            }
+
+            if (effectiveExpiryDate && new Date() > new Date(effectiveExpiryDate)) {
+                courseObj.isExpired = true;
+                courseObj.expiryDate = effectiveExpiryDate;
+                courseObj.daysLeft = 0;
+            } else {
+                courseObj.isExpired = false;
+                if (effectiveExpiryDate) {
+                    courseObj.expiryDate = effectiveExpiryDate;
+                    courseObj.daysLeft = Math.max(0, Math.ceil((new Date(effectiveExpiryDate) - new Date()) / (1000 * 60 * 60 * 24)));
+                } else if (courseObj.validityType === 'Lifetime' || !courseObj.validityType) {
+                    courseObj.daysLeft = 'Lifetime';
+                }
+            }
+
             return courseObj;
         });
 
@@ -238,7 +279,10 @@ exports.getCourseDetails = async (req, res) => {
             if (user.role === 'Admin') {
                 hasFullAccess = true;
             } else if (enrollment) {
-                if (new Date() > enrollment.expiryDate) {
+                if (enrollment.status === 'Disabled') {
+                    hasFullAccess = false;
+                    isExpired = false; // Distinct from expired
+                } else if (enrollment.expiryDate && new Date() > new Date(enrollment.expiryDate)) {
                     isExpired = true;
                     hasFullAccess = false;
                 } else {
@@ -338,7 +382,7 @@ exports.getAllCoursesAdmin = async (req, res) => {
 // Create Course
 exports.createCourse = async (req, res) => {
     try {
-        const { title, description, price, mentors, category, difficulty, duration, thumbUrl, status, introVideoUrl, introText, previewDuration } = req.body;
+        const { title, description, price, mentors, category, difficulty, duration, thumbUrl, status, introVideoUrl, introText, previewDuration, whatsappGroupLink } = req.body;
         const user = await User.findById(req.user.id);
 
         // Determine course status based on role:
@@ -363,6 +407,9 @@ exports.createCourse = async (req, res) => {
             introVideoUrl,
             introText,
             previewDuration: previewDuration || 60,
+            whatsappGroupLink,
+            validityType: req.body.validityType || 'Lifetime',
+            validityDays: req.body.validityDays || 0,
             status: initialStatus,
             createdBy: req.user.id
         });
@@ -389,6 +436,32 @@ exports.updateCourse = async (req, res) => {
         if (!oldCourse) return res.status(404).json({ message: 'Course not found' });
 
         const course = await Course.findByIdAndUpdate(id, updates, { new: true }).populate('mentors', 'name');
+
+        // Dynamic Expiry Recalculation Hook
+        if (
+            (updates.validityType && updates.validityType !== oldCourse.validityType) ||
+            (updates.validityDays !== undefined && updates.validityDays !== oldCourse.validityDays)
+        ) {
+            const { Enrollment } = require('../models/index');
+            const enrollments = await Enrollment.find({ courseID: id });
+
+            const newValidityType = updates.validityType || oldCourse.validityType;
+            const newValidityDays = parseInt(updates.validityDays !== undefined ? updates.validityDays : oldCourse.validityDays, 10) || 0;
+
+            const updatePromises = enrollments.map(async (enr) => {
+                if (newValidityType === 'Lifetime' || !newValidityType) {
+                    enr.expiryDate = null;
+                } else if (newValidityType === 'Limited' && newValidityDays > 0) {
+                    const calculatedExpiry = new Date(enr.enrolledAt || Date.now());
+                    calculatedExpiry.setDate(calculatedExpiry.getDate() + newValidityDays);
+                    enr.expiryDate = calculatedExpiry;
+                }
+                return enr.save();
+            });
+
+            await Promise.allSettled(updatePromises);
+            console.log(`✅ Recalculated expiry dates for ${enrollments.length} enrollments due to Course validity change.`);
+        }
 
         // Notify course mentors on status change
         if (updates.status && oldCourse.status !== updates.status) {
@@ -523,6 +596,12 @@ exports.getCourseWithEnrollments = async (req, res) => {
     try {
         console.log('getCourseWithEnrollments called with ID:', req.params.id);
         const { id } = req.params;
+        const mongoose = require('mongoose');
+
+        if (id === 'null' || id === 'undefined' || !id || !mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: 'Invalid or missing Course ID' });
+        }
+
         const { Enrollment } = require('../models/index');
 
         const course = await Course.findById(id).populate('mentors', 'name email');

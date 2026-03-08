@@ -41,6 +41,13 @@ router.post(
   r2Controller.completeUpload,
 );
 
+router.post(
+  "/video/direct",
+  authorize(["Staff", "Admin"]),
+  uploadController.videoDirectUploadMiddleware,
+  r2Controller.uploadVideoDirect
+);
+
 // PDF upload for module content
 router.post(
   "/pdf",

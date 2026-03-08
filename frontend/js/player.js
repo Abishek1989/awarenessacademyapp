@@ -108,6 +108,12 @@ async function loadPlayer() {
         });
         const data = await res.json();
 
+        if (data.isExpired) {
+            UI.error('Your access to this course has expired.');
+            setTimeout(() => { window.location.href = 'courses.html'; }, 2000);
+            return;
+        }
+
         hasFullAccess = data.hasFullAccess; // Access based on enrollment
         document.getElementById('courseTitle').textContent = data.course.title;
         const mentorName = data.course.mentors && data.course.mentors.length > 0 ? data.course.mentors[0].name : 'Awareness Academy Guides';
@@ -432,6 +438,8 @@ async function loadModuleContent(module) {
     contentDisplay.style.display = 'none';
     contentDisplay.innerHTML = '';
     downloadBtn.style.display = 'none';
+    const whatsappBtn = document.getElementById('joinWhatsappBtn');
+    if (whatsappBtn) whatsappBtn.style.display = 'none';
 
     title.textContent = module.title;
 
@@ -490,6 +498,17 @@ async function loadModuleContent(module) {
     markBtn.innerHTML = '<i class="fas fa-check-circle"></i><span class="btn-text-full">Mark as Complete</span><span class="btn-text-short">Done</span>';
     markBtn.style.background = '#9ca3af'; // grey while locked
     markBtn.disabled = true;
+
+    // WhatsApp Join button
+    const waBtn = document.getElementById('joinWhatsappBtn');
+    if (waBtn) {
+        if (window.cachedCourseData && window.cachedCourseData.course && window.cachedCourseData.course.whatsappGroupLink) {
+            waBtn.href = window.cachedCourseData.course.whatsappGroupLink;
+            waBtn.style.display = 'flex';
+        } else {
+            waBtn.style.display = 'none';
+        }
+    }
 
     // Check existing progress
     checkCompletionStatus(module._id);
@@ -810,6 +829,17 @@ function loadIntroIframe(course) {
     overlay.style.display = 'none';
     markBtn.style.display = 'none';
     if (contentDisplay) contentDisplay.style.display = 'none';
+
+    // WhatsApp Join button
+    const waBtn = document.getElementById('joinWhatsappBtn');
+    if (waBtn) {
+        if (course && course.whatsappGroupLink) {
+            waBtn.href = course.whatsappGroupLink;
+            waBtn.style.display = 'flex';
+        } else {
+            waBtn.style.display = 'none';
+        }
+    }
 
     title.textContent = "Course Introduction - " + (course?.title || 'Overview');
     document.getElementById('contentDescription').innerHTML = '<p>Welcome to the course. Watch the introduction to get started.</p>';

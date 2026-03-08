@@ -94,6 +94,9 @@ const courseSchema = new Schema({
     introVideoUrl: { type: String }, // Introduction Video URL
     introText: { type: String }, // Rich text description
     previewDuration: { type: Number, default: 60 }, // Seconds
+    whatsappGroupLink: { type: String }, // Link to join WhatsApp group
+    validityType: { type: String, enum: ['Lifetime', 'Limited'], default: 'Lifetime' }, // Time limit for access
+    validityDays: { type: Number, default: 0 }, // If limited, how many days access lasts from enrollment
     status: {
         type: String,
         enum: ['Draft', 'Pending', 'Approved', 'Published', 'Inactive'],
@@ -346,7 +349,7 @@ module.exports = {
         courseID: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
         enrolledAt: { type: Date, default: Date.now },
         expiryDate: { type: Date },
-        status: { type: String, enum: ['Active', 'Expired'], default: 'Active' },
+        status: { type: String, enum: ['Active', 'Expired', 'Disabled'], default: 'Active' },
         progress: { type: Number, default: 0, min: 0, max: 100 },
         completed: { type: Boolean, default: false }
     })),

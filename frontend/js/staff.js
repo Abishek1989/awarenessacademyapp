@@ -2,8 +2,33 @@
  * Awareness Academy - Staff Dashboard Logic
  */
 
+function handleHashNavigation() {
+    const hash = window.location.hash.substring(1);
+    const bareHash = hash.split('?')[0];
+
+    if (!bareHash) {
+        switchSection('overview', false);
+        return;
+    }
+
+    if (bareHash === 'editCourse') {
+        const urlParams = new URLSearchParams(hash.split('?')[1] || '');
+        const courseId = urlParams.get('id');
+        switchSection('courses', false);
+    } else {
+        switchSection(bareHash, false);
+    }
+}
+
+window.addEventListener('hashchange', () => {
+    handleHashNavigation();
+});
+
 // Navigation function to switch between sections
-function switchSection(sectionName) {
+function switchSection(sectionName, updateHash = true) {
+    if (updateHash && sectionName !== 'editCourse') {
+        window.location.hash = sectionName;
+    }
     // Hide all sections
     const sections = ['overviewSection', 'coursesSection', 'studentsSection', 'notificationsSection', 'liveSection', 'assessmentsSection', 'ticketsSection', 'profileSection'];
     sections.forEach(id => {
@@ -307,10 +332,91 @@ window.staffResetWizard = function () {
     if (thumbUploadProgress) thumbUploadProgress.style.display = 'none';
     if (thumbUploadStatus) thumbUploadStatus.textContent = '';
 
-    // Only call updateStaffStepUI if it exists (defined later)
-    if (typeof updateStaffStepUI === 'function') {
-        updateStaffStepUI();
+    // Switch to first tab
+    if (typeof switchStaffCourseTab === 'function') {
+        switchStaffCourseTab('step1');
     }
+};
+
+// This function is called when editing an existing course
+window.openStaffCourseModal = function (course) {
+    staffResetWizard(); // Reset everything first
+
+    // Switch to the Course Edit Tab UI
+    document.querySelectorAll('.dashboard-section').forEach(s => s.style.display = 'none');
+    document.getElementById('staffCourseEditTab').style.display = 'block';
+
+    const titleEl = document.getElementById('staffCourseModalTitle');
+    const staffStudentTabBtn = document.getElementById('staffStudentTabBtn');
+
+    if (course && course._id) {
+        // Editing existing course
+        document.getElementById('courseId').value = course._id;
+        titleEl.innerText = 'Edit Course: ' + course.title;
+
+        document.getElementById('courseTitle').value = course.title || '';
+        document.getElementById('courseDesc').value = course.description || '';
+        document.getElementById('coursePrice').value = course.price || '';
+        document.getElementById('courseDifficulty').value = course.difficulty || 'Beginner';
+        document.getElementById('courseCategory').value = course.category || 'Programming';
+        document.getElementById('courseDuration').value = course.duration || '';
+        document.getElementById('courseThumb').value = course.thumbnail || '';
+        document.getElementById('courseIntroText').value = course.introText || '';
+        document.getElementById('courseIntroVideoUrl').value = course.introVideoUrl || '';
+        document.getElementById('coursePreviewDuration').value = course.previewDuration || '';
+        if (document.getElementById('courseWhatsappLink')) {
+            document.getElementById('courseWhatsappLink').value = course.whatsappGroupLink || '';
+        }
+
+        // Set validity
+        if (course.validityType === 'Lifetime') {
+            document.getElementById('staffValidityLifetime').checked = true;
+        } else {
+            document.getElementById('staffValidityLimited').checked = true;
+            document.getElementById('staffCourseValidityDays').value = course.validityDays || '';
+        }
+        toggleStaffValidityDays(); // Update UI based on selection
+
+        // Set status
+        const statusInput = document.getElementById('courseStatusInput');
+        if (statusInput) statusInput.value = course.status || 'Draft';
+
+        // Show thumbnail preview if exists
+        if (course.thumbnail) {
+            document.getElementById('thumbPreviewImg').src = _getStaffThumbnail(course.thumbnail);
+            document.getElementById('thumbPreviewContainer').style.display = 'block';
+        }
+
+        // Show uploaded state if video exists
+        if (course.introVideoUrl) {
+            const previewCont = document.getElementById('staffVideoPreviewContainer');
+            if (previewCont) previewCont.style.display = 'block';
+            document.getElementById('staffDropzoneContent').style.display = 'none';
+            document.getElementById('staffVideoLink').href = course.introVideoUrl;
+        } else {
+            const previewCont = document.getElementById('staffVideoPreviewContainer');
+            if (previewCont) previewCont.style.display = 'none';
+            document.getElementById('staffDropzoneContent').style.display = 'block';
+        }
+
+        document.getElementById('staffDeleteCourseBtn').style.display = 'block'; // Show delete button for existing courses
+        staffStudentTabBtn.style.display = 'flex';
+        loadStaffCourseStudents(course._id);
+
+    } else {
+        // Adding new course
+        titleEl.innerText = 'Add New Course';
+        document.getElementById('courseId').value = ''; // Clear ID for new course
+        document.getElementById('staffDeleteCourseBtn').style.display = 'none'; // Hide delete button for new courses
+        staffStudentTabBtn.style.display = 'none'; // Hide student tab for new course creation
+
+        // Reset Validity Fields
+        document.getElementById('staffValidityLifetime').checked = true;
+        document.getElementById('staffCourseValidityDays').value = '';
+        toggleStaffValidityDays();
+    }
+    // Switch to first tab
+    switchStaffCourseTab('step1');
 };
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -327,15 +433,29 @@ document.addEventListener('DOMContentLoaded', () => {
         avatar.textContent = (user.name || 'M').charAt(0).toUpperCase();
     }
 
-    // 2. Modals Logic
-    const courseModal = document.getElementById('courseModal');
+    // 2. Modals & Tabs Logic
     const uploadModal = document.getElementById('uploadModal');
 
     document.getElementById('newCourseBtn').addEventListener('click', () => {
         staffResetWizard();
-        courseModal.style.display = 'flex';
+        document.querySelectorAll('.dashboard-section').forEach(s => s.style.display = 'none');
+        document.getElementById('staffCourseEditTab').style.display = 'block';
+
+        // Hide student tab for new course creation
+        const studentTabBtn = document.getElementById('staffStudentTabBtn');
+        if (studentTabBtn) studentTabBtn.style.display = 'none';
+
+        // Set title to Add New Course
+        const titleEl = document.getElementById('staffCourseModalTitle');
+        if (titleEl) titleEl.innerText = 'Add New Course';
+
+        // Reset Validity Fields
+        document.getElementById('staffValidityLifetime').checked = true;
+        document.getElementById('staffCourseValidityDays').value = '';
+        toggleStaffValidityDays();
+        document.getElementById('staffDeleteCourseBtn').style.display = 'none'; // Hide delete button for new courses
     });
-    document.getElementById('closeModal').addEventListener('click', () => courseModal.style.display = 'none');
+
     document.getElementById('closeUploadModal').addEventListener('click', () => uploadModal.style.display = 'none');
 
     // Intro Video Upload Logic
@@ -590,8 +710,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // 3. Load Overview (Default) and Courses
-    loadOverview();
+    // 3. Handle Hash Routing
+    handleHashNavigation();
     loadCourses();
     checkDeletedCourses();
 
@@ -2541,138 +2661,474 @@ async function sendStaffReply(ticketId) {
 
 window.sendStaffReply = sendStaffReply;
 
-/* --- STAFF STEPPER WIZARD CONTINUED --- */
-// Note: staffResetWizard is now defined earlier (before DOMContentLoaded)
-// to avoid reference errors
+// Sub-Sidebar Navigation for Course Edit Tab
+window.switchStaffCourseTab = function (tabId) {
+    // Hide all steps
+    const steps = ['step1', 'step2', 'step3', 'staffCourseStep4', 'staffCourseStudents'];
+    steps.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    });
 
-window.staffStepNext = function () {
-    if (!validateStaffStep(currentStaffStep)) return;
-    currentStaffStep++;
-    updateStaffStepUI();
-}
+    // Remove active styling from all tab buttons
+    document.querySelectorAll('.staff-course-tab').forEach(btn => {
+        btn.classList.remove('active');
+        btn.style.color = '#666';
+        btn.style.background = 'transparent';
+    });
 
-window.jumpStaffStep = function (n) {
-    // Validate if jumping ahead deeply? For now allow "Edit Mode" freedom
-    // But basic validation of step 1 is useful if creating new
-    if (n > currentStaffStep + 1 && currentStaffStep === 1) {
-        if (!validateStaffStep(1)) return;
+    // Show target step
+    const targetEl = document.getElementById(tabId);
+    if (targetEl) targetEl.style.display = 'block';
+
+    // Add active styling to clicked tab
+    const activeTab = document.querySelector(`.staff-course-tab[data-target="${tabId}"]`);
+    if (activeTab) {
+        activeTab.classList.add('active');
+        activeTab.style.color = 'var(--color-primary)';
+        activeTab.style.background = 'rgba(102, 126, 234, 0.1)';
     }
 
-    currentStaffStep = n;
-    updateStaffStepUI();
+    // If switching to Students tab, load the data
+    if (tabId === 'staffCourseStudents') {
+        const courseId = document.getElementById('courseId').value;
+        if (courseId) {
+            loadStaffCourseStudents(courseId);
+        } else {
+            document.getElementById('staffCourseStudentsContainer').innerHTML =
+                '<div style="padding: 40px; text-align: center; color: #999;">Save the course first to view enrolled students.</div>';
+        }
+    }
 }
 
-window.staffStepBack = function () {
-    if (currentStaffStep > 1) currentStaffStep--;
-    updateStaffStepUI();
+// Student Management Logic for Staff
+window.loadStaffCourseStudents = async function (courseId) {
+    const container = document.getElementById('staffCourseStudentsContainer');
+    container.innerHTML = '<div style="padding: 40px; text-align: center; color: #999;"><i class="fas fa-spinner fa-spin" style="font-size: 2rem;"></i><p>Loading students...</p></div>';
+
+    try {
+        const res = await fetch(`${Auth.apiBase}/enrollments/course/${courseId}`, { headers: Auth.getHeaders() });
+        if (!res.ok) throw new Error(await res.text());
+        const students = await res.json();
+
+        if (!students || students.length === 0) {
+            container.innerHTML = '<div style="padding: 40px; text-align: center; color: #999;">No students enrolled yet.</div>';
+            return;
+        }
+
+        window.currentStaffCourseStudents = students; // For search filtering
+        renderStaffCourseStudents(students);
+    } catch (err) {
+        console.error('Failed to load course students:', err);
+        container.innerHTML = '<div style="padding: 40px; text-align: center; color: #e74c3c;">Failed to load registered students.</div>';
+    }
 }
 
-function updateStaffStepUI() {
-    // 1. Show/Hide Steps
-    for (let i = 1; i <= 4; i++) {
-        const el = document.getElementById(`step${i}`);
-        if (el) el.style.display = (i === currentStaffStep) ? 'block' : 'none';
+window.renderStaffCourseStudents = function (students) {
+    const container = document.getElementById('staffCourseStudentsContainer');
 
-        // 2. Update Header Indicators
-        const stepLabels = ['Basic Info', 'Key Details', 'Media', 'Finalize'];
+    if (!students || students.length === 0) {
+        container.innerHTML = '<div style="padding: 40px; text-align: center; color: #999;">No matching students found.</div>';
+        return;
+    }
+    let html = `<div style="display: flex; flex-direction: column; gap: 15px;">`;
 
-        document.querySelectorAll('.step-indicator').forEach(el => {
-            const step = parseInt(el.dataset.step);
-            const labelText = stepLabels[step - 1] || step;
+    students.forEach(enr => {
+        const st = enr.student;
+        const name = st ? st.name : 'Unknown';
+        const email = st ? st.email : 'N/A';
+        const pct = enr.progressPct || 0;
 
-            if (step < currentStaffStep) {
-                el.className = 'step-indicator completed';
-                el.style.background = 'var(--color-success)';
-                el.style.color = 'white';
-                el.innerHTML = `<i class="fas fa-check"></i> ${labelText}`;
-            } else if (step === currentStaffStep) {
-                el.className = 'step-indicator active';
-                el.style.background = 'var(--color-saffron)';
-                el.style.color = 'white';
-                el.innerHTML = labelText;
-            } else {
-                el.className = 'step-indicator';
-                el.style.background = '#eee';
-                el.style.color = '#999';
-                el.innerHTML = labelText;
+        // Fallback to _id timestamp if enrollmentDate is not provided by backend
+        let rawDate = enr.enrollmentDate;
+        if (!rawDate && enr._id) {
+            rawDate = new Date(parseInt(enr._id.substring(0, 8), 16) * 1000);
+        }
+        const regDate = rawDate ? new Date(rawDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A';
+        const endDate = enr.expiryDate ? new Date(enr.expiryDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Lifetime';
+
+        // Status Badge
+        let statusBadge = '';
+        if (enr.status === 'Active') {
+            statusBadge = enr.isExpired
+                ? '<span class="badge" style="background: #fee; color: #e74c3c; padding: 6px 10px; border-radius: 6px; font-weight: 600;">Expired</span>'
+                : '<span class="badge" style="background: #e6f4ea; color: #1e7e34; padding: 6px 10px; border-radius: 6px; font-weight: 600;">Active</span>';
+        } else if (enr.status === 'Completed') {
+            statusBadge = '<span class="badge" style="background: #e3f2fd; color: #0d47a1; padding: 6px 10px; border-radius: 6px; font-weight: 600;">Completed</span>';
+        } else {
+            statusBadge = '<span class="badge" style="background: #f8f9fa; color: #6c757d; border: 1px solid #ddd; padding: 6px 10px; border-radius: 6px; font-weight: 600;">Disabled</span>';
+        }
+
+        const btnDisabled = enr.status === 'Disabled';
+
+        html += `
+            <div style="background: white; border: 1px solid #f0f0f0; border-radius: 12px; padding: 20px; display: flex; flex-direction: column; gap: 15px; transition: box-shadow 0.3s;" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'">
+                <!-- Top Row: Student Info, Status, Actions -->
+                <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 15px;">
+                    <div style="display: flex; gap: 15px; align-items: center;">
+                        <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, var(--color-primary) 0%, #764ba2 100%); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold;">
+                            ${name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                            <div style="font-weight: 600; font-size: 1.1rem; color: #333;">${name}</div>
+                            <div style="font-size: 0.85rem; color: #666;"><i class="fas fa-envelope" style="opacity: 0.7; margin-right: 4px;"></i>${email}</div>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
+                        ${statusBadge}
+                        <div style="display: flex; gap: 8px;">
+                            ${btnDisabled
+                ? `<button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem; background: #e6f4ea; color: #1e7e34; border: 1px solid #c3e6cb; border-radius: 6px;" onclick="updateStaffEnrollmentStatus('${enr._id}', 'Active')"><i class="fas fa-check"></i> Enable</button>`
+                : `<button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem; background: #fee; color: #e74c3c; border: 1px solid #f5c6cb; border-radius: 6px;" onclick="updateStaffEnrollmentStatus('${enr._id}', 'Disabled')"><i class="fas fa-ban"></i> Disable</button>`
             }
+                            ${enr.expiryDate ? `
+                                <button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem; background: #e3f2fd; color: #0d47a1; border: 1px solid #bbdefb; border-radius: 6px;" onclick="promptExtendStaffEnrollment('${enr._id}', '${enr.expiryDate}')" title="Extend Access">
+                                    <i class="fas fa-calendar-plus"></i> Extend
+                                </button>
+                            ` : ''}
+                            <button class="btn-primary" style="padding: 6px 12px; font-size: 0.8rem; background: #fee; color: #c0392b; border: 1px solid #e74c3c; border-radius: 6px;" onclick="deleteStaffEnrollment('${enr._id}')" title="Remove Completely">
+                                <i class="fas fa-user-minus"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <hr style="border: none; border-top: 1px dashed #eee; margin: 0;">
+                
+                <!-- Bottom Row: Dates, Validity, Progress -->
+                <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: center; background: #fafafa; padding: 15px; border-radius: 8px;">
+                    <div style="flex: 1; min-width: 140px;">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; color: #888; font-weight: 600; margin-bottom: 5px;">Enrolled On</div>
+                        <div style="font-weight: 500; color: #444; font-size: 0.95rem;">
+                            <i class="far fa-calendar-alt" style="color: var(--color-primary); margin-right: 5px;"></i> ${regDate}
+                        </div>
+                    </div>
+                    
+                    <div style="flex: 1; min-width: 200px;">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; color: #888; font-weight: 600; margin-bottom: 5px;">Access Validity</div>
+                        ${btnDisabled ? `
+                            <div style="font-size: 0.95rem; color: #e74c3c; font-weight: 600; display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-ban"></i> Access Disabled
+                            </div>
+                        ` : (enr.courseValidityType === 'Lifetime' ? `
+                            <div style="font-size: 0.95rem; color: #2ecc71; font-weight: 600; display: flex; align-items: center; gap: 5px;">
+                                <i class="fas fa-infinity"></i> Lifetime Access
+                            </div>
+                        ` : (enr.expiryDate ? `
+                            <div style="display: flex; flex-direction: column; gap: 3px;">
+                                <div style="font-size: 0.9rem; color: #555;">Completed: <strong>${enr.daysCompleted}</strong> days</div>
+                                <div style="font-size: 0.9rem; color: ${enr.isExpired ? '#e74c3c' : '#2ecc71'};">Left: <strong>${enr.daysLeft}</strong> days</div>
+                                <div style="font-size: 0.8rem; color: #888;"><i class="far fa-clock"></i> Expires: ${new Date(enr.expiryDate).toLocaleDateString()}</div>
+                            </div>
+                        ` : `<div style="font-size: 0.8rem; color: #EF4444; font-weight: 500;">Missing expiry date (Course is Limited)</div>`))
+            }                    </div>
+
+                    <div style="flex: 1; min-width: 200px;">
+                        <div style="font-size: 0.75rem; text-transform: uppercase; color: #888; font-weight: 600; margin-bottom: 5px;">Course Progress</div>
+                        ${btnDisabled ? `
+                            <div style="display: flex; align-items: center; gap: 10px; opacity: 0.5;">
+                                <div style="flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;"></div>
+                                <span style="font-size: 0.9rem; font-weight: 700; color: #e74c3c;"><i class="fas fa-lock"></i> Locked</span>
+                            </div>
+                        ` : `
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
+                                <div style="height: 100%; width: ${pct}%; background: ${pct === 100 ? '#2ecc71' : 'var(--color-primary)'};"></div>
+                            </div>
+                            <span style="font-size: 0.9rem; font-weight: 700; color: #333;">${pct}%</span>
+                        </div>
+                        `}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    html += `</div>`;
+    container.innerHTML = html;
+}
+
+window.currentStaffStudentFilter = 'All';
+
+window.filterStaffStudents = function (statusFilter, btnElement) {
+    if (statusFilter && typeof statusFilter === 'string') {
+        window.currentStaffStudentFilter = statusFilter;
+        if (btnElement) {
+            const buttons = btnElement.parentElement.querySelectorAll('button');
+            buttons.forEach(btn => {
+                btn.style.background = '#f0f0f0';
+                btn.style.color = '#555';
+                btn.style.border = '1px solid #ddd';
+            });
+            btnElement.style.background = 'var(--color-primary)';
+            btnElement.style.color = 'white';
+            btnElement.style.border = 'none';
+        }
+    }
+
+    const status = window.currentStaffStudentFilter || 'All';
+    const q = document.getElementById('staffStudentSearch').value.toLowerCase();
+    if (!window.currentStaffCourseStudents) return;
+
+    let filtered = window.currentStaffCourseStudents;
+
+    if (status !== 'All') {
+        filtered = filtered.filter(enr => {
+            if (status === 'Active') return enr.status === 'Active' && !enr.isExpired;
+            if (status === 'Expired') return enr.status === 'Expired' || (enr.status === 'Active' && enr.isExpired);
+            if (status === 'Disabled') return enr.status === 'Disabled';
+            return true;
         });
     }
 
-    // 2. Progress Bar
-    const progress = ((currentStaffStep - 1) / 3) * 100;
-    const bar = document.getElementById('staffStepProgress');
-    if (bar) bar.style.width = `${progress}%`;
+    if (q) {
+        filtered = filtered.filter(enr => {
+            const name = (enr.student?.name || '').toLowerCase();
+            const email = (enr.student?.email || '').toLowerCase();
+            return name.includes(q) || email.includes(q);
+        });
+    }
 
-    // 3. Label
-    const labels = ['Essential Details', 'Key Information', 'Media & Preview', 'Finalize & Launch'];
-    const labelEl = document.getElementById('staffStepLabel');
-    if (labelEl) labelEl.innerText = labels[currentStaffStep - 1];
+    renderStaffCourseStudents(filtered);
+}
 
-    const stepDisp = document.getElementById('staffCurrentStepDisplay');
-    if (stepDisp) stepDisp.innerText = currentStaffStep;
+window.updateStaffEnrollmentStatus = async function (enrollmentId, newStatus) {
+    if (!confirm(`Are you sure you want to change access to ${newStatus}?`)) return;
 
-    // 4. Buttons
-    const prev = document.getElementById('staffPrevBtn');
-    const next = document.getElementById('staffNextBtn');
-    const draft = document.getElementById('staffDraftBtn');
-
-    if (prev) prev.style.visibility = (currentStaffStep === 1) ? 'hidden' : 'visible';
-
-    if (currentStaffStep === 4) {
-        if (next) next.style.display = 'none';
-        if (draft) draft.style.display = 'block';
-    } else {
-        if (next) {
-            next.style.display = 'block';
-            next.innerText = 'Next';
+    const body = { status: newStatus };
+    if (newStatus === 'Active') {
+        const reply = prompt('Enter number of days to grant (leave blank for lifetime access). Cancel to abort:');
+        if (reply === null) return;
+        const trimmed = reply.trim();
+        if (trimmed === '') {
+            body.expiryDate = null;
+        } else {
+            const days = parseInt(trimmed, 10);
+            if (isNaN(days) || days < 0) {
+                UI.error('Invalid number of days');
+                return;
+            }
+            const newExpiry = new Date();
+            newExpiry.setDate(newExpiry.getDate() + days);
+            body.expiryDate = newExpiry.toISOString();
         }
-        if (draft) draft.style.display = 'none';
+    }
+
+    try {
+        const res = await fetch(`${Auth.apiBase}/enrollments/${enrollmentId}`, {
+            method: 'PUT',
+            headers: { ...Auth.getHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        if (!res.ok) throw new Error(await res.text());
+        UI.success('Access status updated successfully');
+        const courseId = document.getElementById('staffCourseId').value;
+        loadStaffCourseStudents(courseId);
+    } catch (err) {
+        console.error(err);
+        UI.error('Failed to update status');
     }
 }
 
-function validateStaffStep(step) {
-    let isValid = true;
-    let msg = '';
+window.deleteStaffEnrollment = async function (enrollmentId) {
+    if (!confirm('Are you absolutely sure you want to completely remove this student from the course? This action cannot be undone and will delete all their progress.')) return;
 
-    if (step === 1) {
-        if (!document.getElementById('courseTitle').value.trim()) { isValid = false; msg = 'Title is required.'; }
-    } else if (step === 2) {
-        if (!document.getElementById('coursePrice').value) { isValid = false; msg = 'Price is required.'; }
-        if (!document.getElementById('courseDesc').value.trim()) { isValid = false; msg = 'Description is required.'; }
-        if (!document.getElementById('courseDuration').value.trim()) { isValid = false; msg = 'Duration is required.'; }
+    try {
+        const res = await fetch(`${Auth.apiBase}/enrollments/${enrollmentId}`, {
+            method: 'DELETE',
+            headers: Auth.getHeaders()
+        });
+        if (!res.ok) throw new Error(await res.text());
+        UI.success('Student completely removed from course.');
+        const courseId = document.getElementById('staffCourseId').value;
+        loadStaffCourseStudents(courseId);
+    } catch (err) {
+        console.error(err);
+        UI.error('Failed to remove student');
     }
-
-    if (!isValid) UI.error(msg);
-    return isValid;
 }
 
-window.submitCourse = async function () {
-    const form = document.getElementById('courseForm');
-    const formData = new FormData(form);
-    const data = Object.fromEntries(formData.entries());
+window.promptExtendStaffEnrollment = async function (enrollmentId, currentExpiry) {
+    const days = prompt('Enter number of days to extend validity from today (or leave blank to cancel):');
+    if (!days || isNaN(days)) return;
+
+    try {
+        const newExpiry = new Date();
+        newExpiry.setDate(newExpiry.getDate() + parseInt(days));
+
+        const res = await fetch(`${Auth.apiBase}/enrollments/${enrollmentId}`, {
+            method: 'PUT',
+            headers: { ...Auth.getHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ expiryDate: newExpiry.toISOString() })
+        });
+        if (!res.ok) throw new Error(await res.text());
+        UI.success(`Validity extended by ${days} days`);
+
+        // Reload list
+        const courseId = document.getElementById('courseId').value;
+        loadStaffCourseStudents(courseId);
+    } catch (err) {
+        console.error(err);
+        UI.error('Failed to extend validity');
+    }
+}
+
+window.deleteStaffCourse = async function () {
+    const courseId = document.getElementById('courseId').value; // Assuming 'courseId' is the ID of the course being edited
+    if (!courseId) return;
+
+    // Create a custom red-themed confirmation modal
+    const modalHtml = `
+        <div id="deleteCourseConfirmModal_Staff" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+            <div style="background: white; padding: 30px; border-radius: 12px; max-width: 450px; width: 90%; text-align: center; border-top: 6px solid #dc2626; box-shadow: 0 10px 25px rgba(220, 38, 38, 0.3);">
+                <i class="fas fa-exclamation-triangle" style="font-size: 3.5rem; color: #dc2626; margin-bottom: 15px;"></i>
+                <h3 style="color: #dc2626; margin-top: 0; font-weight: 800; text-transform: uppercase;">Danger Zone</h3>
+                <p style="color: #4b5563; font-size: 1rem; margin-bottom: 20px;">You are about to completely delete this course. This action <b>cannot be undone</b> and will permanently remove all associated materials.</p>
+                <div style="background: #fee2e2; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #fecaca;">
+                    <p style="margin: 0; font-size: 0.85rem; color: #991b1b; font-weight: 700; text-transform: uppercase;">Course ID to delete:</p>
+                    <p style="margin: 5px 0 0 0; font-family: monospace; font-size: 1.25rem; color: #dc2626; font-weight: bold; user-select: all;">${courseId}</p>
+                </div>
+                <p style="font-size: 0.9rem; color: #374151; margin-bottom: 10px; font-weight: 600;">Please type the Course ID above to confirm:</p>
+                <input type="text" id="confirmCourseIdInput_Staff" class="form-control" style="width: 100%; box-sizing: border-box; border: 2px solid #fca5a5; padding: 12px; border-radius: 8px; text-align: center; font-family: monospace; font-size: 1.1rem; margin-bottom: 20px; color: #dc2626; font-weight: bold;" placeholder="Paste ID here" autocomplete="off">
+                
+                <div style="display: flex; gap: 15px;">
+                    <button type="button" onclick="document.getElementById('deleteCourseConfirmModal_Staff').remove()" style="flex: 1; padding: 12px; background: #f3f4f6; color: #4b5563; border: 1px solid #d1d5db; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Cancel</button>
+                    <button type="button" id="finalDeleteCourseBtn_Staff" onclick="executeStaffCourseDelete('${courseId}')" disabled style="flex: 1; padding: 12px; background: #dc2626; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: not-allowed; opacity: 0.5; transition: all 0.2s;">Delete Forever</button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+
+    // Add event listener to input to enable button
+    const inputEL = document.getElementById('confirmCourseIdInput_Staff');
+    const btnEl = document.getElementById('finalDeleteCourseBtn_Staff');
+    inputEL.addEventListener('input', (e) => {
+        if (e.target.value.trim() === courseId) {
+            btnEl.disabled = false;
+            btnEl.style.cursor = 'pointer';
+            btnEl.style.opacity = '1';
+            btnEl.style.boxShadow = '0 4px 12px rgba(220, 38, 38, 0.4)';
+        } else {
+            btnEl.disabled = true;
+            btnEl.style.cursor = 'not-allowed';
+            btnEl.style.opacity = '0.5';
+            btnEl.style.boxShadow = 'none';
+        }
+    });
+}
+
+window.executeStaffCourseDelete = async function (courseId) {
+    const modal = document.getElementById('deleteCourseConfirmModal_Staff');
+    if (modal) modal.remove();
 
     try {
         UI.showLoader();
-        const res = await fetch(`${Auth.apiBase}/staff/courses`, {
-            method: 'POST',
-            headers: Auth.getHeaders(),
-            body: JSON.stringify(data)
+        const res = await fetch(`${Auth.apiBase}/courses/${courseId}`, {
+            method: 'DELETE',
+            headers: Auth.getHeaders()
         });
+
+        const data = await res.json();
+
         if (res.ok) {
-            UI.success('Course draft created!');
-            document.getElementById('courseModal').style.display = 'none';
-            loadCourses();
+            UI.success('Course deleted successfully.');
+            closeStaffCourseEditTab();
+            loadCourses(); // Reload the main course list
         } else {
-            const err = await res.json();
-            UI.error(err.message || 'Creation failed');
+            if (data.message === 'Cannot delete course with active enrollments') {
+                UI.error(`Cannot delete course: There are ${data.enrollmentCount} active student enrollments. Please remove all students first before deleting.`);
+                // Switch to students tab automatically so staff can remove them
+                switchStaffCourseTab('staffCourseStudents');
+            } else {
+                UI.error(data.message || 'Failed to delete course');
+            }
         }
     } catch (err) {
-        UI.error('Could not initiate the course draft.');
+        console.error("Delete course error: ", err);
+        UI.error("An error occurred while deleting the course.");
     } finally {
         UI.hideLoader();
     }
+}
+
+window.saveCourse = async function (e) {
+    if (e) e.preventDefault();
+    const id = document.getElementById('courseId').value;
+    const statusInput = document.getElementById('courseStatusInput');
+    const status = statusInput ? statusInput.value : 'Draft';
+
+    // Validation
+    if (!document.getElementById('courseTitle').value || !document.getElementById('coursePrice').value) {
+        UI.error('Please fill all mandatory (*) fields in Details tab.');
+        return;
+    }
+
+    const data = {
+        title: document.getElementById('courseTitle').value,
+        description: document.getElementById('courseDesc').value,
+        price: document.getElementById('coursePrice').value,
+        difficulty: document.getElementById('courseDifficulty').value,
+        category: document.getElementById('courseCategory').value,
+        duration: document.getElementById('courseDuration').value,
+        thumbUrl: document.getElementById('courseThumb').value,
+        introText: document.getElementById('courseIntroText').value,
+        introVideoUrl: document.getElementById('courseIntroVideoUrl').value,
+        previewDuration: document.getElementById('coursePreviewDuration').value,
+        whatsappGroupLink: document.getElementById('courseWhatsappLink') ? document.getElementById('courseWhatsappLink').value : '',
+        validityType: document.querySelector('input[name="validityType"]:checked').value,
+        validityDays: document.getElementById('staffCourseValidityDays').value || 0,
+        status: status
+    };
+
+    let networkSuccess = false;
+    try {
+        UI.showLoader();
+        const method = id ? 'PUT' : 'POST';
+        const url = id ? `${Auth.apiBase}/staff/courses/${id}` : `${Auth.apiBase}/staff/courses`;
+
+        const res = await fetch(url, {
+            method,
+            headers: { ...Auth.getHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err.message || 'Save failed');
+        }
+
+        networkSuccess = true;
+        UI.success(`Course ${id ? 'Updated' : 'Created'}!`);
+    } catch (err) {
+        UI.error(err.message || 'Could not save course.');
+    } finally {
+        UI.hideLoader();
+    }
+
+    if (networkSuccess) {
+        try { closeStaffCourseEditTab(); } catch (e) { console.error(e); }
+        loadCourses().catch(e => console.error(e));
+    }
 };
+
+function closeStaffCourseEditTab() {
+    document.getElementById('staffCourseEditTab').style.display = 'none';
+    switchSection('courses');
+}
+
+function toggleStaffValidityDays() {
+    const isLimited = document.getElementById('staffValidityLimited').checked;
+    const container = document.getElementById('staffValidityDaysContainer');
+    if (isLimited) {
+        container.style.display = 'block';
+        document.getElementById('staffCourseValidityDays').setAttribute('required', 'true');
+    } else {
+        container.style.display = 'none';
+        document.getElementById('staffCourseValidityDays').removeAttribute('required');
+    }
+}
 
 // ===================================
 // MODULE MANAGER FUNCTIONALITY

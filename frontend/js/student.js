@@ -178,15 +178,8 @@ document.addEventListener('DOMContentLoaded', () => {
         loadCharts();
     }
 
-    // 9. Handle URL parameters for direct section navigation
-    const urlParams = new URLSearchParams(window.location.search);
-    const sectionParam = urlParams.get('section');
-    if (sectionParam) {
-        // Remove the parameter from URL without page reload
-        window.history.replaceState({}, document.title, window.location.pathname);
-        // Switch to the requested section
-        setTimeout(() => switchSection(sectionParam), 500);
-    }
+    // 9. Handle URL Hash for direct section navigation
+    handleHashNavigation();
 });
 
 // Expose functions to global scope for HTML onclick attributes
@@ -246,7 +239,26 @@ function getPaymentStatusText(status) {
     return statusTexts[status] || status;
 }
 
-function switchSection(section) {
+function handleHashNavigation() {
+    const hash = window.location.hash.substring(1);
+    const bareHash = hash.split('?')[0];
+
+    if (!bareHash) {
+        switchSection('course', false);
+        return;
+    }
+
+    switchSection(bareHash, false);
+}
+
+window.addEventListener('hashchange', () => {
+    handleHashNavigation();
+});
+
+function switchSection(section, updateHash = true) {
+    if (updateHash) {
+        window.location.hash = section;
+    }
     // Handle Sidebar Links
     const navLinks = document.querySelectorAll('.nav-link');
     navLinks.forEach(link => {
@@ -716,23 +728,58 @@ async function loadEnrolledCourses() {
         container.innerHTML = coursesWithModules.map(c => {
             // Check if course is completed (100% progress)
             const isCompleted = c.progress && c.progress.percentage >= 100;
-            const completionBadge = isCompleted
-                ? '<span class="badge" style="background: #10B981; color: white; position: absolute; top: 10px; right: 10px; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;"><i class="fas fa-check-circle"></i> Completed</span>'
-                : '';
+            // Check if course is expired
+            const isExpired = c.isExpired;
+            // Check if explicitly disabled by admin
+            const isDisabled = c.enrollmentStatus === 'Disabled';
+
+            let statusBadge = '';
+            if (isDisabled) {
+                statusBadge = '<span class="badge" style="background: #e74c3c; color: white; position: absolute; top: 10px; right: 10px; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;"><i class="fas fa-ban"></i> Access Disabled</span>';
+            } else if (isExpired) {
+                statusBadge = '<span class="badge" style="background: var(--color-error); color: white; position: absolute; top: 10px; right: 10px; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;"><i class="fas fa-lock"></i> Expired</span>';
+            } else if (isCompleted) {
+                statusBadge = '<span class="badge" style="background: #10B981; color: white; position: absolute; top: 10px; right: 10px; padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 600;"><i class="fas fa-check-circle"></i> Completed</span>';
+            }
+
+            let actionButtons = '';
+            if (isDisabled) {
+                actionButtons = `
+                    <button disabled class="btn-primary" style="width: 100%; padding: 8px; background: #e74c3c; cursor: not-allowed; opacity: 0.9;"><i class="fas fa-ban"></i> Account Disabled</button>
+                    <p style="color: #e74c3c; font-size: 0.75rem; text-align: center; margin-top: 5px;">Contact support to restore access.</p>
+                `;
+            } else if (isExpired) {
+                actionButtons = `
+                    <button disabled class="btn-primary" style="width: 100%; padding: 8px; background: #ccc; cursor: not-allowed; opacity: 0.8;">Access Expired</button>
+                `;
+            } else {
+                actionButtons = `
+                    <button onclick="window.location.href='player.html?course=${c._id}&content=first'" class="btn-primary" style="width: 100%; padding: 8px;">Continue Course</button>
+                    <button onclick="checkAndTakeExam('${c._id}')" class="btn-primary" style="width: 100%; padding: 8px; background: var(--color-golden);">Take Assessment</button>
+                `;
+            }
+
+            let validityText = '';
+            if (!isDisabled && !isExpired && c.daysLeft !== undefined && c.daysLeft !== 'Lifetime') {
+                const daysColor = c.daysLeft <= 7 ? '#e74c3c' : (c.daysLeft <= 30 ? '#F59E0B' : '#888');
+                validityText = `<div style="text-align: center; margin-bottom: 12px; font-size: 0.8rem; font-weight: 500; color: ${daysColor};">
+                    <i class="far fa-clock"></i> Access expires in ${c.daysLeft} days
+                </div>`;
+            }
 
             return `
-                <div class="course-card glass-premium fade-in" style="position: relative;">
-                    ${completionBadge}
+                <div class="course-card glass-premium fade-in" style="position: relative; ${(isExpired || isDisabled) ? 'opacity: 0.8; filter: grayscale(30%);' : ''}">
+                    ${statusBadge}
                     <div class="course-thumb" style="background: url('${getThumbnail(c.thumbnail)}'); background-size: cover;"></div>
                     <div class="course-info">
                         <h4>${c.title}</h4>
                         <p style="color: var(--color-text-secondary); font-size: 0.85rem; margin-bottom: 15px;">By ${c.mentors && c.mentors.length > 0 ? c.mentors.map(m => m.name).join(', ') : 'Mentor'}</p>
                         
                         <!-- Course Action Buttons -->
-                        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;">
-                            <button onclick="window.location.href='player.html?course=${c._id}&content=first'" class="btn-primary" style="width: 100%; padding: 8px;">Continue Course</button>
-                            <button onclick="checkAndTakeExam('${c._id}')" class="btn-primary" style="width: 100%; padding: 8px; background: var(--color-golden);">Take Assessment</button>
+                        <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 10px;">
+                            ${actionButtons}
                         </div>
+                        ${validityText}
                     </div>
                 </div>
             `;
@@ -1617,13 +1664,13 @@ async function loadMarketplace() {
 
         function renderMarketplaceCourses(coursesToRender) {
             container.innerHTML = coursesToRender.map(c => {
-            const isEnrolled = c.isEnrolled;
-            const mentorName = c.instructor;
-            const thumb = getThumbnail(c.thumbnail);
+                const isEnrolled = c.isEnrolled;
+                const mentorName = c.instructor;
+                const thumb = getThumbnail(c.thumbnail);
 
-            let ctaBtn = '';
-            if (isEnrolled) {
-                ctaBtn = `<button onclick="switchSection('course')" style="
+                let ctaBtn = '';
+                if (isEnrolled) {
+                    ctaBtn = `<button onclick="switchSection('course')" style="
                     width:100%; padding:11px; border:none; border-radius:10px;
                     background:linear-gradient(135deg,#22c55e,#16a34a); color:#fff;
                     font-weight:700; font-size:0.9rem; cursor:pointer;
@@ -1631,8 +1678,8 @@ async function loadMarketplace() {
                     font-family:inherit;">
                     <i class="fas fa-check-circle"></i> Continue Learning
                 </button>`;
-            } else if (c.status === 'Approved') {
-                ctaBtn = `<button onclick="openNotifyModal('${c._id}','${c.title.replace(/'/g, "\\'")}')" style="
+                } else if (c.status === 'Approved') {
+                    ctaBtn = `<button onclick="openNotifyModal('${c._id}','${c.title.replace(/'/g, "\\'")}')" style="
                     width:100%; padding:11px; border:none; border-radius:10px;
                     background:linear-gradient(135deg,#F59E0B,#D97706); color:#fff;
                     font-weight:700; font-size:0.9rem; cursor:pointer;
@@ -1640,8 +1687,8 @@ async function loadMarketplace() {
                     font-family:inherit;">
                     <i class="fas fa-bell"></i> Notify Me
                 </button>`;
-            } else {
-                ctaBtn = `<button onclick="purchaseCourse('${c._id}','${c.price}',event)" style="
+                } else {
+                    ctaBtn = `<button onclick="purchaseCourse('${c._id}','${c.price}',event)" style="
                     width:100%; padding:11px; border:none; border-radius:10px;
                     background:linear-gradient(135deg,#FF9933,#FFC300); color:#fff;
                     font-weight:700; font-size:0.9rem; cursor:pointer;
@@ -1652,9 +1699,9 @@ async function loadMarketplace() {
                     onmouseout="this.style.transform='';this.style.boxShadow='0 4px 12px rgba(255,153,51,0.35)';">
                     <i class="fas fa-bolt"></i> Enroll Now
                 </button>`;
-            }
+                }
 
-            return `
+                return `
             <div class="mkt-course-card" style="
                 background:#fff; border-radius:16px; overflow:hidden;
                 display:flex; flex-direction:column;
@@ -1773,7 +1820,7 @@ function setupMarketplaceEventListeners() {
                 filterMarketplace();
             }, 300);
         });
-        
+
         // Also filter on Enter key
         searchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {

@@ -131,6 +131,17 @@ const videoUpload = multer({
 
 exports.videoUploadMiddleware = videoUpload.single('video');
 
+// Direct Memory Storage for AWS/R2 video push
+const videoDirectStorage = multer.memoryStorage();
+const videoDirectUpload = multer({
+    storage: videoDirectStorage,
+    fileFilter: videoFilter,
+    limits: {
+        fileSize: 500 * 1024 * 1024 // 500MB limit
+    }
+});
+exports.videoDirectUploadMiddleware = videoDirectUpload.single('video');
+
 exports.uploadVideo = catchAsync(async (req, res, next) => {
     if (!req.file) {
         return next(new AppError('No video file uploaded', 400));
