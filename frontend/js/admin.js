@@ -1087,9 +1087,14 @@ async function loadUserManagement(role) {
                                 </span>
                             </td>
                             <td style="padding: 15px; text-align: right; white-space: nowrap;">
-                                <button class="btn-primary" style="padding: 5px 10px; font-size: 0.7rem; background: #337ab7; margin-right: 5px;" onclick='openEditUserModal(${JSON.stringify(u).replace(/'/g, "&#39;")})'>
-                                    <i class="fas fa-edit"></i> Edit
-                                </button>
+                                ${u.role === 'Admin' && (!isCurrentUserDefaultAdmin && currentUser._id !== u._id) ?
+                    `<button class="btn-primary" style="padding: 5px 10px; font-size: 0.7rem; background: #ccc; cursor: not-allowed; margin-right: 5px;" disabled title="Only default admin can edit other admins">
+                                        <i class="fas fa-lock"></i>
+                                    </button>` :
+                    `<button class="btn-primary" style="padding: 5px 10px; font-size: 0.7rem; background: #337ab7; margin-right: 5px;" onclick='openEditUserModal(${JSON.stringify(u).replace(/'/g, "&#39;")})'>
+                                        <i class="fas fa-edit"></i> Edit
+                                    </button>`
+                }
                                 ${u.role === 'Admin' && u.isDefaultAdmin ?
                     `<button class="btn-primary" style="padding: 5px 10px; font-size: 0.7rem; background: #ccc; cursor: not-allowed; margin-right: 5px;" disabled title="Default admin cannot be disabled">
                                         <i class="fas fa-lock"></i>
@@ -1455,27 +1460,163 @@ async function submitMultiStageUser() {
 }
 
 function openEditUserModal(user) {
+    // 1. Clear form first to avoid data retention bug from previous user
+    document.getElementById('editUserForm').reset();
+
+    const isStudent = user.role === 'Student';
+
+    // Toggle dynamic tabs
+    document.getElementById('navTab_family').style.display = 'flex'; // Staff also use Family
+    document.getElementById('navTab_address').style.display = 'flex'; // Staff also use Address
+
+    // Students use Work, Staff/Admins use Bank
+    document.getElementById('navTab_work').style.display = isStudent ? 'flex' : 'none';
+    document.getElementById('navTab_bank').style.display = (!isStudent) ? 'flex' : 'none';
+
+    // Toggle specific student fields in Identity tab
+    document.getElementById('studentOnly_initial').style.display = isStudent ? 'block' : 'none';
+    document.getElementById('studentOnly_dob_gender').style.display = 'grid'; // Staff also use DOB now, so always show grid, might adjust inner later
+
+    // 2. Identity Tab
     document.getElementById('editUserId').value = user._id;
     document.getElementById('editUserName').value = user.name;
     document.getElementById('editUserEmail').value = user.email;
     document.getElementById('editUserPhone').value = user.phone || '';
+    document.getElementById('editUserAdditionalPhone').value = user.additionalPhone || '';
+    document.getElementById('editUserWhatsapp').value = user.whatsappNumber || '';
+    document.getElementById('editUserInitial').value = user.initial || '';
     document.getElementById('editUserRole').value = user.role;
 
-    // Extended Details (Safe access)
-    if (user.fatherName) document.getElementById('editFatherName').value = user.fatherName;
-    if (user.motherName) document.getElementById('editMotherName').value = user.motherName;
-    if (user.address) {
-        document.getElementById('editTown').value = user.address.town || '';
-        document.getElementById('editState').value = user.address.state || '';
+    if (user.dob) {
+        // dob is usually an ISO string from backend, convert to YYYY-MM-DD for date input
+        const dobDate = new Date(user.dob);
+        if (!isNaN(dobDate)) {
+            document.getElementById('editUserDob').value = dobDate.toISOString().split('T')[0];
+        }
     }
 
-    // Audit Info
+    if (user.gender) {
+        document.getElementById('editUserGender').value = user.gender;
+    }
+
+    // 3. Family Tab
+    document.getElementById('editFatherName').value = user.fatherName || '';
+    document.getElementById('editMotherName').value = user.motherName || '';
+
+    const maritalStatus = user.maritalStatus || '';
+    document.getElementById('editMaritalStatus').value = maritalStatus;
+    document.getElementById('editSpouseFields').style.display = maritalStatus === 'Married' ? 'grid' : 'none';
+    document.getElementById('editSpouseName').value = user.spouseName || '';
+    document.getElementById('editSpouseContact').value = user.spouseContact || '';
+
+    // 4. Address Tab
+    if (user.address) {
+        document.getElementById('editDoorNumber').value = user.address.doorNumber || '';
+        document.getElementById('editStreetName').value = user.address.streetName || '';
+        document.getElementById('editTown').value = user.address.town || '';
+        document.getElementById('editDistrict').value = user.address.district || '';
+        document.getElementById('editState').value = user.address.state || '';
+        document.getElementById('editPincode').value = user.address.pincode || '';
+    }
+
+    // 5. Work Tab (for Students)
+    if (user.workDetails) {
+        document.getElementById('editWorkType').value = user.workDetails.type || '';
+        document.getElementById('editWorkName').value = user.workDetails.name || '';
+    }
+
+    // 5b. Bank Tab (for Staff/Admins)
+    if (user.bankDetails) {
+        document.getElementById('editBankAcctName').value = user.bankDetails.accountHolderName || '';
+        document.getElementById('editBankAcctNum').value = user.bankDetails.accountNumber || '';
+        document.getElementById('editBankName').value = user.bankDetails.bankName || '';
+        document.getElementById('editBankIfsc').value = user.bankDetails.ifscCode || '';
+        document.getElementById('editBankBranch').value = user.bankDetails.branchName || '';
+    }
+
+    // 6. Audit Info / Tab
     const auditText = user.lastEditedBy
-        ? `Last Edited By: ${user.lastEditedBy} on ${new Date(user.lastEditedAt).toLocaleString()}`
+        ? `Last Edited By: ${user.lastEditedBy}`  // Removed the date here since the timeline handles it
         : 'No edit history available';
     document.getElementById('auditInfo').textContent = auditText;
 
-    document.getElementById('editUserModal').style.display = 'flex';
+    // Render the Audit Logs Tab
+    const auditContainer = document.getElementById('auditLogsContainer');
+    auditContainer.innerHTML = '';
+
+    if (user.auditHistory && user.auditHistory.length > 0) {
+        // Sort newest first
+        const sortedHistory = [...user.auditHistory].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+        sortedHistory.forEach(log => {
+            let icon = 'fas fa-edit';
+            let color = '#667eea'; // default blue
+
+            if (log.action === 'Create') { icon = 'fas fa-user-plus'; color = '#27ae60'; }
+            if (log.action === 'Deactivate') { icon = 'fas fa-user-slash'; color = '#e74c3c'; }
+            if (log.action === 'Activate') { icon = 'fas fa-user-check'; color = '#27ae60'; }
+            if (log.action === 'Delete-Attempt') { icon = 'fas fa-exclamation-triangle'; color = '#f39c12'; }
+
+            const dateStr = new Date(log.timestamp).toLocaleString('en-US', {
+                year: 'numeric', month: 'short', day: 'numeric',
+                hour: '2-digit', minute: '2-digit'
+            });
+
+            const logCard = document.createElement('div');
+            logCard.style.cssText = `
+                background: #f8f9fa;
+                border: 1px solid #e9ecef;
+                border-left: 4px solid ${color};
+                border-radius: 8px;
+                padding: 15px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            `;
+
+            logCard.innerHTML = `
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e9ecef; padding-bottom: 8px; margin-bottom: 4px;">
+                    <div style="display: flex; align-items: center; gap: 10px; font-weight: 600; color: #333;">
+                        <div style="background: ${color}20; color: ${color}; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                            <i class="${icon}"></i>
+                        </div>
+                        ${log.action}
+                    </div>
+                    <div style="color: #888; font-size: 0.85rem; display: flex; align-items: center; gap: 5px;">
+                        <i class="far fa-clock"></i> ${dateStr}
+                    </div>
+                </div>
+                <div style="font-size: 0.95rem; color: #444;">
+                    <strong>Reason:</strong> ${log.reason}
+                </div>
+                <div style="font-size: 0.85rem; color: #666; display: flex; align-items: center; gap: 5px;">
+                    <i class="far fa-user"></i> Performed by: <span style="font-weight: 500;">${log.performedBy}</span>
+                </div>
+            `;
+            auditContainer.appendChild(logCard);
+        });
+    } else {
+        auditContainer.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; background: #f8f9fa; border-radius: 8px; border: 1px dashed #ddd;">
+                <i class="fas fa-history" style="font-size: 2rem; color: #ccc; margin-bottom: 10px;"></i>
+                <h5 style="color: #666; margin: 0;">No Audit History Available</h5>
+                <p style="color: #999; font-size: 0.9rem; margin-top: 5px;">Changes made to this user will appear here.</p>
+            </div>
+        `;
+    }
+
+    // Open modal at Tab 1
+    switchEditTab('identity', document.querySelector('.edit-tab-btn'), 0);
+
+    // Switch to the User Edit Tab UI (Full Page)
+    document.querySelectorAll('.dashboard-section').forEach(s => s.style.display = 'none');
+    document.getElementById('adminUserEditTab').style.display = 'block';
+}
+
+function closeUserEditTab() {
+    document.getElementById('adminUserEditTab').style.display = 'none';
+    // Return to the users section
+    switchSection('users', true);
 }
 
 // Global variables for delete logic
@@ -1572,21 +1713,72 @@ async function submitAddUser() {
 
 async function submitEditUser() {
     const form = document.getElementById('editUserForm');
-    const data = Object.fromEntries(new FormData(form).entries());
+
+    // Custom validation handling since native HTML5 validation fails silently across hidden tabs
+    if (!form.checkValidity()) {
+        const invalidElement = Array.from(form.elements).find(el => !el.validity.valid);
+        if (invalidElement) {
+            const tab = invalidElement.closest('.edit-section');
+            if (tab) {
+                const tabId = tab.id.replace('editTab_', '');
+                const tabs = ['identity', 'family', 'address', 'work', 'bank', 'security', 'audit'];
+                const index = tabs.indexOf(tabId);
+                if (index !== -1) {
+                    switchEditTab(tabId, document.querySelectorAll('.edit-tab-btn')[index], index);
+                }
+                // Give the DOM a tiny moment to render display: block before showing the bubble
+                setTimeout(() => form.reportValidity(), 50);
+            }
+        }
+        return;
+    }
+
+    const formData = new FormData(form);
+    const data = Object.fromEntries(formData.entries());
     const userId = data.userId;
 
     // Remove empty password if not changing
     if (!data.password) delete data.password;
 
-    // Fix nested address fields
-    if (data['address[town]'] !== undefined || data['address[state]'] !== undefined) {
-        data.address = {
-            town: data['address[town]'],
-            state: data['address[state]']
-        };
-        delete data['address[town]'];
-        delete data['address[state]'];
+    // Struct nested objects: address & workDetails & bankDetails
+    const address = {};
+    const workDetails = {};
+    const bankDetails = {};
+
+    for (let key of formData.keys()) {
+        if (key.startsWith('address[')) {
+            const subKey = key.replace('address[', '').replace(']', '');
+            address[subKey] = data[key];
+            delete data[key];
+        } else if (key.startsWith('workDetails[')) {
+            const subKey = key.replace('workDetails[', '').replace(']', '');
+            workDetails[subKey] = data[key];
+            delete data[key];
+        } else if (key.startsWith('bankDetails[')) {
+            const subKey = key.replace('bankDetails[', '').replace(']', '');
+            bankDetails[subKey] = data[key];
+            delete data[key];
+        }
     }
+
+    // Purge any empty strings to prevent Mongoose Enum validation 500 errors
+    for (let key in address) {
+        if (address[key] === '') delete address[key];
+    }
+    for (let key in workDetails) {
+        if (workDetails[key] === '') delete workDetails[key];
+    }
+    for (let key in bankDetails) {
+        if (bankDetails[key] === '') delete bankDetails[key];
+    }
+
+    if (Object.keys(address).length > 0) data.address = address;
+    if (Object.keys(workDetails).length > 0) data.workDetails = workDetails;
+    if (Object.keys(bankDetails).length > 0) data.bankDetails = bankDetails;
+
+    // Clean up empty optional selects
+    if (data.gender === '') delete data.gender;
+    if (data.maritalStatus === '') delete data.maritalStatus;
 
     try {
         UI.showLoader();
@@ -1598,7 +1790,7 @@ async function submitEditUser() {
 
         if (res.ok) {
             UI.success('User updated successfully.');
-            document.getElementById('editUserModal').style.display = 'none';
+            closeUserEditTab();
             loadUserManagement(currentUserRoleView);
         } else {
             const result = await res.json();
@@ -3310,7 +3502,7 @@ function renderCourses(courses) {
         const statusColor = getStatusColor(displayStatus);
 
         return `
-            <div class="glass-card" style="padding: 22px; border-radius: 12px; display: flex; flex-direction: column; gap: 20px; transition: transform 0.2s, box-shadow 0.2s; position: relative;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 15px rgba(0,0,0,0.05)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
+            <div class="glass-card" style="padding: 22px; border-radius: 12px; display: flex; flex-direction: column; gap: 20px; transition: transform 0.2s, box-shadow 0.2s; position: relative; height: 100%;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 15px rgba(0,0,0,0.05)';" onmouseout="this.style.transform='none'; this.style.boxShadow='none';">
                 
                 <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 15px;">
                     <div style="flex: 1; cursor: pointer; padding-right: 10px;" onclick="viewCourseDetails('${c._id}')">
@@ -3329,7 +3521,7 @@ function renderCourses(courses) {
                     </div>
                 </div>
                 
-                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 20px; flex-wrap: wrap; gap: 15px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #eee; padding-top: 20px; flex-wrap: wrap; gap: 15px; margin-top: auto;">
                     <a href="course-preview.html?id=${c._id}" class="btn-primary" 
                         title="Preview Course Content" 
                         style="text-decoration:none; display:inline-flex; align-items:center; justify-content:center; padding:6px 14px; font-size:0.85rem; background: #fffaf0; color: #d35400; border: 1px solid #d35400; border-radius: 20px; font-weight: 600; transition: all 0.3s;" 
@@ -3342,10 +3534,6 @@ function renderCourses(courses) {
                         <button class="btn-primary" title="Edit" style="padding:6px 12px; font-size:0.85rem; background: #f0f0f0; color: #333; border: 1px solid #ddd;" 
                             onclick='openCourseModal(${JSON.stringify(c).replace(/'/g, "&#39;")})'>
                             <i class="fas fa-edit"></i> Edit
-                        </button>
-                        <button class="btn-primary" title="Delete" style="background: #fff; border:1px solid #d9534f; color:#d9534f; padding:6px 12px; font-size:0.85rem;" 
-                            onclick="deleteCourse('${c._id}')">
-                            <i class="fas fa-trash"></i>
                         </button>
                     </div>
                 </div>
@@ -5196,7 +5384,7 @@ async function updatePlatformInfo() {
 // Switch Edit User Modal Tabs
 function switchEditTab(tabName, buttonElement, tabIndex) {
     // Hide all tab contents
-    const tabs = ['editTab_identity', 'editTab_profile', 'editTab_security'];
+    const tabs = ['editTab_identity', 'editTab_family', 'editTab_address', 'editTab_work', 'editTab_security'];
     tabs.forEach(tab => {
         const el = document.getElementById(tab);
         if (el) el.style.display = 'none';

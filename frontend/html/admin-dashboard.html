@@ -4479,103 +4479,303 @@
 
     <!-- COMPREHENSIVE EDIT MODAL -->
     <!-- COMPREHENSIVE EDIT MODAL -->
-    <div id="editUserModal" class="modal"
-        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; align-items: center; justify-content: center;">
-        <div class="glass-card"
-            style="background: white; padding: 0; border-radius: 15px; width: 500px; margin: 20px; position: relative; overflow: hidden; display: flex; flex-direction: column; max-height: 90vh;">
+    <div id="adminUserEditTab" class="dashboard-section"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #fdfdfd; z-index: 1000; padding: 0;">
+        <div style="background: white; width: 100%; height: 100%; display: flex; flex-direction: column;">
 
             <!-- Header -->
             <div
-                style="padding: 20px 30px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; background: #fafafa;">
-                <div>
-                    <h3 style="margin: 0; font-size: 1.3rem;">Edit User</h3>
-                    <p id="auditInfo" style="font-size: 0.75rem; color: #999; margin: 0;">System Edit</p>
+                style="padding: 20px 30px; border-bottom: 1px solid #f0f0f0; display: flex; justify-content: space-between; align-items: center; background: #fafafa; flex-shrink: 0;">
+                <div style="display: flex; align-items: center; gap: 20px;">
+                    <button class="btn-primary"
+                        style="background: transparent; border: 1px solid #ddd; color: #555; padding: 8px 15px;"
+                        onclick="closeUserEditTab()">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </button>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.5rem; color: var(--color-primary);">Edit User</h3>
+                        <p id="auditInfo" style="margin: 5px 0 0 0; font-size: 0.85rem; color: #666;">System Edit</p>
+                    </div>
                 </div>
-                <span style="font-size: 2rem; cursor: pointer; line-height: 0.5;"
-                    onclick="document.getElementById('editUserModal').style.display='none'">&times;</span>
+                <div style="display: flex; gap: 10px;">
+                    <style>
+                        .user-edit-sidebar-tab {
+                            padding: 12px 15px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            color: #666;
+                            font-weight: 500;
+                            display: flex;
+                            align-items: center;
+                            gap: 10px;
+                            transition: all 0.2s;
+                        }
+
+                        .user-edit-sidebar-tab:hover {
+                            background: rgba(0, 0, 0, 0.03);
+                        }
+
+                        .user-edit-sidebar-tab.active {
+                            color: var(--color-primary);
+                            background: rgba(102, 126, 234, 0.1);
+                            font-weight: 600;
+                        }
+                    </style>
+                    <button type="button" class="btn-primary"
+                        style="background: var(--color-success); padding: 10px 30px; font-weight: 600; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);"
+                        onclick="submitEditUser()">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
             </div>
 
-            <!-- Tabs -->
-            <div
-                style="display: flex; background: white; padding: 10px 30px 0; gap: 5px; border-bottom: 1px solid #eee;">
-                <button type="button" class="edit-tab-btn active" onclick="switchEditTab('identity', this)"
-                    style="padding: 10px 15px; background: none; border: none; border-bottom: 2px solid var(--color-primary); font-weight: 600; color: var(--color-primary); cursor: pointer;">Identity</button>
-                <button type="button" class="edit-tab-btn" onclick="switchEditTab('profile', this)"
-                    style="padding: 10px 15px; background: none; border: none; border-bottom: 2px solid transparent; color: #666; cursor: pointer;">Profile</button>
-                <button type="button" class="edit-tab-btn" onclick="switchEditTab('security', this)"
-                    style="padding: 10px 15px; background: none; border: none; border-bottom: 2px solid transparent; color: #666; cursor: pointer;">Security</button>
+            <!-- 2-Column Layout to match Course Edit (or just full content) -->
+            <div style="display: flex; flex: 1; overflow: hidden;">
+                <!-- Left Sub-Sidebar (Tabs) -->
+                <div
+                    style="width: 250px; background: #fdfdfd; border-right: 1px solid #eee; overflow-y: auto; padding: 20px 15px; flex-shrink: 0;">
+                    <ul
+                        style="list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 8px;">
+                        <li class="edit-tab-btn user-edit-sidebar-tab active" onclick="switchEditTab('identity', this)">
+                            <i class="fas fa-id-card"></i> Identity
+                        </li>
+                        <li id="navTab_family" class="edit-tab-btn user-edit-sidebar-tab"
+                            onclick="switchEditTab('family', this)">
+                            <i class="fas fa-users"></i> Family
+                        </li>
+                        <li id="navTab_address" class="edit-tab-btn user-edit-sidebar-tab"
+                            onclick="switchEditTab('address', this)">
+                            <i class="fas fa-map-marker-alt"></i> Address
+                        </li>
+                        <li id="navTab_work" class="edit-tab-btn user-edit-sidebar-tab"
+                            onclick="switchEditTab('work', this)">
+                            <i class="fas fa-briefcase"></i> Work
+                        </li>
+                        <li id="navTab_bank" class="edit-tab-btn user-edit-sidebar-tab"
+                            onclick="switchEditTab('bank', this)" style="display: none;">
+                            <i class="fas fa-university"></i> Bank
+                        </li>
+                        <li class="edit-tab-btn user-edit-sidebar-tab" onclick="switchEditTab('security', this)">
+                            <i class="fas fa-shield-alt"></i> Security
+                        </li>
+                        <li id="navTab_audit" class="edit-tab-btn user-edit-sidebar-tab"
+                            onclick="switchEditTab('audit', this)">
+                            <i class="fas fa-history"></i> Audit Logs
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Right Content Area -->
+                <div style="flex: 1; padding: 30px 40px; overflow-y: auto; background: white;">
+                    <form id="editUserForm" onsubmit="event.preventDefault(); submitEditUser();">
+                        <input type="hidden" name="userId" id="editUserId">
+
+                        <!-- Tab 1: Identity -->
+                        <div id="editTab_identity" class="edit-section">
+                            <h4
+                                style="margin: 0 0 20px 0; color: var(--color-primary); border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+                                Identity Information</h4>
+                            <div class="form-group mb-3"><label>Full Name</label><input type="text" name="name"
+                                    id="editUserName" class="form-control" required></div>
+                            <div class="form-group mb-3"><label>Email</label><input type="email" name="email"
+                                    id="editUserEmail" class="form-control" required></div>
+                            <div class="form-grid"
+                                style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div class="form-group"><label>Phone</label><input type="text" name="phone"
+                                        id="editUserPhone" class="form-control"></div>
+                                <div class="form-group"><label>Alternate Phone</label><input type="text"
+                                        name="additionalPhone" id="editUserAdditionalPhone" class="form-control"></div>
+                                <div class="form-group"><label>WhatsApp</label><input type="text" name="whatsappNumber"
+                                        id="editUserWhatsapp" class="form-control"></div>
+                            </div>
+                            <div class="form-grid"
+                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div class="form-group" id="studentOnly_initial"><label>Initial</label><input
+                                        type="text" name="initial" id="editUserInitial" class="form-control"
+                                        placeholder="E.g. Mr/Ms/Dr"></div>
+                                <div class="form-group"><label>Role</label>
+                                    <select name="role" id="editUserRole" class="form-control">
+                                        <option value="Student">Student</option>
+                                        <option value="Staff">Staff</option>
+                                        <option value="Admin">Admin</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-grid" id="studentOnly_dob_gender"
+                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div class="form-group"><label>Date of Birth</label><input type="date" name="dob"
+                                        id="editUserDob" class="form-control"></div>
+                                <div class="form-group"><label>Gender</label>
+                                    <select name="gender" id="editUserGender" class="form-control">
+                                        <option value="">-- Select --</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab 2: Family -->
+                        <div id="editTab_family" class="edit-section" style="display: none;">
+                            <h4
+                                style="margin: 0 0 20px 0; color: var(--color-primary); border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+                                Family Details</h4>
+                            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div class="form-group"><label>Father's Name</label><input type="text" name="fatherName"
+                                        id="editFatherName" class="form-control"></div>
+                                <div class="form-group"><label>Mother's Name</label><input type="text" name="motherName"
+                                        id="editMotherName" class="form-control"></div>
+                            </div>
+                            <div class="form-group" style="margin-top: 15px;">
+                                <label>Marital Status</label>
+                                <select name="maritalStatus" id="editMaritalStatus" class="form-control"
+                                    onchange="document.getElementById('editSpouseFields').style.display = this.value === 'Married' ? 'grid' : 'none'">
+                                    <option value="">-- Select --</option>
+                                    <option value="Single">Single</option>
+                                    <option value="Married">Married</option>
+                                </select>
+                            </div>
+                            <div id="editSpouseFields" class="form-grid"
+                                style="display: none; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                                <div class="form-group"><label>Spouse Name</label><input type="text" name="spouseName"
+                                        id="editSpouseName" class="form-control"></div>
+                                <div class="form-group"><label>Spouse Contact</label><input type="text"
+                                        name="spouseContact" id="editSpouseContact" class="form-control"></div>
+                            </div>
+                        </div>
+
+                        <!-- Tab 3: Address -->
+                        <div id="editTab_address" class="edit-section" style="display: none;">
+                            <h4
+                                style="margin: 0 0 20px 0; color: var(--color-primary); border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+                                Address Information</h4>
+                            <div class="form-grid"
+                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div class="form-group"><label>Door Number</label><input type="text"
+                                        name="address[doorNumber]" id="editDoorNumber" class="form-control"></div>
+                                <div class="form-group"><label>Street Name</label><input type="text"
+                                        name="address[streetName]" id="editStreetName" class="form-control"></div>
+                            </div>
+                            <div class="form-grid"
+                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div class="form-group"><label>Town/City</label><input type="text" name="address[town]"
+                                        id="editTown" class="form-control"></div>
+                                <div class="form-group"><label>District</label><input type="text"
+                                        name="address[district]" id="editDistrict" class="form-control"></div>
+                            </div>
+                            <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                                <div class="form-group"><label>State</label><input type="text" name="address[state]"
+                                        id="editState" class="form-control"></div>
+                                <div class="form-group"><label>Pincode</label><input type="text" name="address[pincode]"
+                                        id="editPincode" class="form-control"></div>
+                            </div>
+                        </div>
+
+                        <!-- Tab 4: Work -->
+                        <div id="editTab_work" class="edit-section" style="display: none;">
+                            <h4
+                                style="margin: 0 0 20px 0; color: var(--color-primary); border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+                                Work Details</h4>
+                            <div class="form-group mb-3">
+                                <label>Occupation Type</label>
+                                <select name="workDetails[type]" id="editWorkType" class="form-control">
+                                    <option value="">-- Select --</option>
+                                    <option value="Student">Student</option>
+                                    <option value="Professional">Professional</option>
+                                    <option value="Self-Employed">Self-Employed</option>
+                                    <option value="Homemaker">Homemaker</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                            <div class="form-group mb-3">
+                                <label>Organization / School Name</label>
+                                <input type="text" name="workDetails[name]" id="editWorkName" class="form-control">
+                            </div>
+                        </div>
+
+                        <!-- Tab Bank: Bank Details (Staff/Admin) -->
+                        <div id="editTab_bank" class="edit-section" style="display: none;">
+                            <h4
+                                style="margin: 0 0 20px 0; color: var(--color-primary); border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+                                Bank Details</h4>
+                            <div class="form-grid"
+                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div class="form-group">
+                                    <label>Account Holder Name</label>
+                                    <input type="text" name="bankDetails[accountHolderName]" id="editBankAcctName"
+                                        class="form-control">
+                                </div>
+                                <div class="form-group">
+                                    <label>Account Number</label>
+                                    <input type="text" name="bankDetails[accountNumber]" id="editBankAcctNum"
+                                        class="form-control">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 15px;">
+                                <label>Bank Name</label>
+                                <input type="text" name="bankDetails[bankName]" id="editBankName" class="form-control">
+                            </div>
+                            <div class="form-grid"
+                                style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                                <div class="form-group">
+                                    <label>IFSC Code</label>
+                                    <input type="text" name="bankDetails[ifscCode]" id="editBankIfsc"
+                                        class="form-control" style="text-transform: uppercase;">
+                                </div>
+                                <div class="form-group">
+                                    <label>Branch Name</label>
+                                    <input type="text" name="bankDetails[branchName]" id="editBankBranch"
+                                        class="form-control">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Tab 5: Security & Save -->
+                        <div id="editTab_security" class="edit-section" style="display: none;">
+                            <h4
+                                style="margin: 0 0 20px 0; color: var(--color-primary); border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+                                Security & Audit</h4>
+                            <div class="form-group mb-3">
+                                <label>New Password <small style="color: #999;">(Optional)</small></label>
+                                <input type="password" name="password" class="form-control"
+                                    placeholder="Leave blank to keep current">
+                            </div>
+
+                            <div class="form-group"
+                                style="background: #fff8e1; padding: 25px; border-radius: 8px; border: 1px solid #ffe082; margin-top: 30px;">
+                                <label style="font-weight: 600; color: #b78103; margin-bottom: 8px; display: block;"><i
+                                        class="fas fa-info-circle"></i> Reason for Edit <span
+                                        style="color: red;">*</span></label>
+                                <textarea name="reason" class="form-control" required rows="3"
+                                    placeholder="Briefly explain what you changed and why (min 10 characters)"
+                                    minlength="10"
+                                    style="border: 1px solid #ffe082; padding: 12px; border-radius: 8px; font-size: 0.95rem;"></textarea>
+                                <small style="color: #666; margin-top: 8px; display: block;">This will be recorded in
+                                    the <span id="auditInfo" style="font-weight: 600; color: #333;">audit
+                                        history</span>.</small>
+                            </div>
+                        </div>
+
+                        <!-- Tab Audit: Audit Logs -->
+                        <div id="editTab_audit" class="edit-section" style="display: none;">
+                            <h4
+                                style="margin: 0 0 20px 0; color: var(--color-primary); border-bottom: 2px solid #f0f0f0; padding-bottom: 10px;">
+                                <i class="fas fa-history"></i> Activity & Audit Logs
+                            </h4>
+                            <p style="color: #666; font-size: 0.9rem; margin-bottom: 20px;">
+                                This section displays an immutable record of all profile changes, status updates, and
+                                administrative actions performed on this account.
+                            </p>
+
+                            <!-- Container for dynamic logs -->
+                            <div id="auditLogsContainer" style="display: flex; flex-direction: column; gap: 15px;">
+                                <!-- Handled by JS -->
+                            </div>
+                        </div>
+                    </form>
+                </div>
             </div>
-
-            <form id="editUserForm" onsubmit="event.preventDefault(); submitEditUser();"
-                style="flex: 1; overflow-y: auto; padding: 30px;">
-                <input type="hidden" name="userId" id="editUserId">
-
-                <!-- Tab 1: Identity -->
-                <div id="editTab_identity" class="edit-section">
-                    <div class="form-group mb-3"><label>Full Name</label><input type="text" name="name"
-                            id="editUserName" class="form-control" required></div>
-                    <div class="form-group mb-3"><label>Email</label><input type="email" name="email" id="editUserEmail"
-                            class="form-control" required></div>
-                    <div class="form-group mb-3"><label>Phone</label><input type="text" name="phone" id="editUserPhone"
-                            class="form-control"></div>
-                    <div class="form-group mb-3"><label>Role</label>
-                        <select name="role" id="editUserRole" class="form-control">
-                            <option value="Student">Student</option>
-                            <option value="Staff">Staff</option>
-                            <option value="Admin">Admin</option>
-                        </select>
-                    </div>
-                    <div style="text-align: right; margin-top: 20px;">
-                        <button type="button" class="btn-primary" onclick="switchEditTab('profile', null, 1)">Next
-                            &rarr;</button>
-                    </div>
-                </div>
-
-                <!-- Tab 2: Profile -->
-                <div id="editTab_profile" class="edit-section" style="display: none;">
-                    <div class="form-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
-                        <div class="form-group"><label>Father's Name</label><input type="text" name="fatherName"
-                                id="editFatherName" class="form-control"></div>
-                        <div class="form-group"><label>Mother's Name</label><input type="text" name="motherName"
-                                id="editMotherName" class="form-control"></div>
-                    </div>
-                    <div class="form-grid"
-                        style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
-                        <div class="form-group"><label>Town/City</label><input type="text" name="address[town]"
-                                id="editTown" class="form-control"></div>
-                        <div class="form-group"><label>State</label><input type="text" name="address[state]"
-                                id="editState" class="form-control"></div>
-                    </div>
-                    <div style="display: flex; justify-content: space-between; margin-top: 20px;">
-                        <button type="button" class="btn-primary" style="background: #ccc;"
-                            onclick="switchEditTab('identity', null, 0)">&larr; Back</button>
-                        <button type="button" class="btn-primary" onclick="switchEditTab('security', null, 2)">Next
-                            &rarr;</button>
-                    </div>
-                </div>
-
-                <!-- Tab 3: Security & Save -->
-                <div id="editTab_security" class="edit-section" style="display: none;">
-                    <div class="form-group mb-3">
-                        <label>New Password <small style="color: #999;">(Optional)</small></label>
-                        <input type="password" name="password" class="form-control"
-                            placeholder="Leave blank to keep current">
-                    </div>
-
-                    <div class="form-group"
-                        style="background: #fff8e1; padding: 15px; border-radius: 8px; border: 1px solid #ffe082;">
-                        <label style="color: #f57f17; font-weight: 600;">Reason for Update (Mandatory)</label>
-                        <textarea name="reason" class="form-control" rows="2"
-                            placeholder="Describe change (min 10 chars)..." required minlength="10"></textarea>
-                    </div>
-
-                    <div style="display: flex; gap: 10px; margin-top: 25px;">
-                        <button type="button" class="btn-primary" style="background: #ccc; flex: 1;"
-                            onclick="switchEditTab('profile', null, 1)">&larr; Back</button>
-                        <button type="submit" class="btn-primary" style="flex: 2;">Update User</button>
-                    </div>
-                </div>
-            </form>
         </div>
     </div>
 

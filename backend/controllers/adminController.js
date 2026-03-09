@@ -335,7 +335,7 @@ exports.getAdvancedAnalytics = async (req, res) => {
         });
 
         const filterDays = parseInt(req.query.days);
-        
+
         // If filterDays is 0 or NaN (undefined), it means 'All Time', so we set the start date to 1970
         // Use explicit check to ensure All Time works correctly
         const filterStartDate = (filterDays && filterDays > 0) ? new Date(Date.now() - filterDays * 24 * 60 * 60 * 1000) : new Date(0);
@@ -830,51 +830,100 @@ exports.getUsers = async (req, res) => {
             .lean();
 
         const { Payment, Course, Membership } = require('../models/index');
+
+        // Optimizing the N+1 problem: pre-fetch aggregated data in bulk
+        const studentIds = users.filter(u => u.role === 'Student').map(u => u._id);
+        const staffIds = users.filter(u => u.role === 'Staff').map(u => u._id);
+
+        let studentTotalPaymentsMap = {};
+        let studentPaymentBreakdownMap = {};
+
+        if (studentIds.length > 0) {
+            const allUserPayments = await Payment.aggregate([
+                {
+                    $match: {
+                        studentID: { $in: studentIds },
+                        status: { $in: ['Success', 'success', 'completed', 'Completed', 'captured', 'Captured'] }
+                    }
+                },
+                { $group: { _id: "$studentID", total: { $sum: "$amount" } } }
+            ]);
+
+            allUserPayments.forEach(p => { studentTotalPaymentsMap[p._id.toString()] = p.total; });
+
+            const allCourseWisePayments = await Payment.aggregate([
+                {
+                    $match: {
+                        studentID: { $in: studentIds },
+                        status: { $in: ['Success', 'success', 'completed', 'Completed', 'captured', 'Captured'] }
+                    }
+                },
+                {
+                    $lookup: {
+                        from: 'courses',
+                        localField: 'courseID',
+                        foreignField: '_id',
+                        as: 'courseInfo'
+                    }
+                },
+                { $unwind: { path: '$courseInfo', preserveNullAndEmptyArrays: true } },
+                {
+                    $group: {
+                        _id: { studentID: "$studentID", courseID: "$courseID" },
+                        courseName: { $first: '$courseInfo.title' },
+                        totalPaid: { $sum: '$amount' }
+                    }
+                }
+            ]);
+
+            allCourseWisePayments.forEach(p => {
+                const sid = p._id.studentID.toString();
+                if (!studentPaymentBreakdownMap[sid]) studentPaymentBreakdownMap[sid] = [];
+                studentPaymentBreakdownMap[sid].push({
+                    _id: p._id.courseID,
+                    courseName: p.courseName,
+                    totalPaid: p.totalPaid
+                });
+            });
+        }
+
+        let staffMappedCoursesMap = {};
+        let staffMappedMembershipsMap = {};
+
+        if (staffIds.length > 0) {
+            const allMappedCourses = await Course.find({ mentors: { $in: staffIds } }).select('title _id mentors').lean();
+            const allMappedMemberships = await Membership.find({ mentors: { $in: staffIds } }).select('packageName _id mentors').lean();
+
+            allMappedCourses.forEach(c => {
+                if (Array.isArray(c.mentors)) {
+                    c.mentors.forEach(m => {
+                        const mid = m.toString();
+                        if (!staffMappedCoursesMap[mid]) staffMappedCoursesMap[mid] = [];
+                        staffMappedCoursesMap[mid].push({ _id: c._id, title: c.title });
+                    });
+                }
+            });
+
+            allMappedMemberships.forEach(m => {
+                if (Array.isArray(m.mentors)) {
+                    m.mentors.forEach(mentor => {
+                        const mid = mentor.toString();
+                        if (!staffMappedMembershipsMap[mid]) staffMappedMembershipsMap[mid] = [];
+                        staffMappedMembershipsMap[mid].push({ _id: m._id, packageName: m.packageName });
+                    });
+                }
+            });
+        }
+
         for (let u of users) {
+            const uid = u._id.toString();
             if (u.role === 'Student') {
                 u.registeredCoursesCount = Array.isArray(u.enrolledCourses) ? u.enrolledCourses.length : 0;
-                
-                // Match multiple successful payment status variations (case-insensitive)
-                const userPayments = await Payment.aggregate([
-                    { 
-                        $match: { 
-                            studentID: u._id, 
-                            status: { $in: ['Success', 'success', 'completed', 'Completed', 'captured', 'Captured'] } 
-                        } 
-                    },
-                    { $group: { _id: null, total: { $sum: "$amount" } } }
-                ]);
-                u.totalPayments = userPayments.length > 0 ? userPayments[0].total : 0;
-                
-                // Get course-wise payment breakdown for hover tooltip
-                const courseWisePayments = await Payment.aggregate([
-                    { 
-                        $match: { 
-                            studentID: u._id, 
-                            status: { $in: ['Success', 'success', 'completed', 'Completed', 'captured', 'Captured'] } 
-                        } 
-                    },
-                    {
-                        $lookup: {
-                            from: 'courses',
-                            localField: 'courseID',
-                            foreignField: '_id',
-                            as: 'courseInfo'
-                        }
-                    },
-                    { $unwind: { path: '$courseInfo', preserveNullAndEmptyArrays: true } },
-                    {
-                        $group: {
-                            _id: '$courseID',
-                            courseName: { $first: '$courseInfo.title' },
-                            totalPaid: { $sum: '$amount' }
-                        }
-                    }
-                ]);
-                u.paymentBreakdown = courseWisePayments;
+                u.totalPayments = studentTotalPaymentsMap[uid] || 0;
+                u.paymentBreakdown = studentPaymentBreakdownMap[uid] || [];
             } else if (u.role === 'Staff') {
-                const mappedCourses = await Course.find({ mentors: u._id }).select('title _id').lean();
-                const mappedMemberships = await Membership.find({ mentors: u._id }).select('packageName _id').lean();
+                const mappedCourses = staffMappedCoursesMap[uid] || [];
+                const mappedMemberships = staffMappedMembershipsMap[uid] || [];
                 u.mappedCoursesCount = mappedCourses.length;
                 u.mappedMembershipsCount = mappedMemberships.length;
                 u.totalMappedCount = mappedCourses.length + mappedMemberships.length;
@@ -961,6 +1010,22 @@ exports.updateUser = async (req, res) => {
         const user = await User.findById(id);
         if (!user) return res.status(404).json({ message: 'User not found' });
 
+        // --- Role-Based Access Control Check ---
+        // If the target being edited is an Admin:
+        if (user.role === 'Admin') {
+            // Only the Default Admin can edit other Admins OR the Default Admin.
+            // A regular Admin can ONLY edit themselves.
+            const isSelf = req.user.id === user._id.toString();
+            if (!req.user.isDefaultAdmin && !isSelf) {
+                return res.status(403).json({
+                    message: user.isDefaultAdmin
+                        ? 'Forbidden: Only the Default Admin can modify their own profile.'
+                        : 'Forbidden: Regular Admins cannot modify other Admins. Access denied.'
+                });
+            }
+        }
+        // ----------------------------------------
+
         // Apply updates
         Object.assign(user, updates);
 
@@ -980,6 +1045,7 @@ exports.updateUser = async (req, res) => {
         await user.save();
         res.status(200).json({ message: 'User updated successfully' });
     } catch (err) {
+        console.error('[updateUser] 500 Error:', err);
         res.status(500).json({ message: 'Failed to update user', error: err.message });
     }
 };
