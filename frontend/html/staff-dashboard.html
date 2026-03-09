@@ -2688,6 +2688,15 @@
         document.getElementById('scheduleForm').addEventListener('submit', async function (e) {
             e.preventDefault();
 
+            const submitButton = e.target.querySelector(`button[type="submit"]`);
+            const originalText = submitButton.textContent;
+
+            // Prevent multiple submissions
+            if (submitButton.disabled) return;
+            
+            submitButton.disabled = true;
+            submitButton.textContent = 'Publishing...';
+
             const token = localStorage.getItem('token');
             const apiBase = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api';
             const formData = new FormData(e.target);
@@ -2714,6 +2723,9 @@
             // Validate that at least one is selected
             if (!scheduleData.courseID && !scheduleData.membershipID) {
                 alert('Please select either a course or membership package');
+                // Re-enable button
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
                 return;
             }
 
@@ -2741,6 +2753,10 @@
             } catch (error) {
                 console.error('Error creating schedule:', error);
                 alert('Failed to create schedule. Please try again.');
+            } finally {
+                // Re-enable button regardless of success or failure
+                submitButton.disabled = false;
+                submitButton.textContent = originalText;
             }
         });
 

@@ -876,32 +876,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateExamStepUI();
     }, 100);
 
-    // 7. Schedule Flow
-    document.getElementById('scheduleForm').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const data = Object.fromEntries(new FormData(e.target).entries());
-
-        try {
-            UI.showLoader();
-            const res = await fetch(`${Auth.apiBase}/schedules`, {
-                method: 'POST',
-                headers: Auth.getHeaders(),
-                body: JSON.stringify(data)
-            });
-            if (res.ok) {
-                UI.success('Live flow scheduled!');
-                document.getElementById('scheduleModal').style.display = 'none';
-                if (currentSection === 'live') loadSchedules();
-            } else {
-                const errData = await res.json().catch(() => ({}));
-                UI.error(errData.message || 'Scheduling failed');
-            }
-        } catch (err) {
-            UI.handleError(err, 'Scheduling');
-        }
-        finally { UI.hideLoader(); }
-    });
-
+    // Schedule modal close handler
     document.getElementById('closeScheduleModal').addEventListener('click', () => {
         document.getElementById('scheduleModal').style.display = 'none';
     });
