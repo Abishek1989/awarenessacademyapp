@@ -18,6 +18,12 @@ router.get('/my-timetable', authorize(['Student', 'Staff', 'Admin']), scheduleCo
 // Update schedule status (Admin only)
 router.put('/:id/status', authorize(['Admin']), scheduleController.updateScheduleStatus);
 
+// Update own schedule (Staff - within 5 minutes)
+router.put('/:id/own', authorize(['Staff']), scheduleController.updateOwnSchedule);
+
+// Delete own schedule (Staff - no time limit) 
+router.delete('/:id/own', authorize(['Staff']), scheduleController.deleteOwnSchedule);
+
 // Update schedule (Admin only)
 router.put('/:id', authorize(['Admin']), scheduleController.updateSchedule);
 

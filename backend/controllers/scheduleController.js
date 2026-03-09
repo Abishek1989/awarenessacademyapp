@@ -257,3 +257,90 @@ exports.deleteSchedule = async (req, res) => {
         res.status(500).json({ message: 'Failed to delete schedule', error: err.message });
     }
 };
+
+// Update Own Schedule (Staff - within 5 minutes)
+exports.updateOwnSchedule = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { title, startTime, duration, meetingLink, courseID, membershipID } = req.body;
+
+        const schedule = await Schedule.findById(id);
+        if (!schedule) {
+            return res.status(404).json({ message: 'Schedule not found' });
+        }
+
+        // Check if user owns this schedule
+        if (schedule.staffID.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'You can only edit your own schedules' });
+        }
+
+        // Check if schedule was created within the last 5 minutes
+        const now = new Date();
+        const createdAt = schedule.createdAt || schedule._id.getTimestamp();
+        const timeDiff = (now - createdAt) / (1000 * 60); // difference in minutes
+
+        if (timeDiff > 5) {
+            return res.status(403).json({ 
+                message: 'Schedule can only be edited within 5 minutes of creation',
+                timeRemaining: Math.max(0, 5 - timeDiff)
+            });
+        }
+
+        // Update fields
+        if (title) schedule.title = title;
+        if (startTime) {
+            schedule.startTime = new Date(startTime);
+            const durationToUse = duration || schedule.expectedDuration;
+            schedule.endTime = new Date(schedule.startTime.getTime() + durationToUse * 60000);
+        }
+        if (duration) {
+            schedule.expectedDuration = duration;
+            schedule.endTime = new Date(schedule.startTime.getTime() + duration * 60000);
+        }
+        if (meetingLink !== undefined) schedule.meetingLink = meetingLink;
+        
+        // Update course/membership if provided
+        if (courseID !== undefined) {
+            schedule.courseID = courseID || null;
+            if (!courseID) schedule.membershipID = membershipID || null;
+        }
+        if (membershipID !== undefined) {
+            schedule.membershipID = membershipID || null;
+            if (!membershipID) schedule.courseID = courseID || null;
+        }
+
+        await schedule.save();
+        res.status(200).json({ message: 'Schedule updated successfully', schedule });
+    } catch (err) {
+        console.error('Update own schedule error:', err);
+        res.status(500).json({ message: 'Failed to update schedule', error: err.message });
+    }
+};
+
+// Delete Own Schedule (Staff - no time limit)
+exports.deleteOwnSchedule = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        const mongoose = require('mongoose');
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: 'Invalid schedule ID format' });
+        }
+
+        const schedule = await Schedule.findById(id);
+        if (!schedule) {
+            return res.status(404).json({ message: 'Schedule not found' });
+        }
+
+        // Check if user owns this schedule
+        if (schedule.staffID.toString() !== req.user.id) {
+            return res.status(403).json({ message: 'You can only delete your own schedules' });
+        }
+
+        await Schedule.findByIdAndDelete(id);
+        res.status(200).json({ message: 'Schedule deleted successfully' });
+    } catch (err) {
+        console.error('Delete own schedule error:', err);
+        res.status(500).json({ message: 'Failed to delete schedule', error: err.message });
+    }
+};
