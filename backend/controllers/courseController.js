@@ -691,134 +691,36 @@ exports.removeStudentsFromCourse = async (req, res) => {
     }
 };
 
-// Export Courses and Students to Excel
-exports.exportCoursesExcel = async (req, res) => {
+// Sync Courses and Students to Google Sheets
+exports.syncCoursesToGoogleSheets = async (req, res) => {
     try {
-        const ExcelJS = require('exceljs');
         const { Enrollment } = require('../models/index');
+        const googleSheets = require('../utils/googleSheets');
 
-        // Fetch all courses
         const courses = await Course.find().populate('mentors', 'name');
 
         if (!courses || courses.length === 0) {
-            return res.status(404).json({ message: 'No courses found to export.' });
+            return res.status(404).json({ message: 'No courses found to sync.' });
         }
 
-        // Create a new workbook
-        const workbook = new ExcelJS.Workbook();
-        workbook.creator = 'Awareness Academy Admin';
-        workbook.created = new Date();
-
-        for (const course of courses) {
-            // Excel sheet names cannot exceed 31 characters and must be unique
-            let baseName = course.title.replace(/[\[\]\*\?\/\\\:]/g, '').trim();
-            if (!baseName) baseName = 'Course';
-
-            // Generate a unique suffix using the last 4 chars of the Object ID
-            const uniqueId = course._id.toString().slice(-4);
-
-            // Ensure the combined name is under 31 chars safely
-            const maxBaseLen = 31 - (uniqueId.length + 1); // +1 for the underscore
-            let sheetName = `${baseName.substring(0, maxBaseLen)}_${uniqueId}`;
-
-            // Create a sheet for the course
-            const worksheet = workbook.addWorksheet(sheetName);
-
-            // Fetch enrollments for this specific course
-            const enrollments = await Enrollment.find({ courseID: course._id })
+        const getEnrollmentsForCourse = async (courseId) => {
+            return await Enrollment.find({ courseID: courseId })
                 .populate('studentID', 'name email phone whatsapp role')
                 .lean();
+        };
 
-            // Extract Mentor Data
-            const mentorNames = course.mentors && course.mentors.length > 0
-                ? course.mentors.map(m => m.name).join(', ')
-                : 'No Mentors Assigned';
+        const { synced, failed } = await googleSheets.syncAllCourses(courses, getEnrollmentsForCourse);
 
-            // Set up columns
-            worksheet.columns = [
-                { header: 'Course Title', key: 'courseTitle', width: 30 },
-                { header: 'Course Category', key: 'courseCategory', width: 25 },
-                { header: 'Course Difficulty', key: 'difficulty', width: 15 },
-                { header: 'Assigned Staff (Mentors)', key: 'mentors', width: 35 },
-                { header: 'Course Price', key: 'price', width: 15 },
-                { header: 'Course Duration', key: 'duration', width: 15 },
-                { header: 'Student Name', key: 'name', width: 25 },
-                { header: 'Email', key: 'email', width: 30 },
-                { header: 'Phone', key: 'phone', width: 15 },
-                { header: 'WhatsApp', key: 'whatsapp', width: 15 },
-                { header: 'Role', key: 'role', width: 15 },
-                { header: 'Enrolled At', key: 'enrolledAt', width: 20 },
-                { header: 'Status', key: 'status', width: 15 },
-                { header: 'Progress %', key: 'progress', width: 15 }
-            ];
-
-            // Style headers
-            worksheet.getRow(1).font = { bold: true };
-            worksheet.getRow(1).fill = {
-                type: 'pattern',
-                pattern: 'solid',
-                fgColor: { argb: 'FFE0E0E0' }
-            };
-
-            // Filter out null users (deleted accounts)
-            const validEnrollments = enrollments.filter(e => e.studentID != null);
-
-            // Row Template config for repetition
-            const courseRowData = {
-                courseTitle: course.title || 'N/A',
-                courseCategory: course.category || 'N/A',
-                difficulty: course.difficulty || 'N/A',
-                mentors: mentorNames,
-                price: course.price !== undefined ? course.price : 'N/A',
-                duration: course.duration || 'N/A'
-            };
-
-            if (validEnrollments.length > 0) {
-                // Add rows
-                validEnrollments.forEach(enrollment => {
-                    const student = enrollment.studentID;
-                    worksheet.addRow({
-                        ...courseRowData,
-                        name: student.name || 'N/A',
-                        email: student.email || 'N/A',
-                        phone: student.phone || 'N/A',
-                        whatsapp: student.whatsapp || 'N/A',
-                        role: student.role || 'Student',
-                        enrolledAt: enrollment.enrolledAt ? new Date(enrollment.enrolledAt).toLocaleDateString() : 'N/A',
-                        status: enrollment.status || 'Active',
-                        progress: enrollment.progress ? `${enrollment.progress}%` : '0%'
-                    });
-                });
-            } else {
-                worksheet.addRow({
-                    ...courseRowData,
-                    name: 'No students enrolled in this course.'
-                });
-                // Merge cells for the empty message, pushing from start of student cols (G) to end (N)
-                worksheet.mergeCells(`G2:N2`);
-                worksheet.getCell('G2').alignment = { horizontal: 'center' };
-                worksheet.getCell('G2').font = { italic: true, color: { argb: 'FF888888' } };
-            }
-        }
-
-        // Set response headers
-        res.setHeader(
-            'Content-Type',
-            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        );
-        res.setHeader(
-            'Content-Disposition',
-            'attachment; filename=' + 'Courses_Export_' + new Date().toISOString().split('T')[0] + '.xlsx'
-        );
-
-        // Write to stream
-        await workbook.xlsx.write(res);
-        res.status(200).end();
+        res.status(200).json({
+            message: `Successfully synced ${synced} courses to Google Spreadsheet.`,
+            syncedCourses: synced,
+            failedCourses: failed
+        });
 
     } catch (err) {
-        console.error('Error generating Excel export:', err);
+        console.error('Error syncing to Google Sheets:', err);
         if (!res.headersSent) {
-            res.status(500).json({ message: 'Failed to generate Excel file', error: err.message });
+            res.status(500).json({ message: 'Failed to sync with Google Spreadsheet', error: err.message });
         }
     }
 };

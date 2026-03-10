@@ -2,19 +2,13 @@ const preload = () => {
 
     let manager = new THREE.LoadingManager();
     manager.onLoad = function () {
-        const environment = new Environment(typo, textures);
+        const environment = new Environment(typo, particle);
     }
 
     var typo = null;
     const loader = new THREE.FontLoader(manager);
     const font = loader.load('https://res.cloudinary.com/dydre7amr/raw/upload/v1612950355/font_zsd4dr.json', function (font) { typo = font; });
-    let textures = [];
-    const tl = new THREE.TextureLoader(manager);
-    textures[0] = tl.load('../assets/images/particles/p1.png');
-    textures[1] = tl.load('../assets/images/particles/p2.png');
-    textures[2] = tl.load('../assets/images/particles/p3.png');
-    textures[3] = tl.load('../assets/images/particles/p4.png');
-    textures[4] = tl.load('../assets/images/particles/p5.png');
+    const particle = new THREE.TextureLoader(manager).load('https://res.cloudinary.com/dfvtkoboz/image/upload/v1605013866/particle_a64uzf.png');
 
 }
 
@@ -25,10 +19,10 @@ else
 
 class Environment {
 
-    constructor(font, textures) {
+    constructor(font, particle) {
 
         this.font = font;
-        this.textures = textures;
+        this.particle = particle;
         this.container = document.querySelector('#magic');
         this.scene = new THREE.Scene();
         this.createCamera();
@@ -45,7 +39,7 @@ class Environment {
 
     setup() {
 
-        this.createParticles = new CreateParticles(this.scene, this.font, this.textures, this.camera, this.renderer);
+        this.createParticles = new CreateParticles(this.scene, this.font, this.particle, this.camera, this.renderer);
     }
 
     render() {
@@ -90,11 +84,11 @@ class Environment {
 
 class CreateParticles {
 
-    constructor(scene, font, textures, camera, renderer) {
+    constructor(scene, font, particleImg, camera, renderer) {
 
         this.scene = scene;
         this.font = font;
-        this.textures = textures;
+        this.particleImg = particleImg;
         this.camera = camera;
         this.renderer = renderer;
 
@@ -115,10 +109,10 @@ class CreateParticles {
 
         this.data = {
             text: this.textList[this.currentTextIndex],
-            amount: 100, // Re-increased quantity for density
-            particleSize: 0.8, // Drastically scaled down mini size
+            amount: 1500,
+            particleSize: 1,
             particleColor: 0xffffff,
-            textSize: window.innerWidth > 768 ? 13 : 18,
+            textSize: window.innerWidth > 768 ? 11 : 13, // Increased size for mobile view
             area: 250,
             ease: .05,
         }
@@ -384,8 +378,6 @@ class CreateParticles {
 
         let colors = [];
         let sizes = [];
-        let textureIdx = [];
-        let rotations = [];
 
         for (let x = 0; x < shapes.length; x++) {
 
@@ -399,20 +391,9 @@ class CreateParticles {
 
                 const a = new THREE.Vector3(element.x, element.y, 0);
                 thePoints.push(a);
-                // Pre-calculate golden/saffron hue to tint the petals naturally
-                const h = 0.05 + Math.random() * 0.1; // Golden/Saffron range
-                const s = 0.8 + Math.random() * 0.2;
-                const l = 0.6 + Math.random() * 0.4;
-                const color = new THREE.Color().setHSL(h, s, l);
+                colors.push(this.colorChange.r, this.colorChange.g, this.colorChange.b);
+                sizes.push(1)
 
-                colors.push(color.r, color.g, color.b);
-                sizes.push(1.0);
-
-                // Randomly select one of the 5 textures (0 to 4)
-                textureIdx.push(Math.floor(Math.random() * 5.0));
-
-                // Random initial rotation
-                rotations.push(Math.random() * Math.PI * 2.0);
             });
         }
 
@@ -421,23 +402,17 @@ class CreateParticles {
 
         geoParticles.setAttribute('customColor', new THREE.Float32BufferAttribute(colors, 3));
         geoParticles.setAttribute('size', new THREE.Float32BufferAttribute(sizes, 1));
-        geoParticles.setAttribute('textureIdx', new THREE.Float32BufferAttribute(textureIdx, 1));
-        geoParticles.setAttribute('rotation', new THREE.Float32BufferAttribute(rotations, 1));
 
         const material = new THREE.ShaderMaterial({
 
             uniforms: {
                 color: { value: new THREE.Color(0xffffff) },
-                t0: { value: this.textures[0] },
-                t1: { value: this.textures[1] },
-                t2: { value: this.textures[2] },
-                t3: { value: this.textures[3] },
-                t4: { value: this.textures[4] }
+                pointTexture: { value: this.particleImg }
             },
             vertexShader: document.getElementById('vertexshader').textContent,
             fragmentShader: document.getElementById('fragmentshader').textContent,
 
-            blending: THREE.NormalBlending, // Changed from Additive to Normal because these are realistic leaves
+            blending: THREE.AdditiveBlending,
             depthTest: false,
             transparent: true,
         });

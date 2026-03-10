@@ -7218,71 +7218,51 @@ function handleDeveloperClick() {
 }
 
 /* =========================================================================
- * COURSE EXPORT FUNCTIONALITY
+ * GOOGLE SHEETS SYNCHRONIZATION
  * ========================================================================= */
-async function exportCoursesExcel() {
+async function syncToGoogleSheets() {
     const token = localStorage.getItem('token');
     if (!token) {
-        UI.error('Please log in again to export.');
+        UI.error('Please log in again to sync.');
         return;
     }
 
-    try {
-        const btn = document.querySelector('button[onclick="exportCoursesExcel()"]');
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Exporting...';
-        btn.disabled = true;
+    const btn = document.querySelector('button[onclick="syncToGoogleSheets()"]');
+    let originalText = '';
 
-        const response = await fetch(`${Auth.apiBase}/courses/admin/export-excel`, {
-            method: 'GET',
+    try {
+        if (btn) {
+            originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+            btn.disabled = true;
+        }
+
+        UI.showLoader();
+        const response = await fetch(`${Auth.apiBase}/courses/admin/sync-google-sheets`, {
+            method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`
             }
         });
 
+        const data = await response.json();
+
         if (!response.ok) {
-            throw new Error(`Export failed: ${response.status} ${response.statusText}`);
+            throw new Error(data.message || `Sync failed: ${response.status}`);
         }
 
-        // Convert the response stream to a Blob
-        const blob = await response.blob();
-
-        // Extract filename from Content-Disposition header if possible, else use default
-        let filename = 'Courses_Export.xlsx';
-        const contentDisposition = response.headers.get('Content-Disposition');
-        if (contentDisposition && contentDisposition.includes('filename=')) {
-            const match = contentDisposition.match(/filename="?([^"]+)"?/);
-            if (match && match[1]) {
-                filename = match[1];
-            }
+        UI.success(data.message || 'Successfully synced data to Google Sheets!');
+        if (data.syncedCourses) {
+            console.log(`Synced ${data.syncedCourses} course(s) to Google Sheets.`);
         }
-
-        // Create an Object URL for the Blob and trigger a download via an anchor tag
-        const downloadUrl = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.style.display = 'none';
-        a.href = downloadUrl;
-        a.download = filename;
-        document.body.appendChild(a);
-
-        a.click(); // Trigger the native download mechanism
-
-        // Cleanup
-        window.URL.revokeObjectURL(downloadUrl);
-        document.body.removeChild(a);
-
-        UI.success('Excel file downloaded successfully!');
-
-        btn.innerHTML = originalText;
-        btn.disabled = false;
 
     } catch (error) {
-        console.error('Export Error:', error);
-        UI.error('Failed to export courses to Excel.');
-
-        const btn = document.querySelector('button[onclick="exportCoursesExcel()"]');
+        console.error('Sync Error:', error);
+        UI.error(error.message || 'Failed to sync courses to Google Sheets.');
+    } finally {
+        UI.hideLoader();
         if (btn) {
-            btn.innerHTML = '<i class="fas fa-file-excel"></i> Export Excel';
+            btn.innerHTML = originalText || '<i class="fas fa-sync"></i> Sync Google Sheets';
             btn.disabled = false;
         }
     }

@@ -44,9 +44,9 @@ const authorize = require('../middleware/auth');
 // @route   GET /api/courses/admin/all
 router.get('/admin/all', authorize(['Admin']), courseController.getAllCoursesAdmin);
 
-// @route   GET /api/courses/admin/export-excel
-// @desc    Download all courses and registered students as an Excel file
-router.get('/admin/export-excel', authorize(['Admin']), courseController.exportCoursesExcel);
+// @route   POST /api/courses/admin/sync-google-sheets
+// @desc    Sync all courses and registered students to a Google Spreadsheet
+router.post('/admin/sync-google-sheets', authorize(['Admin']), courseController.syncCoursesToGoogleSheets);
 
 // @route   GET /api/courses/admin/view/:id (Must be before /:id route)
 router.get('/admin/view/:id', authorize(['Admin']), courseController.getCourseWithEnrollments);
