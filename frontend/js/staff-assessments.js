@@ -360,7 +360,7 @@ async function handleCreateExam(e) {
 
     try {
         UI.showLoader();
-        const res = await fetch(`${Auth.apiBase}/exams`, {
+        const res = await fetch(`${Auth.apiBase}/exams/create`, {
             method: 'POST',
             headers: Auth.getHeaders(),
             body: JSON.stringify(data)
