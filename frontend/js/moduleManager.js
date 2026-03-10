@@ -150,7 +150,23 @@ async function loadModules(courseId) {
         const data = await res.json();
         modules = data.modules || [];
 
-        renderModules();
+        // Also fetch the assessment for this course
+        let assessment = null;
+        try {
+            const examRes = await fetch(`${Auth.apiBase}/exams/course/${courseId}`, {
+                headers: Auth.getHeaders()
+            });
+            if (examRes.ok) {
+                const examData = await examRes.json();
+                if (Array.isArray(examData) && examData.length > 0) {
+                    assessment = examData[0];
+                }
+            }
+        } catch (e) {
+            console.warn('Could not load assessment data', e);
+        }
+
+        renderModules(assessment);
 
     } catch (err) {
         console.error('Failed to load modules:', err);
@@ -160,27 +176,15 @@ async function loadModules(courseId) {
     }
 }
 
-/**
- * Render modules list
- */
-function renderModules() {
+// Render standard modules
+function renderModules(assessment = null) {
     const container = document.getElementById('moduleList');
+    if (!container) return;
 
-    if (modules.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-book"></i>
-                <p>No modules yet. Create your first module!</p>
-            </div>
-        `;
-        return;
-    }
-
-    // Helper function to get content type icon
-    const getContentTypeIcon = (contentType) => {
-        switch (contentType) {
+    const getContentTypeIcon = (type) => {
+        switch (type) {
             case 'video':
-                return '<i class="fas fa-video" style="color: #856404;" title="Video"></i>';
+                return '<i class="fas fa-play-circle" style="color: #17a2b8;" title="Video"></i>';
             case 'pdf':
                 return '<i class="fas fa-file-pdf" style="color: #721c24;" title="PDF"></i>';
             case 'rich-content':
@@ -189,7 +193,12 @@ function renderModules() {
         }
     };
 
-    container.innerHTML = modules.map(module => `
+    let htmlContent = modules.length === 0 ? `
+        <div style="text-align: center; padding: 40px 20px; background: white; border-radius: 12px; border: 1px dashed #ced4da; margin-bottom: 20px;">
+            <i class="fas fa-layer-group" style="font-size: 3rem; color: #dee2e6; margin-bottom: 15px;"></i>
+            <h5 style="color: #6c757d; margin-bottom: 5px;">No Modules Added</h5>
+            <p style="color: #adb5bd; font-size: 0.9rem; margin-bottom: 0;">Create your first module to begin building the curriculum.</p>
+        </div>` : modules.map(module => `
         <div class="module-item" data-module-id="${module._id}">
             <div class="module-header">
                 <i class="fas fa-grip-vertical drag-handle"></i>
@@ -215,8 +224,61 @@ function renderModules() {
         </div>
     `).join('');
 
+    // Append Final Assessment Block
+    htmlContent += `
+        <div class="module-item" style="border-left: 4px solid #764ba2; background: #faf5ff; margin-top: 20px;">
+            <div class="module-header">
+                <div style="width: 20px;"></div> <!-- Spacer for drag handle to align nicely -->
+                <div class="module-info">
+                    <div class="module-title" style="color: #764ba2;">
+                        <i class="fas fa-graduation-cap" style="color: #764ba2;"></i>
+                        Final Assessment
+                    </div>
+                    <div class="module-meta">
+                        ${assessment
+            ? (assessment.approvalStatus === 'Approved' ? '<span style="color: #28a745;">• Approved</span>' : (assessment.approvalStatus === 'Rejected' ? '<span style="color: #dc3545;">• Rejected</span>' : '<span style="color: #ffc107;">• Pending Approval</span>')) + ` <span style="margin-left:8px; color:#666;">(${assessment.questions ? assessment.questions.length : 0} Questions)</span>`
+            : '<span style="color: #6c757d;">• No assessment created yet</span>'
+        }
+                    </div>
+                </div>
+                <div class="module-actions">
+                    ${assessment
+            ? `<button class="icon-btn" onclick="openAssessmentEditor('${assessment._id}')" title="Edit Assessment" style="border-color: #764ba2; color: #764ba2;">
+                               <i class="fas fa-edit"></i> Edit
+                           </button>`
+            : `<button class="icon-btn" onclick="openAssessmentEditor()" title="Create Assessment" style="background: #764ba2; color: white; border: none;">
+                               <i class="fas fa-plus"></i> Create
+                           </button>`
+        }
+                </div>
+            </div>
+            <p style="margin: 10px 0 0 30px; color: #6c757d; font-size: 0.85rem;">
+                ${assessment ? assessment.title : 'Required for students to claim certification upon completing this course.'}
+            </p>
+        </div>
+    `;
+
+    container.innerHTML = htmlContent;
+
     // Initialize drag-drop
     initializeSortable();
+}
+
+/**
+ * Open the assessment editor for the current course
+ * @param {string} assessmentId - Optional ID of existing assessment
+ */
+function openAssessmentEditor(assessmentId = null) {
+    if (!currentCourse) {
+        UI.error('No course selected');
+        return;
+    }
+
+    let url = `staff-assessments.html?courseId=${currentCourse}`;
+    if (assessmentId) {
+        url += `&examId=${assessmentId}`;
+    }
+    window.location.href = url;
 }
 
 /**

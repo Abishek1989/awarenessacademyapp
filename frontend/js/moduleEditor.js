@@ -682,7 +682,7 @@ async function loadModuleData(id) {
     document.getElementById("moduleTitle").value = module.title;
     document.getElementById("moduleDescription").value =
       module.description || "";
-    document.getElementById("moduleDuration").value = module.duration || 10;
+    document.getElementById("moduleDuration").value = module.minDuration || 10;
 
     // Set content type
     selectedContentType = module.contentType || "rich-content";

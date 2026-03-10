@@ -135,18 +135,18 @@ const DRMProtection = {
     if (fileUrl && fileUrl.startsWith("http")) {
       return {
         blobUrl: fileUrl,
-        cleanup: () => {},
+        cleanup: () => { },
       };
     }
 
     // For local files or if fileUrl isn't provided, use the backend endpoint
     // but instead of fetching a blob, we return the endpoint URL with an auth token
-    const token = Auth.getToken();
+    const token = localStorage.getItem('token');
     const secureUrl = `${Auth.apiBase}/secure-files/${moduleId}?token=${token}`;
 
     return {
       blobUrl: secureUrl,
-      cleanup: () => {}, // No cleanup needed for direct URLs
+      cleanup: () => { }, // No cleanup needed for direct URLs
     };
   },
 

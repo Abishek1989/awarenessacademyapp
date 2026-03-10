@@ -271,17 +271,26 @@ function renderSidebar() {
                         <div class="assessment-dropdown-item reject" onclick="event.stopPropagation(); rejectAssessment('${exam._id}'); closeAssessmentMenu();">
                             <i class="fas fa-times"></i> Reject
                         </div>
+                        <div class="assessment-dropdown-item" onclick="event.stopPropagation(); deleteAssessmentFromMenu('${exam._id}'); closeAssessmentMenu();" style="color: #6c757d;">
+                            <i class="fas fa-trash"></i> Delete
+                        </div>
                     `;
             } else if (displayStatus === "Approved") {
               menuItems = `
                         <div class="assessment-dropdown-item reject" onclick="event.stopPropagation(); rejectAssessment('${exam._id}'); closeAssessmentMenu();">
                             <i class="fas fa-ban"></i> Revoke Approval
                         </div>
+                        <div class="assessment-dropdown-item" onclick="event.stopPropagation(); deleteAssessmentFromMenu('${exam._id}'); closeAssessmentMenu();" style="color: #6c757d;">
+                            <i class="fas fa-trash"></i> Delete
+                        </div>
                     `;
             } else if (displayStatus === "Rejected") {
               menuItems = `
                         <div class="assessment-dropdown-item approve" onclick="event.stopPropagation(); approveAssessment('${exam._id}'); closeAssessmentMenu();">
                             <i class="fas fa-check"></i> Approve
+                        </div>
+                        <div class="assessment-dropdown-item" onclick="event.stopPropagation(); deleteAssessmentFromMenu('${exam._id}'); closeAssessmentMenu();" style="color: #6c757d;">
+                            <i class="fas fa-trash"></i> Delete
                         </div>
                     `;
             }
@@ -479,6 +488,52 @@ async function deleteModule() {
     UI.hideLoader();
   }
 }
+
+// Delete Assessment Logic for Sidebar Menu
+window.deleteAssessmentFromMenu = async function (examId) {
+  if (
+    !examId ||
+    !confirm(
+      "Are you sure you want to DELETE this assessment?\nThis action cannot be undone.",
+    )
+  )
+    return;
+
+  try {
+    UI.showLoader();
+    const res = await fetch(`${Auth.apiBase}/exams/${examId}`, {
+      method: "DELETE",
+      headers: Auth.getHeaders(),
+    });
+
+    if (!res.ok) throw new Error("Delete failed");
+    UI.success("Assessment deleted");
+
+    // Remove from local list
+    assessmentsData = assessmentsData.filter((e) => e._id !== examId);
+
+    // Refresh Sidebar
+    renderSidebar();
+
+    // If currently viewing the deleted assessment, reset to empty or next module
+    if (currentExamId === examId) {
+      currentExamId = null;
+      if (modulesData.length > 0) {
+        selectModule(modulesData[0]._id);
+      } else if (assessmentsData.length > 0) {
+        selectAssessment(assessmentsData[0]._id);
+      } else {
+        document.getElementById("contentDisplay").style.display = "none";
+        document.getElementById("emptyState").style.display = "block";
+      }
+    }
+  } catch (err) {
+    console.error(err);
+    UI.error("Delete failed");
+  } finally {
+    UI.hideLoader();
+  }
+};
 
 /**
  * Render module content based on content type
@@ -771,8 +826,8 @@ async function loadAndDisplayExam(examId) {
                 </h3>
 
                 ${exam.questions
-                  .map(
-                    (q, index) => `
+        .map(
+          (q, index) => `
                     <div style="background: white; border: 2px solid #e0e0e0; border-radius: 12px; padding: 25px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);">
                         <div style="font-weight: 600; margin-bottom: 15px; color: #333; font-size: 1.1rem; display: flex; align-items: start; gap: 12px;">
                             <span style="background: linear-gradient(135deg, var(--color-saffron) 0%, var(--color-golden) 100%); color: white; padding: 8px 14px; border-radius: 8px; font-size: 1rem; font-weight: bold; flex-shrink: 0;">
@@ -782,10 +837,10 @@ async function loadAndDisplayExam(examId) {
                         </div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-left: 45px;">
                             ${q.options
-                              .map((opt, i) => {
-                                const isCorrect =
-                                  q.correctOptionIndices.includes(i);
-                                return `
+              .map((opt, i) => {
+                const isCorrect =
+                  q.correctOptionIndices.includes(i);
+                return `
                                     <div style="display: flex; align-items: center; gap: 12px; padding: 14px; background: ${isCorrect ? "linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%)" : "#f8f9fa"}; border-radius: 8px; ${isCorrect ? "border: 2px solid #28a745; box-shadow: 0 2px 6px rgba(40, 167, 69, 0.2);" : "border: 1px solid #e0e0e0;"}">
                                         <span style="background: ${isCorrect ? "#28a745" : "#6c757d"}; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; flex-shrink: 0; font-size: 0.95rem;">
                                             ${String.fromCharCode(65 + i)}
@@ -794,13 +849,13 @@ async function loadAndDisplayExam(examId) {
                                         ${isCorrect ? '<i class="fas fa-check-circle" style="color: #28a745; font-size: 1.3rem;"></i>' : ""}
                                     </div>
                                 `;
-                              })
-                              .join("")}
+              })
+              .join("")}
                         </div>
                     </div>
                 `,
-                  )
-                  .join("")}
+        )
+        .join("")}
             </div>
         `;
   } catch (err) {

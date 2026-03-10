@@ -825,9 +825,6 @@
                 <li><a href="javascript:void(0)" class="nav-link" onclick="switchSection('live')"
                         title="Live Classroom"><i class="fas fa-video"></i> <span class="sidebar-text">Live
                             Classroom</span></a></li>
-                <li><a href="javascript:void(0)" class="nav-link" onclick="switchSection('assessments')"
-                        title="Assessments"><i class="fas fa-clipboard-list"></i> <span
-                            class="sidebar-text">Assessments</span></a></li>
                 <li><a href="javascript:void(0)" class="nav-link" onclick="switchSection('tickets')"
                         title="Support Tickets"><i class="fas fa-ticket-alt"></i> <span class="sidebar-text">Support
                             Tickets</span></a></li>
@@ -933,11 +930,14 @@
 
                 <!-- Notifications Section -->
                 <section id="notificationsSection" style="display: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <div
+                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                         <h3 style="margin: 0;">Notifications</h3>
                         <div style="display: flex; align-items: center; gap: 10px;">
-                            <span id="notificationCount" class="notification-badge" style="background: var(--color-saffron); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; display: none;">0</span>
-                            <button onclick="clearAllNotifications()" class="btn-secondary" style="padding: 8px 16px; font-size: 0.85rem;">
+                            <span id="notificationCount" class="notification-badge"
+                                style="background: var(--color-saffron); color: white; padding: 4px 8px; border-radius: 12px; font-size: 0.8rem; font-weight: 600; display: none;">0</span>
+                            <button onclick="clearAllNotifications()" class="btn-secondary"
+                                style="padding: 8px 16px; font-size: 0.85rem;">
                                 <i class="fas fa-check-double"></i> Mark All Read
                             </button>
                         </div>
@@ -967,32 +967,7 @@
                     </div>
                 </section>
 
-                <!-- Assessments Section -->
-                <section id="assessmentsSection" style="display: none;">
-                    <div
-                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 15px; margin-bottom: 30px; color: white; box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);">
-                        <h2 style="margin: 0 0 10px 0; font-size: 2rem;"><i class="fas fa-clipboard-check"></i> My
-                            Assessments</h2>
-                        <p style="margin: 0; opacity: 0.9;">Create, manage, and track your course assessments</p>
-                    </div>
 
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-                        <div>
-                            <h3 style="margin: 0; color: #333;">All Assessments</h3>
-                            <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9rem;">Manage your course assessments
-                                and their approval status</p>
-                        </div>
-                        <button class="btn-primary" id="newExamBtn"
-                            style="background: var(--color-golden); padding: 12px 24px;">
-                            <i class="fas fa-plus"></i> Create Assessment
-                        </button>
-                    </div>
-
-                    <div id="assessmentsList" style="display: grid; gap: 20px;">
-                        <p style="text-align: center; color: #999; padding: 40px;">Loading assessments...</p>
-                    </div>
-                </section>
 
                 <!-- Support Tickets Section -->
                 <section id="ticketsSection" style="display: none; height: calc(100vh - 100px); overflow: hidden;">
@@ -1986,162 +1961,6 @@
         </div>
     </div>
 
-    <!-- Exam Modal [NEW - WIZARD STYLE] -->
-    <div class="modal" id="examModal">
-        <div class="modal-content glass-card" style="max-width: 900px; max-height: 90vh; overflow-y: auto; padding: 0;">
-            <!-- Step Progress Bar -->
-            <div
-                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; border-radius: 20px 20px 0 0; color: white;">
-                <h2 style="font-family: var(--font-heading); margin: 0 0 20px 0; font-size: 1.5rem;">
-                    <i class="fas fa-graduation-cap"></i> Create Assessment
-                </h2>
-                <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                    <div class="step-indicator" data-step="1" style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="step-circle">1</div>
-                            <span class="step-label">Basic Info</span>
-                        </div>
-                        <div class="step-line"></div>
-                    </div>
-                    <div class="step-indicator" data-step="2" style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="step-circle">2</div>
-                            <span class="step-label">Settings</span>
-                        </div>
-                        <div class="step-line"></div>
-                    </div>
-                    <div class="step-indicator" data-step="3" style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="step-circle">3</div>
-                            <span class="step-label">Questions</span>
-                        </div>
-                        <div class="step-line"></div>
-                    </div>
-                    <div class="step-indicator" data-step="4" style="flex: 1;">
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="step-circle">4</div>
-                            <span class="step-label">Review</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Form Content -->
-            <form id="examForm" style="padding: 30px;">
-                <!-- Step 1: Basic Information -->
-                <div class="exam-step" id="examStep1">
-                    <h3 style="font-family: var(--font-heading); color: var(--color-saffron); margin-bottom: 20px;">
-                        Basic Information
-                    </h3>
-                    <div class="form-group">
-                        <label><i class="fas fa-book"></i> Select Course *</label>
-                        <select name="courseID" id="examCourseSelect" class="form-control" required>
-                            <option value="">Choose a course...</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-heading"></i> Assessment Title *</label>
-                        <input type="text" name="title" id="examTitle" class="form-control"
-                            placeholder="e.g., Mindfulness Mastery Final Assessment" required>
-                        <small style="color: var(--color-text-secondary);">Give your assessment a clear, descriptive
-                            title</small>
-                    </div>
-                </div>
-
-                <!-- Step 2: Assessment Settings -->
-                <div class="exam-step" id="examStep2" style="display: none;">
-                    <h3 style="font-family: var(--font-heading); color: var(--color-saffron); margin-bottom: 20px;">
-                        Assessment Settings
-                    </h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-                        <div class="form-group">
-                            <label><i class="fas fa-clock"></i> Duration (minutes) *</label>
-                            <input type="number" name="duration" id="examDuration" class="form-control" value="30"
-                                min="5" max="180" required>
-                            <small style="color: var(--color-text-secondary);">Recommended: 1-2 minutes per
-                                question</small>
-                        </div>
-                        <div class="form-group">
-                            <label><i class="fas fa-trophy"></i> Passing Score (%) *</label>
-                            <input type="number" name="passingScore" id="examPassingScore" class="form-control"
-                                value="70" min="0" max="100" required>
-                            <small style="color: var(--color-text-secondary);">Minimum score to pass</small>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label><i class="fas fa-chart-line"></i> Completion Threshold (% of Course) *</label>
-                        <input type="number" name="activationThreshold" id="examThreshold" class="form-control"
-                            value="85" min="0" max="100">
-                        <small style="color: var(--color-text-secondary);">Student must complete this percentage of the
-                            course content to unlock the assessment</small>
-                    </div>
-                    <div
-                        style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid var(--color-saffron);">
-                        <strong><i class="fas fa-info-circle"></i> Quick Tips:</strong>
-                        <ul style="margin: 10px 0 0 20px; line-height: 1.8;">
-                            <li>Typical assessments: 10-20 questions, 30-45 minutes</li>
-                            <li>Quick quizzes: 5-10 questions, 10-15 minutes</li>
-                            <li>Comprehensive exams: 30+ questions, 60-90 minutes</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Step 3: Add Questions -->
-                <div class="exam-step" id="examStep3" style="display: none;">
-                    <div
-                        style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-                        <h3 style="font-family: var(--font-heading); color: var(--color-saffron); margin: 0;">
-                            Questions <span id="questionCount" style="font-size: 0.9rem; color: #666;">(0)</span>
-                        </h3>
-                        <button type="button" onclick="addQuestionField()" class="btn-primary"
-                            style="background: var(--color-golden); padding: 8px 15px; font-size: 0.85rem;">
-                            <i class="fas fa-plus"></i> Add Question
-                        </button>
-                    </div>
-
-                    <div id="questionContainer" style="max-height: 400px; overflow-y: auto; padding-right: 10px;">
-                        <div style="text-align: center; padding: 40px; color: var(--color-text-secondary);">
-                            <i class="fas fa-question-circle"
-                                style="font-size: 3rem; opacity: 0.3; margin-bottom: 15px;"></i>
-                            <p>No questions added yet. Click "Add Question" to get started.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Step 4: Review & Submit -->
-                <div class="exam-step" id="examStep4" style="display: none;">
-                    <h3 style="font-family: var(--font-heading); color: var(--color-saffron); margin-bottom: 20px;">
-                        <i class="fas fa-check-circle"></i> Review Assessment
-                    </h3>
-                    <div id="examReview" style="background: #f8f9fa; padding: 20px; border-radius: 12px;">
-                        <!-- Review content will be populated by JavaScript -->
-                    </div>
-                </div>
-
-                <!-- Navigation Buttons -->
-                <div
-                    style="display: flex; justify-content: space-between; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
-                    <button type="button" id="examPrevBtn" class="btn-primary"
-                        style="background: #6c757d; display: none; padding: 10px 25px;">
-                        <i class="fas fa-arrow-left"></i> Previous
-                    </button>
-                    <div style="flex: 1;"></div>
-                    <button type="button" id="examNextBtn" class="btn-primary" style="padding: 10px 25px;">
-                        Next <i class="fas fa-arrow-right"></i>
-                    </button>
-                    <button type="submit" id="examSubmitBtn" class="btn-primary"
-                        style="display: none; background: var(--color-success); padding: 10px 25px;">
-                        <i class="fas fa-check"></i> Create Assessment
-                    </button>
-                    <button type="button" id="closeExamModal" class="btn-primary"
-                        style="background: var(--color-text-secondary); padding: 10px 25px; margin-left: 10px;">
-                        Cancel
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <style>
         /* Step Wizard Styles */
         .step-indicator {
@@ -2331,22 +2150,32 @@
         }
 
         @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
                 transform: translateY(0);
             }
+
             40% {
                 transform: translateY(-3px);
             }
+
             60% {
                 transform: translateY(-2px);
             }
         }
 
         @keyframes notificationPulse {
-            0%, 100% {
+
+            0%,
+            100% {
                 opacity: 0.8;
                 transform: scale(1);
             }
+
             50% {
                 opacity: 1;
                 transform: scale(1.02);
@@ -2417,58 +2246,72 @@
     </style>
 
     <!-- Schedule Modal [NEW] -->
-    <div class="modal" id="scheduleModal">
-        <div class="modal-content glass-card">
-            <h2 style="font-family: var(--font-heading); color: var(--color-saffron);">Schedule Live Flow</h2>
-            <form id="scheduleForm">
-                <div class="form-group">
-                    <label>Select Type</label>
-                    <select id="scheduleType" class="form-control" onchange="toggleScheduleTypeOptions()" required>
-                        <option value="">-- Choose Course or Membership --</option>
-                        <option value="course">Course</option>
-                        <option value="membership">Membership Package</option>
-                    </select>
-                </div>
-                <div class="form-group" id="courseSelectGroup" style="display: none;">
-                    <label>Select Course</label>
-                    <select name="courseID" id="scheduleCourseSelect" class="form-control"></select>
-                </div>
-                <div class="form-group" id="membershipSelectGroup" style="display: none;">
-                    <label>Select Membership Package</label>
-                    <select name="membershipID" id="scheduleMembershipSelect" class="form-control"></select>
-                </div>
-                <div class="form-group">
-                    <label>Session Title</label>
-                    <input type="text" name="title" class="form-control" placeholder="e.g. Deep Breath-Work Session"
-                        required>
-                </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div id="scheduleModal" class="modal"
+        style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 2000; justify-content: center; align-items: center; padding: 20px;">
+        <div
+            style="background: white; border-radius: 15px; max-width: 600px; width: 100%; box-shadow: 0 10px 40px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+            <div
+                style="background: linear-gradient(135deg, #f6d365 0%, #ffb142 100%); padding: 25px; border-radius: 15px 15px 0 0; color: white;">
+                <h3 style="margin: 0; display: flex; align-items: center; gap: 10px; font-family: var(--font-heading);">
+                    <i class="fas fa-video"></i>
+                    Schedule Live Flow
+                </h3>
+            </div>
+            <div style="padding: 30px;">
+                <form id="scheduleForm">
                     <div class="form-group">
-                        <label>Date & Time</label>
-                        <input type="datetime-local" name="startTime" id="scheduleStartTime" class="form-control" required>
-                        <small id="timeWarning" style="color: #e74c3c; display: none; margin-top: 5px;">
-                            <i class="fas fa-exclamation-triangle"></i> Class must be scheduled at least 15 minutes from now
-                        </small>
+                        <label>Select Type</label>
+                        <select id="scheduleType" class="form-control" onchange="toggleScheduleTypeOptions()" required>
+                            <option value="">-- Choose Course or Membership --</option>
+                            <option value="course">Course</option>
+                            <option value="membership">Membership Package</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="courseSelectGroup" style="display: none;">
+                        <label>Select Course</label>
+                        <select name="courseID" id="scheduleCourseSelect" class="form-control"></select>
+                    </div>
+                    <div class="form-group" id="membershipSelectGroup" style="display: none;">
+                        <label>Select Membership Package</label>
+                        <select name="membershipID" id="scheduleMembershipSelect" class="form-control"></select>
                     </div>
                     <div class="form-group">
-                        <label>Duration (mins)</label>
-                        <input type="number" name="duration" class="form-control" value="60">
+                        <label>Session Title</label>
+                        <input type="text" name="title" class="form-control" placeholder="e.g. Deep Breath-Work Session"
+                            required>
                     </div>
-                </div>
-                <div class="form-group">
-                    <label>Live Link (Meeting URL)</label>
-                    <input type="text" name="meetingLink" class="form-control"
-                        placeholder="e.g. https://meet.google.com/xyz or Zoom link">
-                    <small style="color: var(--color-text-secondary);">Students will use this link to join at the
-                        scheduled
-                        time.</small>
-                </div>
-                <div style="display: flex; gap: 10px; margin-top: 30px;">
-                    <button type="submit" class="btn-primary">Publish Schedule</button>
-                    <button type="button" id="closeScheduleModal" class="btn-primary"
-                        style="background: var(--color-text-secondary);">Cancel</button>
-                </div>
-            </form>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                        <div class="form-group">
+                            <label>Date & Time</label>
+                            <input type="datetime-local" name="startTime" id="scheduleStartTime" class="form-control"
+                                required>
+                            <small id="timeWarning" style="color: #e74c3c; display: none; margin-top: 5px;">
+                                <i class="fas fa-exclamation-triangle"></i> Class must be scheduled at least 15 minutes
+                                from
+                                now
+                            </small>
+                        </div>
+                        <div class="form-group">
+                            <label>Duration (mins)</label>
+                            <input type="number" name="duration" class="form-control" value="60">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Live Link (Meeting URL)</label>
+                        <input type="text" name="meetingLink" class="form-control"
+                            placeholder="e.g. https://meet.google.com/xyz or Zoom link">
+                        <small style="color: var(--color-text-secondary);">Students will use this link to join at the
+                            scheduled
+                            time.</small>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 30px; justify-content: flex-end;">
+                        <button type="button" id="closeScheduleModal" class="btn-primary"
+                            style="background: #f1f3f5; color: #333; border: 1px solid #ddd;">Cancel</button>
+                        <button type="submit" class="btn-primary" style="background: var(--color-saffron);">Publish
+                            Schedule</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -2657,18 +2500,19 @@
         function openScheduleModal() {
             // Reset editing state (in case user was editing)
             editingScheduleId = null;
-            document.querySelector('#scheduleModal h2').textContent = 'Schedule Live Flow';
+            const titleEl = document.querySelector('#scheduleModal h3') || document.querySelector('#scheduleModal h2');
+            if (titleEl) titleEl.innerHTML = '<i class="fas fa-video"></i> Schedule Live Flow';
             document.querySelector('#scheduleForm button[type="submit"]').textContent = 'Publish Schedule';
-            
+
             document.getElementById('scheduleModal').style.display = 'flex';
             loadStaffCoursesAndMemberships();
-            
+
             // Set minimum time to 15 minutes from now
             setMinimumScheduleTime();
-            
+
             // Add real-time validation for datetime input
             const startTimeInput = document.getElementById('scheduleStartTime');
-            startTimeInput.addEventListener('change', function() {
+            startTimeInput.addEventListener('change', function () {
                 const selectedTime = this.value;
                 if (selectedTime && !validateScheduleTime(selectedTime)) {
                     toggleTimeWarning(true, 'Class must be scheduled at least 15 minutes from now');
@@ -2684,10 +2528,10 @@
             document.getElementById('scheduleForm').reset();
             toggleScheduleTypeOptions(); // Reset dropdowns
             toggleTimeWarning(false); // Hide any warnings
-            
+
             // Reset editing state
-            editingScheduleId = null;
-            document.querySelector('#scheduleModal h2').textContent = 'Schedule Live Flow';
+            const titleEl = document.querySelector('#scheduleModal h3') || document.querySelector('#scheduleModal h2');
+            if (titleEl) titleEl.innerHTML = '<i class="fas fa-video"></i> Schedule Live Flow';
             document.querySelector('#scheduleForm button[type="submit"]').textContent = 'Publish Schedule';
         });
 
@@ -2697,7 +2541,7 @@
             const minTime = new Date(now.getTime() + (15 * 60 * 1000)); // Add 15 minutes
             const minTimeString = minTime.toISOString().slice(0, 16); // Format for datetime-local
             const startTimeInput = document.getElementById('scheduleStartTime');
-            
+
             startTimeInput.min = minTimeString;
             // Set default value to 30 minutes from now for better UX
             const defaultTime = new Date(now.getTime() + (30 * 60 * 1000));
@@ -2710,7 +2554,7 @@
             const now = new Date();
             const minTime = new Date(now.getTime() + (15 * 60 * 1000)); // 15 minutes from now
             const selected = new Date(selectedTime);
-            
+
             return selected >= minTime;
         }
 
@@ -2813,7 +2657,7 @@
 
             // Prevent multiple submissions
             if (submitButton.disabled) return;
-            
+
             submitButton.disabled = true;
             const isEditing = !!editingScheduleId;
             submitButton.textContent = isEditing ? 'Updating...' : 'Publishing...';
@@ -2865,7 +2709,7 @@
 
             try {
                 let response;
-                
+
                 if (isEditing) {
                     // Update existing schedule
                     response = await fetch(`${apiBase}/schedules/${editingScheduleId}/own`, {
@@ -2896,12 +2740,12 @@
                     document.getElementById('scheduleForm').reset();
                     toggleScheduleTypeOptions();
                     toggleTimeWarning(false); // Clear any warnings
-                    
+
                     // Reset editing state
-                    editingScheduleId = null;
-                    document.querySelector('#scheduleModal h2').textContent = 'Schedule Live Flow';
+                    const titleEl = document.querySelector('#scheduleModal h3') || document.querySelector('#scheduleModal h2');
+                    if (titleEl) titleEl.innerHTML = '<i class="fas fa-video"></i> Schedule Live Flow';
                     document.querySelector('#scheduleForm button[type="submit"]').textContent = 'Publish Schedule';
-                    
+
                     loadSchedules(); // Reload the schedule list
                 } else {
                     alert(result.message || (isEditing ? 'Failed to update schedule' : 'Failed to create schedule'));
@@ -2930,7 +2774,7 @@
                 });
 
                 const schedules = await response.json();
-                
+
                 // Cache schedules for edit functionality
                 window.currentSchedules = schedules;
                 console.log('Loaded and cached schedules:', schedules);
@@ -2957,14 +2801,14 @@
                     const packageType = schedule.courseID ? 'Course' : 'Membership';
                     const isUpcoming = startTime > new Date();
                     const isPast = endTime < new Date();
-                    
+
                     // Check if schedule can be edited (within 5 minutes of creation)
                     const now = new Date();
                     const createdAt = schedule.createdAt ? new Date(schedule.createdAt) : new Date(parseInt(schedule._id.substring(0, 8), 16) * 1000);
                     const timeDiff = (now - createdAt) / (1000 * 60); // difference in minutes
                     const canEdit = timeDiff <= 5;
                     const timeRemaining = Math.max(0, 5 - timeDiff);
-                    
+
                     // Delete is always available for staff's own schedules
                     const canDelete = true;
 
@@ -3041,11 +2885,11 @@
         // Edit Schedule Function
         async function editSchedule(scheduleId) {
             console.log('Edit schedule called for ID:', scheduleId);
-            
+
             try {
                 const token = localStorage.getItem('token');
                 const apiBase = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api';
-                
+
                 console.log('API Base:', apiBase);
                 console.log('Token:', token ? 'Present' : 'Missing');
 
@@ -3053,13 +2897,13 @@
                 // This avoids making unnecessary API calls
                 const scheduleList = document.getElementById('schedulesList');
                 let schedule = null;
-                
+
                 // Try to find the schedule in the current loaded data first
                 if (window.currentSchedules) {
                     schedule = window.currentSchedules.find(s => s._id === scheduleId);
                     console.log('Found schedule in cache:', schedule ? 'Yes' : 'No');
                 }
-                
+
                 // If not found in cache, fetch fresh data
                 if (!schedule) {
                     console.log('Fetching schedule data from API...');
@@ -3068,7 +2912,7 @@
                     });
 
                     console.log('API Response status:', response.status);
-                    
+
                     if (!response.ok) {
                         const errorText = await response.text();
                         console.error('API Error:', errorText);
@@ -3077,10 +2921,10 @@
 
                     const schedules = await response.json();
                     console.log('Fetched schedules:', schedules);
-                    
+
                     // Cache for future use
                     window.currentSchedules = schedules;
-                    
+
                     schedule = schedules.find(s => s._id === scheduleId);
                     console.log('Found schedule in fresh data:', schedule ? 'Yes' : 'No');
                 }
@@ -3111,8 +2955,8 @@
                 editingScheduleId = scheduleId;
                 console.log('Set editing mode for:', scheduleId);
 
-                // Update modal title and button text first
-                document.querySelector('#scheduleModal h2').textContent = 'Edit Live Flow';
+                const titleEl = document.querySelector('#scheduleModal h3') || document.querySelector('#scheduleModal h2');
+                if (titleEl) titleEl.innerHTML = '<i class="fas fa-edit"></i> Edit Live Flow';
                 document.querySelector('#scheduleForm button[type="submit"]').textContent = 'Update Schedule';
 
                 // Open the modal first
@@ -3123,7 +2967,7 @@
 
                 // Populate the form with existing data
                 console.log('Populating form with schedule data...');
-                
+
                 try {
                     document.getElementById('scheduleStartTime').value = new Date(schedule.startTime).toISOString().slice(0, 16);
                     document.querySelector('input[name="title"]').value = schedule.title || '';
@@ -3139,7 +2983,7 @@
                 try {
                     console.log('Loading courses and memberships...');
                     await loadStaffCoursesAndMemberships();
-                    
+
                     // Set the course or membership selection after options are loaded
                     if (schedule.courseID) {
                         console.log('Setting course selection:', schedule.courseID);
@@ -3227,7 +3071,7 @@
             if (section === 'live') {
                 loadSchedules();
             }
-            
+
             if (section === 'notifications') {
                 loadNotifications();
             }
@@ -3259,12 +3103,12 @@
         // Create a notification
         function createNotification(scheduleId, title, message, type = 'schedule', startTime = null) {
             const notifications = getNotifications();
-            
+
             // Check if notification already exists for this schedule
-            const existingIndex = notifications.findIndex(n => 
+            const existingIndex = notifications.findIndex(n =>
                 n.scheduleId === scheduleId && n.type === type
             );
-            
+
             if (existingIndex === -1) {
                 const notification = {
                     id: Date.now() + Math.random(),
@@ -3277,14 +3121,14 @@
                     read: false,
                     urgent: type === 'schedule_starting'
                 };
-                
+
                 notifications.unshift(notification); // Add to beginning
-                
+
                 // Limit to 50 notifications
                 if (notifications.length > 50) {
                     notifications.splice(50);
                 }
-                
+
                 saveNotifications(notifications);
                 console.log('Created notification:', notification);
             }
@@ -3294,7 +3138,7 @@
         function deleteNotificationBySchedule(scheduleId) {
             const notifications = getNotifications();
             const filtered = notifications.filter(n => n.scheduleId !== scheduleId);
-            
+
             if (filtered.length !== notifications.length) {
                 saveNotifications(filtered);
                 console.log('Deleted notifications for schedule:', scheduleId);
@@ -3305,7 +3149,7 @@
         function markNotificationRead(notificationId) {
             const notifications = getNotifications();
             const notification = notifications.find(n => n.id === notificationId);
-            
+
             if (notification && !notification.read) {
                 notification.read = true;
                 saveNotifications(notifications);
@@ -3328,11 +3172,11 @@
             const notifications = getNotifications();
             const unreadCount = notifications.filter(n => !n.read).length;
             const badge = document.getElementById('notificationCount');
-            
+
             if (unreadCount > 0) {
                 badge.textContent = unreadCount;
                 badge.style.display = 'inline-block';
-                
+
                 // Update sidebar badge
                 const sidebarBadge = document.querySelector('.notification-badge-sidebar');
                 if (sidebarBadge) {
@@ -3353,9 +3197,9 @@
             const notifications = getNotifications();
             const notificationsList = document.getElementById('notificationsList');
             const filter = document.getElementById('notificationFilter').value;
-            
+
             let filteredNotifications = notifications;
-            
+
             // Apply filters
             if (filter === 'unread') {
                 filteredNotifications = notifications.filter(n => !n.read);
@@ -3364,7 +3208,7 @@
             } else if (filter === 'schedule') {
                 filteredNotifications = notifications.filter(n => n.type.includes('schedule'));
             }
-            
+
             if (filteredNotifications.length === 0) {
                 notificationsList.innerHTML = `
                     <div style="text-align: center; padding: 60px 20px; color: #666;">
@@ -3375,13 +3219,13 @@
                 `;
                 return;
             }
-            
+
             let html = '<div style="display: grid; gap: 15px;">';
-            
+
             filteredNotifications.forEach(notification => {
                 const timeAgo = getTimeAgo(new Date(notification.timestamp));
                 const isUrgent = notification.urgent && !notification.read;
-                
+
                 html += `
                     <div class="glass-card notification-item ${notification.read ? 'read' : 'unread'}" 
                          onclick="markNotificationRead(${notification.id})"
@@ -3420,7 +3264,7 @@
                     </div>
                 `;
             });
-            
+
             html += '</div>';
             notificationsList.innerHTML = html;
             updateNotificationBadge();
@@ -3428,7 +3272,7 @@
 
         // Get notification icon based on type
         function getNotificationIcon(type) {
-            switch(type) {
+            switch (type) {
                 case 'schedule_starting': return 'clock';
                 case 'schedule_reminder': return 'bell';
                 case 'schedule_cancelled': return 'times-circle';
@@ -3443,7 +3287,7 @@
             const diffMins = Math.floor(diffMs / 60000);
             const diffHours = Math.floor(diffMins / 60);
             const diffDays = Math.floor(diffHours / 24);
-            
+
             if (diffMins < 1) return 'Just now';
             if (diffMins < 60) return `${diffMins}m ago`;
             if (diffHours < 24) return `${diffHours}h ago`;
@@ -3453,17 +3297,17 @@
         // Check for upcoming schedules and create notifications
         function checkUpcomingSchedules() {
             if (!window.currentSchedules) return;
-            
+
             const now = new Date();
-            
+
             window.currentSchedules.forEach(schedule => {
                 const startTime = new Date(schedule.startTime);
                 const timeDiff = (startTime - now) / (1000 * 60); // minutes until start
-                
+
                 // Create notification 5 minutes before class starts
                 if (timeDiff <= 5 && timeDiff > 0) {
                     const packageName = schedule.courseID?.title || schedule.membershipID?.packageName || 'Unknown';
-                    
+
                     createNotification(
                         schedule._id,
                         '🔔 Class Starting Soon!',
@@ -3484,10 +3328,10 @@
         function initializeNotificationSystem() {
             // Check for upcoming schedules every minute
             setInterval(checkUpcomingSchedules, 60000);
-            
+
             // Load notifications when page loads
             updateNotificationBadge();
-            
+
             // Check immediately
             setTimeout(checkUpcomingSchedules, 2000);
         }
@@ -3504,9 +3348,8 @@
         // === END NOTIFICATION SYSTEM ===
 
         // === ASSESSMENT/EXAM FORM STEP NAVIGATION ===
-        
-        let currentExamStep = 1;
-        const totalExamSteps = 4;
+
+        // Using global variables `currentExamStep` and `totalExamSteps` from staff.js
 
         // Initialize exam form when modal opens
         function openExamModal() {
@@ -3600,12 +3443,12 @@
                 case 1:
                     const courseSelect = document.getElementById('examCourseSelect');
                     const titleInput = document.getElementById('examTitle');
-                    
+
                     if (!courseSelect?.value) {
                         alert('Please select a course for this assessment.');
                         return false;
                     }
-                    
+
                     if (!titleInput?.value.trim()) {
                         alert('Please enter an assessment title.');
                         return false;
@@ -3616,17 +3459,17 @@
                     const durationInput = document.getElementById('examDuration');
                     const passingScoreInput = document.getElementById('examPassingScore');
                     const thresholdInput = document.getElementById('examThreshold');
-                    
+
                     if (!durationInput?.value || durationInput.value < 5) {
                         alert('Please set a valid duration (minimum 5 minutes).');
                         return false;
                     }
-                    
+
                     if (!passingScoreInput?.value || passingScoreInput.value < 0 || passingScoreInput.value > 100) {
                         alert('Please set a valid passing score (0-100%).');
                         return false;
                     }
-                    
+
                     if (thresholdInput?.value !== '' && (thresholdInput.value < 0 || thresholdInput.value > 100)) {
                         alert('Please set a valid activation threshold (0-100%).');
                         return false;
@@ -3639,29 +3482,29 @@
                         alert('Please add at least one question to your assessment.');
                         return false;
                     }
-                    
+
                     // Validate each question has content
                     for (let i = 0; i < questions.length; i++) {
                         const questionText = questions[i].querySelector('textarea');
                         const options = questions[i].querySelectorAll('input[type="text"]');
                         const correctAnswer = questions[i].querySelector('input[type="radio"]:checked');
-                        
+
                         if (!questionText?.value.trim()) {
                             alert(`Question ${i + 1} is missing question text.`);
                             return false;
                         }
-                        
+
                         if (options.length > 0) {
                             let hasOptions = false;
                             options.forEach(opt => {
                                 if (opt.value.trim()) hasOptions = true;
                             });
-                            
+
                             if (!hasOptions) {
                                 alert(`Question ${i + 1} needs at least one answer option.`);
                                 return false;
                             }
-                            
+
                             if (!correctAnswer) {
                                 alert(`Question ${i + 1} needs a correct answer selected.`);
                                 return false;
@@ -3693,7 +3536,7 @@
                 if (response.ok) {
                     const courses = await response.json();
                     courseSelect.innerHTML = '<option value="">Choose a course...</option>';
-                    
+
                     if (Array.isArray(courses) && courses.length > 0) {
                         courses.forEach(course => {
                             courseSelect.innerHTML += `<option value="${course._id}">${course.title}</option>`;
@@ -3711,11 +3554,11 @@
         }
 
         // Event listeners for exam navigation
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Next button
             const nextBtn = document.getElementById('examNextBtn');
             if (nextBtn) {
-                nextBtn.addEventListener('click', function() {
+                nextBtn.addEventListener('click', function () {
                     if (validateExamStep(currentExamStep)) {
                         if (currentExamStep < totalExamSteps) {
                             showExamStep(currentExamStep + 1);
@@ -3727,7 +3570,7 @@
             // Previous button
             const prevBtn = document.getElementById('examPrevBtn');
             if (prevBtn) {
-                prevBtn.addEventListener('click', function() {
+                prevBtn.addEventListener('click', function () {
                     if (currentExamStep > 1) {
                         showExamStep(currentExamStep - 1);
                     }
@@ -3743,27 +3586,27 @@
             // Submit form (Create Assessment button in step 4)
             const examForm = document.getElementById('examForm');
             if (examForm) {
-                examForm.addEventListener('submit', async function(e) {
+                examForm.addEventListener('submit', async function (e) {
                     e.preventDefault();
-                    
+
                     if (currentExamStep !== totalExamSteps) {
                         return; // Only allow submission on final step
                     }
 
                     const submitBtn = document.getElementById('examSubmitBtn');
                     const originalText = submitBtn.textContent;
-                    
+
                     try {
                         submitBtn.disabled = true;
                         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
 
                         const token = localStorage.getItem('token');
                         const apiBase = typeof CONFIG !== 'undefined' ? CONFIG.API_BASE_URL : '/api';
-                        
+
                         // Collect form data
                         const formData = new FormData(examForm);
                         const assessmentData = {
-                            title: formData.get('title'),
+                            title: formData.get('title').trim(),
                             courseID: formData.get('courseID'),
                             duration: parseInt(formData.get('duration')),
                             passingScore: parseInt(formData.get('passingScore')),
@@ -3775,33 +3618,39 @@
                         const questions = document.querySelectorAll('.question-item');
                         questions.forEach((questionEl, index) => {
                             const questionData = {
-                                text: questionEl.querySelector('textarea').value,
+                                question: questionEl.querySelector('textarea').value, // Used 'question' instead of 'text'
                                 type: questionEl.querySelector('select').value,
                                 options: [],
-                                correctAnswer: null
+                                correctAnswerIndices: [] // Backend requires an array of indices
                             };
 
                             if (questionData.type === 'multiple-choice') {
                                 const options = questionEl.querySelectorAll('input[type="text"]');
                                 const correctRadio = questionEl.querySelector('input[type="radio"]:checked');
-                                
+
                                 options.forEach(opt => {
                                     if (opt.value.trim()) {
                                         questionData.options.push(opt.value.trim());
                                     }
                                 });
-                                
+
                                 if (correctRadio) {
-                                    questionData.correctAnswer = parseInt(correctRadio.value);
+                                    questionData.correctAnswerIndices = [parseInt(correctRadio.value)];
                                 }
                             } else if (questionData.type === 'true-false') {
                                 const correctRadio = questionEl.querySelector('input[type="radio"]:checked');
                                 if (correctRadio) {
-                                    questionData.correctAnswer = correctRadio.value === 'true';
+                                    // Map true to index 0, false to index 1 (or whatever logic matches options)
+                                    // True/False usually has 'True' as option 0, 'False' as option 1
+                                    questionData.correctAnswerIndices = [correctRadio.value === 'true' ? 0 : 1];
+                                    questionData.options = ['True', 'False'];
                                 }
                             } else if (questionData.type === 'short-answer') {
                                 const expectedAnswer = questionEl.querySelector('textarea[name*="expectedAnswer"]');
-                                questionData.expectedAnswer = expectedAnswer ? expectedAnswer.value : '';
+                                // Backend strictly requires Array of options and correct hints, short-answer isn't fully supported by the Exam schema's strict options requirement.
+                                // Mocking it to fit the schema constraint:
+                                questionData.options = [expectedAnswer ? expectedAnswer.value : ''];
+                                questionData.correctAnswerIndices = [0];
                             }
 
                             assessmentData.questions.push(questionData);
@@ -3809,8 +3658,8 @@
 
                         console.log('Assessment data:', assessmentData);
 
-                        // Submit to API (placeholder - replace with actual endpoint)
-                        const response = await fetch(`${apiBase}/exams`, {
+                        // Submit to API
+                        const response = await fetch(`${apiBase}/exams/create`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -3824,8 +3673,8 @@
                             alert('Assessment created successfully!');
                             closeExamModal();
                             // Refresh assessments list if function exists
-                            if (typeof loadAssessments === 'function') {
-                                loadAssessments();
+                            if (typeof loadMyAssessments === 'function') {
+                                loadMyAssessments();
                             }
                         } else {
                             const error = await response.json();
@@ -3855,14 +3704,14 @@
         window.showExamStep = showExamStep;
 
         // === ASSESSMENT QUESTION MANAGEMENT ===
-        
+
         let questionCounter = 0;
 
         // Add new question field
         function addQuestionField() {
             questionCounter++;
             const questionContainer = document.getElementById('questionContainer');
-            
+
             if (!questionContainer) return;
 
             // Remove empty state message if it exists
@@ -3929,11 +3778,11 @@
             if (questionElement && confirm('Remove this question?')) {
                 questionElement.remove();
                 updateQuestionCount();
-                
+
                 // Show empty message if no questions left
                 const questionContainer = document.getElementById('questionContainer');
                 const remainingQuestions = questionContainer.querySelectorAll('.question-item');
-                
+
                 if (remainingQuestions.length === 0) {
                     questionContainer.innerHTML = `
                         <div style="text-align: center; padding: 40px; color: var(--color-text-secondary);">
@@ -3949,7 +3798,7 @@
         function toggleQuestionOptions(questionId) {
             const questionType = document.querySelector(`select[name="questions[${questionId}][type]"]`).value;
             const optionsContainer = document.getElementById(`options-${questionId}`);
-            
+
             if (!optionsContainer) return;
 
             if (questionType === 'multiple-choice') {
@@ -4006,7 +3855,7 @@
         function updateQuestionCount() {
             const questionCount = document.querySelectorAll('.question-item').length;
             const countElement = document.getElementById('questionCount');
-            
+
             if (countElement) {
                 countElement.textContent = `(${questionCount})`;
             }
@@ -4018,7 +3867,7 @@
         window.toggleQuestionOptions = toggleQuestionOptions;
 
         // === ASSESSMENT REVIEW FUNCTIONALITY ===
-        
+
         // Populate review step content
         function populateExamReview() {
             const reviewContainer = document.getElementById('examReview');

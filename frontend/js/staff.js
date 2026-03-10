@@ -45,8 +45,10 @@ function switchSection(sectionName, updateHash = true) {
     // Update active state in nav links
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
+        if (link.getAttribute('onclick')?.includes(`switchSection('${sectionName}'`)) {
+            link.classList.add('active');
+        }
     });
-    event?.target?.closest('.nav-link')?.classList.add('active');
 
     // Load data for the selected section
     if (sectionName === 'overview') {

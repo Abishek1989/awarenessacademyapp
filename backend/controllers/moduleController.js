@@ -63,7 +63,7 @@ exports.createModule = catchAsync(async (req, res, next) => {
         courseId,
         title,
         description,
-        duration: duration || 10, // Default 10 mins
+        minDuration: duration || 10, // Default 10 mins
         content: content || '',
         contentType: moduleContentType,
         fileUrl: fileUrl || null,
@@ -140,6 +140,7 @@ exports.getModule = catchAsync(async (req, res, next) => {
 exports.updateModule = catchAsync(async (req, res, next) => {
     const { id } = req.params;
     const { title, description, duration, content, isPublished, fileUrl, fileMetadata } = req.body;
+    const minDuration = duration;
 
     console.log('📦 Updating module:', id);
 
@@ -150,7 +151,7 @@ exports.updateModule = catchAsync(async (req, res, next) => {
 
     // Authorization check
     const isAdmin = req.user.role === 'Admin';
-    const isCreator = module.createdBy.toString() === req.user.id;
+    const isCreator = module.createdBy ? module.createdBy.toString() === req.user.id : false;
 
     if (!isAdmin && !isCreator) {
         return next(new AppError('You can only edit modules you created', 403));
@@ -159,7 +160,7 @@ exports.updateModule = catchAsync(async (req, res, next) => {
     // Update fields
     if (title) module.title = title;
     if (description !== undefined) module.description = description;
-    if (duration !== undefined) module.duration = duration;
+    if (minDuration !== undefined) module.minDuration = minDuration;
 
     // Update content based on contentType
     if (module.contentType === 'rich-content') {

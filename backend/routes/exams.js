@@ -162,7 +162,7 @@ router.put('/:id', authorize(['Staff', 'Admin']), async (req, res) => {
     }
 });
 
-// Delete Exam (Staff)
+// Delete Exam (Staff & Admin)
 router.delete('/:id', authorize(['Staff', 'Admin']), async (req, res) => {
     try {
         const { Exam } = require('../models/index');
@@ -173,19 +173,21 @@ router.delete('/:id', authorize(['Staff', 'Admin']), async (req, res) => {
         }
 
         // Only creator or admin can delete
-        if (exam.createdBy.toString() !== req.user.id && req.user.role !== 'Admin') {
-            return res.status(403).json({ message: 'Unauthorized' });
+        const isCreator = exam.createdBy && exam.createdBy.toString() === req.user.id;
+        if (!isCreator && req.user.role !== 'Admin') {
+            return res.status(403).json({ message: 'Unauthorized. Only the creator or an Admin can delete this assessment.' });
         }
 
-        // Security: Prevent deleting approved assessments
+        // Security: Prevent staff from deleting approved assessments
         if (exam.approvalStatus === 'Approved' && req.user.role !== 'Admin') {
-            return res.status(403).json({ message: 'Approved assessments cannot be deleted. Please contact admin.' });
+            return res.status(403).json({ message: 'Approved assessments cannot be deleted. Please contact an Admin.' });
         }
 
         await Exam.findByIdAndDelete(req.params.id);
-        res.status(200).json({ message: 'Assessment deleted successfully' });
+        return res.status(200).json({ message: 'Assessment deleted successfully' });
     } catch (err) {
-        res.status(500).json({ message: 'Delete failed', error: err.message });
+        console.error('Exam delete error:', err);
+        return res.status(500).json({ message: 'Delete failed', error: err.message });
     }
 });
 
