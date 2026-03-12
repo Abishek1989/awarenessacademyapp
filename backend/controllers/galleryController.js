@@ -1,6 +1,7 @@
 const { Gallery, User } = require('../models/index');
 const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const fs = require('fs').promises;
+const crypto = require('crypto');
 
 const s3Client = new S3Client({
     region: 'auto',
@@ -17,12 +18,35 @@ function sanitizeFileName(name = '') {
     return name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
 }
 
+function normalizePublicBaseUrl(url = '') {
+    const trimmed = String(url || '').trim().replace(/\/+$/, '');
+    if (!trimmed) return '';
+    if (/^https?:\/\//i.test(trimmed)) return trimmed;
+    return `https://${trimmed}`;
+}
+
 function getR2KeyFromUrl(url = '') {
-    const customDomain = (process.env.R2_CUSTOM_DOMAIN || '').replace(/\/$/, '');
-    if (!customDomain || !url.startsWith(customDomain + '/')) {
+    const customDomain = normalizePublicBaseUrl(process.env.R2_CUSTOM_DOMAIN || '');
+    const targetUrl = String(url || '').trim();
+
+    if (!customDomain || !targetUrl) return null;
+
+    if (targetUrl.startsWith(customDomain + '/')) {
+        return targetUrl.slice(customDomain.length + 1);
+    }
+
+    try {
+        const custom = new URL(customDomain);
+        const parsed = new URL(/^https?:\/\//i.test(targetUrl) ? targetUrl : `https://${targetUrl}`);
+
+        if (parsed.hostname === custom.hostname) {
+            return parsed.pathname.replace(/^\/+/, '');
+        }
+    } catch (_) {
         return null;
     }
-    return url.slice(customDomain.length + 1);
+
+    return null;
 }
 
 // Upload Gallery Image (Admin Only)
@@ -44,6 +68,24 @@ exports.uploadGalleryImage = async (req, res) => {
 
         if (!process.env.R2_BUCKET_NAME || !process.env.R2_CUSTOM_DOMAIN || !process.env.R2_ENDPOINT) {
             return res.status(500).json({ message: 'R2 storage is not configured correctly' });
+        }
+
+        const contentHash = crypto.createHash('sha256').update(req.file.buffer).digest('hex');
+        const dedupeWindowMs = Number(process.env.GALLERY_UPLOAD_DEDUPE_WINDOW_MS || 120000);
+        const dedupeSince = new Date(Date.now() - dedupeWindowMs);
+
+        const duplicateImage = await Gallery.findOne({
+            uploadedBy: req.user.id,
+            contentHash,
+            createdAt: { $gte: dedupeSince }
+        }).populate('uploadedBy', 'name email');
+
+        if (duplicateImage) {
+            return res.status(200).json({
+                message: 'This image was already uploaded recently',
+                image: duplicateImage,
+                duplicate: true
+            });
         }
 
         // Validate file type
@@ -78,7 +120,7 @@ exports.uploadGalleryImage = async (req, res) => {
         });
 
         await s3Client.send(uploadCommand);
-        const imageUrl = `${process.env.R2_CUSTOM_DOMAIN.replace(/\/$/, '')}/${uniqueKey}`;
+        const imageUrl = `${normalizePublicBaseUrl(process.env.R2_CUSTOM_DOMAIN)}/${uniqueKey}`;
 
         // Get max displayOrder and increment
         const maxOrderImage = await Gallery.findOne().sort({ displayOrder: -1 }).select('displayOrder');
@@ -91,6 +133,7 @@ exports.uploadGalleryImage = async (req, res) => {
             uploadedBy: req.user.id,
             fileSize: fileSize,
             fileName: uniqueKey,
+            contentHash,
             displayOrder: nextOrder
         });
 

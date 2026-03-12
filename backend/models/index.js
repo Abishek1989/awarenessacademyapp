@@ -567,6 +567,7 @@ module.exports = {
             uploadedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
             fileSize: { type: Number }, // in bytes
             fileName: { type: String },
+            contentHash: { type: String, index: true },
             displayOrder: { type: Number, default: 0 }, // Order for display
             active: { type: Boolean, default: true }
         }, { timestamps: true });

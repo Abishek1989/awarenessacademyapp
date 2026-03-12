@@ -6424,6 +6424,28 @@ let allGalleryImages = [];
 let isGalleryUploadHandlersInitialized = false;
 let isGalleryUploadInProgress = false;
 
+function resolveGalleryImageUrl(imageUrl) {
+    const raw = String(imageUrl || '').trim();
+    if (!raw) {
+        return (typeof CONFIG !== 'undefined' && CONFIG.DEFAULT_COURSE_THUMBNAIL_URL)
+            ? CONFIG.DEFAULT_COURSE_THUMBNAIL_URL
+            : '../assets/images/home_nature.jpg';
+    }
+
+    if (/^https?:\/\//i.test(raw)) return raw;
+
+    if (/^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(raw)) {
+        return `https://${raw.replace(/^\/+/, '')}`;
+    }
+
+    const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.CLIENT_URL)
+        ? CONFIG.CLIENT_URL.replace(/\/$/, '')
+        : window.location.origin;
+
+    if (raw.startsWith('/')) return `${baseUrl}${raw}`;
+    return `${baseUrl}/${raw.replace(/^\/+/, '')}`;
+}
+
 function initGallerySection() {
     loadGalleryImages();
     if (!isGalleryUploadHandlersInitialized) {
@@ -6478,6 +6500,12 @@ function setupGalleryUploadHandlers() {
         return;
     }
 
+    if (form.dataset.handlersBound === 'true') {
+        return;
+    }
+
+    form.dataset.handlersBound = 'true';
+
     // Drag and drop handlers
     dropZone.addEventListener('click', () => fileInput.click());
 
@@ -6519,6 +6547,7 @@ function setupGalleryUploadHandlers() {
     // Form submission
     form.addEventListener('submit', (e) => {
         e.preventDefault();
+        if (isGalleryUploadInProgress) return;
         uploadGalleryImage();
     });
 }
@@ -6596,13 +6625,17 @@ async function uploadGalleryImage() {
         return;
     }
 
+    isGalleryUploadInProgress = true;
+
     if (!selectedGalleryFile) {
+        isGalleryUploadInProgress = false;
         UI.error('Please select an image');
         return;
     }
 
     const description = document.getElementById('galleryDescription').value.trim();
     if (description.length < 10 || description.length > 100) {
+        isGalleryUploadInProgress = false;
         UI.error('Description must be between 10 and 100 characters');
         return;
     }
@@ -6614,11 +6647,11 @@ async function uploadGalleryImage() {
     const uploadBtn = document.getElementById('galleryUploadBtn');
 
     try {
-        isGalleryUploadInProgress = true;
         if (uploadBtn) {
             uploadBtn.disabled = true;
             uploadBtn.style.opacity = '0.5';
             uploadBtn.style.cursor = 'not-allowed';
+            uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
         }
 
         UI.showLoader();
@@ -6633,14 +6666,16 @@ async function uploadGalleryImage() {
         const data = await res.json();
 
         if (res.ok) {
-            UI.success('✓ Image uploaded successfully!');
+            UI.success(data.duplicate ? 'Image already uploaded recently.' : '✓ Image uploaded successfully!');
             closeGalleryUploadModal();
             loadGalleryImages();
 
             // Show success confirmation
-            setTimeout(() => {
-                UI.success('Your image is now live in the gallery!');
-            }, 500);
+            if (!data.duplicate) {
+                setTimeout(() => {
+                    UI.success('Your image is now live in the gallery!');
+                }, 500);
+            }
         } else {
             UI.error(data.message || 'Failed to upload image');
         }
@@ -6649,6 +6684,7 @@ async function uploadGalleryImage() {
         UI.error('Failed to upload image');
     } finally {
         isGalleryUploadInProgress = false;
+        if (uploadBtn) uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload Image';
         updateGalleryUploadButton();
         UI.hideLoader();
     }
@@ -6705,9 +6741,9 @@ function displayGalleryImages(images) {
             
             <!-- Image Container -->
             <div style="position: relative; height: 220px; overflow: hidden; background: #f8f8f8;">
-                 <img src="${(img.imageUrl && /^https?:\/\//i.test(img.imageUrl)) ? img.imageUrl : `/${String(img.imageUrl || '').replace(/^\/+/, '')}`}" alt="${img.description}" 
+                 <img src="${resolveGalleryImageUrl(img.imageUrl)}" alt="${img.description}" 
                      style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" 
-                     onerror="this.src='https://via.placeholder.com/400x220?text=Image+Error'" />
+                     onerror="this.src='${(typeof CONFIG !== 'undefined' && CONFIG.DEFAULT_COURSE_THUMBNAIL_URL) ? CONFIG.DEFAULT_COURSE_THUMBNAIL_URL : '../assets/images/home_nature.jpg'}'" />
                 
                 <!-- 3-Dot Menu -->
                 <div class="gallery-menu" style="position: absolute; top: 12px; right: 12px;">
