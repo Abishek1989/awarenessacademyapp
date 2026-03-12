@@ -1,6 +1,29 @@
 const { Gallery, User } = require('../models/index');
-const path = require('path');
+const { S3Client, PutObjectCommand, DeleteObjectCommand } = require('@aws-sdk/client-s3');
 const fs = require('fs').promises;
+
+const s3Client = new S3Client({
+    region: 'auto',
+    endpoint: process.env.R2_ENDPOINT,
+    credentials: {
+        accessKeyId: process.env.R2_ACCESS_KEY_ID,
+        secretAccessKey: process.env.R2_SECRET_ACCESS_KEY,
+    },
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED'
+});
+
+function sanitizeFileName(name = '') {
+    return name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+}
+
+function getR2KeyFromUrl(url = '') {
+    const customDomain = (process.env.R2_CUSTOM_DOMAIN || '').replace(/\/$/, '');
+    if (!customDomain || !url.startsWith(customDomain + '/')) {
+        return null;
+    }
+    return url.slice(customDomain.length + 1);
+}
 
 // Upload Gallery Image (Admin Only)
 exports.uploadGalleryImage = async (req, res) => {
@@ -19,11 +42,13 @@ exports.uploadGalleryImage = async (req, res) => {
             return res.status(400).json({ message: 'No image file uploaded' });
         }
 
+        if (!process.env.R2_BUCKET_NAME || !process.env.R2_CUSTOM_DOMAIN || !process.env.R2_ENDPOINT) {
+            return res.status(500).json({ message: 'R2 storage is not configured correctly' });
+        }
+
         // Validate file type
         const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
         if (!allowedTypes.includes(req.file.mimetype)) {
-            // Delete uploaded file
-            await fs.unlink(req.file.path);
             return res.status(400).json({ 
                 message: 'Only JPEG, JPG, and PNG images are allowed' 
             });
@@ -35,12 +60,25 @@ exports.uploadGalleryImage = async (req, res) => {
         const maxSize = 500 * 1024; // 500KB
 
         if (fileSize < minSize || fileSize > maxSize) {
-            // Delete uploaded file
-            await fs.unlink(req.file.path);
             return res.status(400).json({ 
                 message: `Image size must be between 10KB and 500KB. Your image is ${(fileSize / 1024).toFixed(2)}KB` 
             });
         }
+
+        const extension = req.file.originalname && req.file.originalname.includes('.')
+            ? req.file.originalname.slice(req.file.originalname.lastIndexOf('.')).toLowerCase()
+            : '.jpg';
+        const uniqueKey = `gallery/${Date.now()}-${sanitizeFileName(req.file.originalname || 'image' + extension)}`;
+
+        const uploadCommand = new PutObjectCommand({
+            Bucket: process.env.R2_BUCKET_NAME,
+            Key: uniqueKey,
+            Body: req.file.buffer,
+            ContentType: req.file.mimetype
+        });
+
+        await s3Client.send(uploadCommand);
+        const imageUrl = `${process.env.R2_CUSTOM_DOMAIN.replace(/\/$/, '')}/${uniqueKey}`;
 
         // Get max displayOrder and increment
         const maxOrderImage = await Gallery.findOne().sort({ displayOrder: -1 }).select('displayOrder');
@@ -48,11 +86,11 @@ exports.uploadGalleryImage = async (req, res) => {
 
         // Create gallery entry
         const galleryImage = new Gallery({
-            imageUrl: req.file.path.replace(/\\/g, '/'), // Normalize path
+            imageUrl,
             description: description.trim(),
             uploadedBy: req.user.id,
             fileSize: fileSize,
-            fileName: req.file.filename,
+            fileName: uniqueKey,
             displayOrder: nextOrder
         });
 
@@ -67,14 +105,6 @@ exports.uploadGalleryImage = async (req, res) => {
         });
 
     } catch (err) {
-        // Clean up file if error occurs
-        if (req.file) {
-            try {
-                await fs.unlink(req.file.path);
-            } catch (unlinkErr) {
-                console.error('Error deleting file:', unlinkErr);
-            }
-        }
         res.status(500).json({ 
             message: 'Failed to upload gallery image', 
             error: err.message 
@@ -235,12 +265,25 @@ exports.deleteGalleryImage = async (req, res) => {
             return res.status(404).json({ message: 'Image not found' });
         }
 
-        // Delete file from filesystem
-        try {
-            await fs.unlink(image.imageUrl);
-        } catch (fileErr) {
-            console.error('Error deleting file:', fileErr);
-            // Continue even if file deletion fails
+        const r2Key = getR2KeyFromUrl(image.imageUrl);
+
+        if (r2Key) {
+            try {
+                const deleteCommand = new DeleteObjectCommand({
+                    Bucket: process.env.R2_BUCKET_NAME,
+                    Key: r2Key
+                });
+                await s3Client.send(deleteCommand);
+            } catch (fileErr) {
+                console.error('Error deleting R2 file:', fileErr);
+            }
+        } else if (image.imageUrl && !image.imageUrl.startsWith('http')) {
+            // Backward compatibility for legacy local-file records
+            try {
+                await fs.unlink(image.imageUrl);
+            } catch (fileErr) {
+                console.error('Error deleting local file:', fileErr);
+            }
         }
 
         // Delete from database

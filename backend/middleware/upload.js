@@ -47,4 +47,20 @@ const upload = multer({
     limits: { fileSize: 100 * 1024 * 1024 } // 100MB limit
 });
 
+const galleryMemoryStorage = multer.memoryStorage();
+const galleryFileFilter = (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png'];
+    if (allowedTypes.includes(file.mimetype)) {
+        cb(null, true);
+    } else {
+        cb(new Error('Invalid file type. Only JPEG, JPG, and PNG images are allowed.'), false);
+    }
+};
+
+upload.galleryUpload = multer({
+    storage: galleryMemoryStorage,
+    fileFilter: galleryFileFilter,
+    limits: { fileSize: 500 * 1024 }
+});
+
 module.exports = upload;

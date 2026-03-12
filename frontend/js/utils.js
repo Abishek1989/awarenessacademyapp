@@ -416,14 +416,5 @@ function setupNewsletter() {
 
 // Auto-init newsletter if not called elsewhere
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Utils.js loaded - Setting up newsletter functionality...');
     setupNewsletter();
-
-    // Additional check to ensure newsletter form exists
-    const form = document.getElementById('newsletterForm');
-    if (form) {
-        console.log('Newsletter form found and initialized');
-    } else {
-        console.log('Newsletter form not found on this page');
-    }
 });

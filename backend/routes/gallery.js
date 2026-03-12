@@ -12,7 +12,7 @@ router.get('/image/:id', galleryController.getImageById);
 // Admin Routes
 router.post('/upload', 
     authorize(['Admin']), 
-    upload.single('image'), 
+    upload.galleryUpload.single('image'), 
     galleryController.uploadGalleryImage
 );
 

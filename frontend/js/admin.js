@@ -6421,10 +6421,15 @@ window.deleteSubscriber = deleteSubscriber;
 
 let selectedGalleryFile = null;
 let allGalleryImages = [];
+let isGalleryUploadHandlersInitialized = false;
+let isGalleryUploadInProgress = false;
 
 function initGallerySection() {
     loadGalleryImages();
-    setupGalleryUploadHandlers();
+    if (!isGalleryUploadHandlersInitialized) {
+        setupGalleryUploadHandlers();
+        isGalleryUploadHandlersInitialized = true;
+    }
 }
 
 // Open upload modal
@@ -6587,6 +6592,10 @@ function filterGalleryImages() {
 }
 
 async function uploadGalleryImage() {
+    if (isGalleryUploadInProgress) {
+        return;
+    }
+
     if (!selectedGalleryFile) {
         UI.error('Please select an image');
         return;
@@ -6602,7 +6611,16 @@ async function uploadGalleryImage() {
     formData.append('image', selectedGalleryFile);
     formData.append('description', description);
 
+    const uploadBtn = document.getElementById('galleryUploadBtn');
+
     try {
+        isGalleryUploadInProgress = true;
+        if (uploadBtn) {
+            uploadBtn.disabled = true;
+            uploadBtn.style.opacity = '0.5';
+            uploadBtn.style.cursor = 'not-allowed';
+        }
+
         UI.showLoader();
         const res = await fetch(`${Auth.apiBase}/gallery/upload`, {
             method: 'POST',
@@ -6630,6 +6648,8 @@ async function uploadGalleryImage() {
         console.error('Error uploading image:', err);
         UI.error('Failed to upload image');
     } finally {
+        isGalleryUploadInProgress = false;
+        updateGalleryUploadButton();
         UI.hideLoader();
     }
 }
@@ -6685,7 +6705,7 @@ function displayGalleryImages(images) {
             
             <!-- Image Container -->
             <div style="position: relative; height: 220px; overflow: hidden; background: #f8f8f8;">
-                <img src="/${img.imageUrl}" alt="${img.description}" 
+                 <img src="${(img.imageUrl && /^https?:\/\//i.test(img.imageUrl)) ? img.imageUrl : `/${String(img.imageUrl || '').replace(/^\/+/, '')}`}" alt="${img.description}" 
                      style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" 
                      onerror="this.src='https://via.placeholder.com/400x220?text=Image+Error'" />
                 
