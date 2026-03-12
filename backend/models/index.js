@@ -307,7 +307,46 @@ const feedbackSchema = new Schema({
 
 feedbackSchema.index({ moduleId: 1, studentId: 1 });
 
-// 16. Staff Notifications Collection
+// 16. Content Collection (legacy upload system, co-exists with Module)
+const contentSchema = new Schema({
+    courseID: { type: Schema.Types.ObjectId, ref: 'Course', required: true },
+    uploadedBy: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    type: { type: String, enum: ['Video', 'PDF', 'Note'], required: true },
+    fileUrl: { type: String, required: true },
+    previewDuration: { type: Number, default: 0 }, // Seconds
+    status: { type: String, enum: ['Pending', 'Approved', 'Rejected'], default: 'Pending' },
+    adminRemarks: { type: String },
+    createdAt: { type: Date, default: Date.now }
+});
+
+// 17. Events Collection
+const eventSchema = new Schema({
+    title: { type: String, required: true },
+    description: { type: String },
+    date: { type: Date, required: true },
+    venue: { type: String },
+    type: { type: String, enum: ['Workshop', 'Seminar', 'Retreat', 'Webinar', 'Other'], default: 'Other' },
+    imageUrl: { type: String },
+    registrationLink: { type: String },
+    active: { type: Boolean, default: true },
+    createdAt: { type: Date, default: Date.now }
+});
+
+// 18. Coupons Collection
+const couponSchema = new Schema({
+    code: { type: String, required: true, unique: true, uppercase: true, trim: true },
+    discountType: { type: String, enum: ['Percentage', 'Fixed'], required: true },
+    discountValue: { type: Number, required: true },
+    validUntil: { type: Date, required: true },
+    usageLimit: { type: Number, default: 1 },
+    usedCount: { type: Number, default: 0 },
+    courseID: { type: Schema.Types.ObjectId, ref: 'Course' }, // null = applies to all
+    active: { type: Boolean, default: true },
+    createdBy: { type: Schema.Types.ObjectId, ref: 'User' },
+    createdAt: { type: Date, default: Date.now }
+});
+
+// 19. Staff Notifications Collection
 const notificationSchema = new Schema({
     recipient: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     type: { type: String, enum: ['Course', 'Module', 'System'], required: true },
@@ -334,6 +373,9 @@ module.exports = {
     Certificate: mongoose.model('Certificate', certificateSchema), // Add Certificate model
     ExamAttempt: mongoose.model('ExamAttempt', examAttemptSchema), // Track exam sessions
     Feedback: mongoose.model('Feedback', feedbackSchema), // Module feedback
+    Content: mongoose.model('Content', contentSchema),
+    Event: mongoose.model('Event', eventSchema),
+    Coupon: mongoose.model('Coupon', couponSchema),
     Module, // New modular content system
     Result: mongoose.model('Result', new Schema({
         studentID: { type: Schema.Types.ObjectId, ref: 'User', required: true },

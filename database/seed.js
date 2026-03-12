@@ -11,7 +11,8 @@ const {
     User, Course, Schedule, Attendance, Payment, Content, FAQ, Impression,
     Exam, Certificate, Progress, Result, Enrollment, Ticket, ExamAttempt,
     Forum, Broadcast, Banner, Blog, Newsletter, ContactMessage,
-    CourseSubscriber, Gallery, Membership, Feedback, Module, Notification
+    CourseSubscriber, Gallery, Membership, Feedback, Module, Notification,
+    Event, Coupon
 } = require('../backend/models/index');
 
 // Import separate model files
@@ -87,6 +88,9 @@ async function seedDatabase() {
         await Module.deleteMany({});
         await Impression.deleteMany({});
         await Notification.deleteMany({});
+        await Content.deleteMany({});
+        await Event.deleteMany({});
+        await Coupon.deleteMany({});
         await Settings.deleteMany({});
         await DeveloperSettings.deleteMany({});
         console.log('✅ Database cleared');
@@ -109,7 +113,11 @@ async function seedDatabase() {
         console.log('✅ All 31 collections initialized successfully');
 
         console.log('\n📋 Database Summary:');
-        console.log('   • 31 Collections created');
+        console.log('   • 31 Collections created (User, Course, Schedule, Attendance, Payment, Content,');
+        console.log('     Impression, Progress, Exam, Certificate, ExamAttempt, Feedback, Result,');
+        console.log('     Notification, FAQ, Enrollment, Ticket, Forum, Broadcast, Banner, Blog,');
+        console.log('     Newsletter, ContactMessage, CourseSubscriber, Gallery, Membership, Module,');
+        console.log('     Settings, DeveloperSettings, Event, Coupon)');
         console.log('   • 1 Admin user created');
         console.log('   • All collections are empty (except users)');
 
