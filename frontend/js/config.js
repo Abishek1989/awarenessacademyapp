@@ -13,16 +13,17 @@ const CONFIG = {
 
     // API URLs - will be set based on environment below
     API_BASE_URL: '',
-    CLIENT_URL: ''
+    CLIENT_URL: '',
+
+    // Runtime-configurable URLs
+    JITSI_BASE_URL: '',
+    DEFAULT_COURSE_THUMBNAIL_URL: ''
 };
 
-// Auto-detect environment
-if (window.location.hostname !== "localhost" && window.location.hostname !== "127.0.0.1" && !window.location.hostname.includes("192.168.")) {
-    // Production - use relative paths (same server serves frontend + backend)
-    CONFIG.API_BASE_URL = '/api';
-    CONFIG.CLIENT_URL = window.location.origin;
-} else {
-    // Development - use localhost (backend runs on port 3000)
-    CONFIG.API_BASE_URL = 'http://localhost:3000/api';
-    CONFIG.CLIENT_URL = 'http://localhost:3000';
-}
+// Runtime overrides (inject via window.__APP_CONFIG__ from server/env)
+const runtimeConfig = (typeof window !== 'undefined' && window.__APP_CONFIG__) ? window.__APP_CONFIG__ : {};
+
+CONFIG.CLIENT_URL = runtimeConfig.CLIENT_URL || window.location.origin;
+CONFIG.API_BASE_URL = runtimeConfig.API_BASE_URL || `${CONFIG.CLIENT_URL}/api`;
+CONFIG.JITSI_BASE_URL = runtimeConfig.JITSI_BASE_URL || 'https://meet.jit.si';
+CONFIG.DEFAULT_COURSE_THUMBNAIL_URL = runtimeConfig.DEFAULT_COURSE_THUMBNAIL_URL || `${CONFIG.CLIENT_URL}/assets/images/home_meditation.jpg`;

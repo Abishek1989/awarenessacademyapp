@@ -1324,9 +1324,9 @@
                         <i class="fas fa-trash"></i> Delete Course
                     </button>
                     <button type="button" class="btn-primary"
-                        style="background: var(--color-success); padding: 10px 30px; font-weight: 600; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);"
+                        style="background: #2196f3; padding: 10px 30px; font-weight: 600; box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);"
                         onclick="saveCourse(event)">
-                        <i class="fas fa-save"></i> Save Changes
+                        <i class="fas fa-paper-plane"></i> Submit for Admin Review
                     </button>
                 </div>
             </div>
@@ -1533,10 +1533,10 @@
                     <div id="staffCourseStep4" class="wizard-step" style="display: none;">
                         <div
                             style="background: #e3f2fd; padding: 20px; border-radius: 8px; border-left: 4px solid #2196f3; margin-top: 20px;">
-                            <h4 style="margin: 0 0 10px 0; color: #1565c0;">Submit for Review?</h4>
+                            <h4 style="margin: 0 0 10px 0; color: #1565c0;">Ready to Submit?</h4>
                             <p style="margin: 0; font-size: 0.95rem; color: #555; line-height: 1.6;">
-                                Your course will be saved as a <strong>Draft</strong> initially.
-                                Once you are ready, you can request approval from an Admin.
+                                Your course will be submitted directly to the Admin for review.
+                                Draft saving is disabled on this page.
                                 <br><br>
                                 Ensure all details, including the introduction video and course description, are
                                 accurate.
@@ -1544,18 +1544,13 @@
                         </div>
 
                         <div style="display: flex; gap: 10px; margin-top: 25px; flex-wrap: wrap;">
-                            <button type="button" class="btn-primary"
-                                style="background: var(--color-saffron); padding: 10px 30px;"
-                                onclick="saveCourse(event)">
-                                <i class="fas fa-save"></i> Create Draft
-                            </button>
                             <button type="button" class="btn-primary" style="background: #2196f3; padding: 10px 30px;"
-                                onclick="document.getElementById('courseStatusInput').value='Pending'; saveCourse(event)">
+                                onclick="saveCourse(event)">
                                 <i class="fas fa-paper-plane"></i> Submit for Admin Review
                             </button>
                         </div>
 
-                        <input type="hidden" id="courseStatusInput" value="Draft">
+                        <input type="hidden" id="courseStatusInput" value="Pending">
                     </div>
 
                     <!-- Registered Students Tab -->
@@ -2423,7 +2418,6 @@
     <script src="../js/utils.js"></script>
     <script src="../js/auth.js"></script>
     <script src="../js/staff.js"></script>
-    <script src="../js/staff-assessments.js"></script>
     <script src="../js/chatbot.js"></script>
 
     <script>

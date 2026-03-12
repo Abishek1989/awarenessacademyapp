@@ -364,7 +364,8 @@ window.openStaffCourseModal = function (course) {
         document.getElementById('courseDuration').value = course.duration || '';
         document.getElementById('courseThumb').value = course.thumbnail || '';
         document.getElementById('courseIntroText').value = course.introText || '';
-        document.getElementById('courseIntroVideoUrl').value = course.introVideoUrl || '';
+        const introVideoHidden = document.getElementById('introVideoUrl') || document.getElementById('courseIntroVideoUrl');
+        if (introVideoHidden) introVideoHidden.value = course.introVideoUrl || '';
         document.getElementById('coursePreviewDuration').value = course.previewDuration || '';
         if (document.getElementById('courseWhatsappLink')) {
             document.getElementById('courseWhatsappLink').value = course.whatsappGroupLink || '';
@@ -785,25 +786,35 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Material Type Toggle
-    document.getElementById('materialType').addEventListener('change', (e) => {
-        const group = document.getElementById('previewDurationGroup');
-        group.style.display = e.target.value === 'Video' ? 'block' : 'none';
-    });
+    const materialTypeSelect = document.getElementById('materialType');
+    if (materialTypeSelect) {
+        materialTypeSelect.addEventListener('change', (e) => {
+            const group = document.getElementById('previewDurationGroup');
+            if (!group) return;
+            group.style.display = e.target.value === 'Video' ? 'block' : 'none';
+        });
+    }
 
     // 6. Create Exam - Multi-Step Wizard Event Listeners
 
     // Navigation buttons
-    document.getElementById('examNextBtn').addEventListener('click', () => {
-        if (validateExamStep(currentExamStep)) {
-            currentExamStep++;
-            updateExamStepUI();
-        }
-    });
+    const examNextBtn = document.getElementById('examNextBtn');
+    if (examNextBtn) {
+        examNextBtn.addEventListener('click', () => {
+            if (validateExamStep(currentExamStep)) {
+                currentExamStep++;
+                updateExamStepUI();
+            }
+        });
+    }
 
-    document.getElementById('examPrevBtn').addEventListener('click', () => {
-        currentExamStep--;
-        updateExamStepUI();
-    });
+    const examPrevBtn = document.getElementById('examPrevBtn');
+    if (examPrevBtn) {
+        examPrevBtn.addEventListener('click', () => {
+            currentExamStep--;
+            updateExamStepUI();
+        });
+    }
 
     // Form submission - assign to global var to allow overwrite/restore
     window.handleCreateExam = async function (e) {
@@ -879,9 +890,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
 
     // Schedule modal close handler
-    document.getElementById('closeScheduleModal').addEventListener('click', () => {
-        document.getElementById('scheduleModal').style.display = 'none';
-    });
+    const closeScheduleModalBtn = document.getElementById('closeScheduleModal');
+    if (closeScheduleModalBtn) {
+        closeScheduleModalBtn.addEventListener('click', () => {
+            const scheduleModal = document.getElementById('scheduleModal');
+            if (scheduleModal) scheduleModal.style.display = 'none';
+        });
+    }
 });
 
 let currentSection = 'overview';
@@ -1153,9 +1168,11 @@ async function loadSchedules() {
 }
 
 function startLiveSession(room) {
-    const domain = 'meet.jit.si';
+    const jitsiBaseUrl = (typeof CONFIG !== 'undefined' && CONFIG.JITSI_BASE_URL)
+        ? CONFIG.JITSI_BASE_URL.replace(/\/$/, '')
+        : 'https://meet.jit.si';
     const roomName = room || 'Awareness-Academy-General';
-    const url = `https://${domain}/${roomName}`;
+    const url = `${jitsiBaseUrl}/${roomName}`;
     window.open(url, '_blank');
 }
 
@@ -1310,7 +1327,12 @@ const _staffStatusColors = {
 function _staffStatusColor(s) { return _staffStatusColors[s] || _staffStatusColors['Draft']; }
 
 function _getStaffThumbnail(thumb) {
-    if (!thumb) return 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=600&q=80';
+    if (!thumb) {
+        if (typeof CONFIG !== 'undefined' && CONFIG.DEFAULT_COURSE_THUMBNAIL_URL) {
+            return CONFIG.DEFAULT_COURSE_THUMBNAIL_URL;
+        }
+        return '../assets/images/home_meditation.jpg';
+    }
     if (thumb.startsWith('http')) return thumb;
     return `${Auth.apiBase.replace('/api', '')}/${thumb}`;
 }
@@ -1455,19 +1477,30 @@ async function checkDeletedCourses() {
     console.log('checkDeletedCourses called - now using notification system instead');
 }
 
-document.getElementById('newExamBtn').addEventListener('click', () => {
-    const select = document.getElementById('examCourseSelect');
-    const courses = JSON.parse(localStorage.getItem('staffCourses') || '[]');
-    select.innerHTML = '<option value="">Choose a course...</option>' +
-        courses.map(c => `<option value="${c._id}">${c.title}</option>`).join('');
-    resetExamForm();
-    document.getElementById('examModal').style.display = 'flex';
-});
+const newExamBtn = document.getElementById('newExamBtn');
+if (newExamBtn) {
+    newExamBtn.addEventListener('click', () => {
+        const select = document.getElementById('examCourseSelect');
+        if (!select) return;
 
-document.getElementById('closeExamModal').addEventListener('click', () => {
-    document.getElementById('examModal').style.display = 'none';
-    resetExamForm();
-});
+        const courses = JSON.parse(localStorage.getItem('staffCourses') || '[]');
+        select.innerHTML = '<option value="">Choose a course...</option>' +
+            courses.map(c => `<option value="${c._id}">${c.title}</option>`).join('');
+        resetExamForm();
+
+        const examModal = document.getElementById('examModal');
+        if (examModal) examModal.style.display = 'flex';
+    });
+}
+
+const closeExamModalBtn = document.getElementById('closeExamModal');
+if (closeExamModalBtn) {
+    closeExamModalBtn.addEventListener('click', () => {
+        const examModal = document.getElementById('examModal');
+        if (examModal) examModal.style.display = 'none';
+        resetExamForm();
+    });
+}
 
 function openScheduleModal() {
     const select = document.getElementById('scheduleCourseSelect');
@@ -3032,30 +3065,52 @@ window.executeStaffCourseDelete = async function (courseId) {
 
 window.saveCourse = async function (e) {
     if (e) e.preventDefault();
-    const id = document.getElementById('courseId').value;
+
+    const getInputValue = (id, fallback = '') => {
+        const el = document.getElementById(id);
+        if (!el) return fallback;
+        return (el.value ?? fallback);
+    };
+
+    const id = getInputValue('courseId', '').trim();
     const statusInput = document.getElementById('courseStatusInput');
-    const status = statusInput ? statusInput.value : 'Draft';
+    const status = statusInput ? (statusInput.value || 'Pending') : 'Pending';
 
     // Validation
-    if (!document.getElementById('courseTitle').value || !document.getElementById('coursePrice').value) {
+    const title = getInputValue('courseTitle', '').trim();
+    const price = getInputValue('coursePrice', '').trim();
+    if (!title || !price) {
         UI.error('Please fill all mandatory (*) fields in Details tab.');
         return;
     }
 
+    const validityType = document.querySelector('input[name="validityType"]:checked')?.value || 'Lifetime';
+    const introVideoUrl = getInputValue('introVideoUrl', getInputValue('courseIntroVideoUrl', '')).trim();
+    const validityDaysRaw = getInputValue('staffCourseValidityDays', '').trim();
+
+    const validityDays = validityType === 'Limited'
+        ? (parseInt(validityDaysRaw, 10) || 0)
+        : 0;
+
+    if (validityType === 'Limited' && validityDays <= 0) {
+        UI.error('Please enter a valid course validity in days.');
+        return;
+    }
+
     const data = {
-        title: document.getElementById('courseTitle').value,
-        description: document.getElementById('courseDesc').value,
-        price: document.getElementById('coursePrice').value,
-        difficulty: document.getElementById('courseDifficulty').value,
-        category: document.getElementById('courseCategory').value,
-        duration: document.getElementById('courseDuration').value,
-        thumbUrl: document.getElementById('courseThumb').value,
-        introText: document.getElementById('courseIntroText').value,
-        introVideoUrl: document.getElementById('courseIntroVideoUrl').value,
-        previewDuration: document.getElementById('coursePreviewDuration').value,
-        whatsappGroupLink: document.getElementById('courseWhatsappLink') ? document.getElementById('courseWhatsappLink').value : '',
-        validityType: document.querySelector('input[name="validityType"]:checked').value,
-        validityDays: document.getElementById('staffCourseValidityDays').value || 0,
+        title,
+        description: getInputValue('courseDesc', '').trim(),
+        price,
+        difficulty: getInputValue('courseDifficulty', 'Beginner'),
+        category: getInputValue('courseCategory', 'Meditation'),
+        duration: getInputValue('courseDuration', '').trim(),
+        thumbUrl: getInputValue('courseThumb', '').trim(),
+        introText: getInputValue('courseIntroText', '').trim(),
+        introVideoUrl,
+        previewDuration: getInputValue('coursePreviewDuration', ''),
+        whatsappGroupLink: getInputValue('courseWhatsappLink', '').trim(),
+        validityType,
+        validityDays,
         status: status
     };
 
@@ -3085,6 +3140,7 @@ window.saveCourse = async function (e) {
     }
 
     if (networkSuccess) {
+        if (statusInput) statusInput.value = 'Pending';
         try { closeStaffCourseEditTab(); } catch (e) { console.error(e); }
         loadCourses().catch(e => console.error(e));
     }
