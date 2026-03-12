@@ -2352,7 +2352,7 @@ async function loadBanners() {
 
         list.innerHTML = banners.map(b => `
             <div style="display:flex; align-items:center; gap:15px; margin-bottom:10px; padding:10px; background:white; border-radius:8px;">
-                <img src="${b.imageUrl}" style="width:60px; height:40px; object-fit:cover; border-radius:4px;">
+                <img src="${(b.imageUrl && (b.imageUrl.toLowerCase().startsWith('https://') || b.imageUrl.toLowerCase().startsWith('http://'))) ? b.imageUrl : resolveGalleryImageUrl(b.imageUrl)}" style="width:60px; height:40px; object-fit:cover; border-radius:4px;" onerror="this.onerror=null;this.src='../assets/images/home_nature.jpg'">
                 <div style="flex:1;"><strong>${b.title}</strong><br><small>${b.link || '-'}</small></div>
             </div>
         `).join('');
@@ -6425,19 +6425,27 @@ let isGalleryUploadHandlersInitialized = false;
 let isGalleryUploadInProgress = false;
 
 function resolveGalleryImageUrl(imageUrl) {
-    const raw = String(imageUrl || '').trim();
+    // Strip any BOM / zero-width / control chars that can fool regex
+    const raw = String(imageUrl || '').replace(/^[\u0000-\u001F\uFEFF]+/, '').trim();
     if (!raw) {
         return (typeof CONFIG !== 'undefined' && CONFIG.DEFAULT_COURSE_THUMBNAIL_URL)
             ? CONFIG.DEFAULT_COURSE_THUMBNAIL_URL
             : '../assets/images/home_nature.jpg';
     }
 
-    if (/^https?:\/\//i.test(raw)) return raw;
+    // Use indexOf instead of regex to avoid any regex engine quirks
+    const lower = raw.toLowerCase();
+    if (lower.startsWith('https://') || lower.startsWith('http://')) return raw;
 
+    // Protocol-relative  e.g. //media.example.com/…
+    if (raw.startsWith('//')) return 'https:' + raw;
+
+    // Bare hostname  e.g. media.example.com/gallery/img.jpg
     if (/^[a-z0-9.-]+\.[a-z]{2,}(\/|$)/i.test(raw)) {
         return `https://${raw.replace(/^\/+/, '')}`;
     }
 
+    // Relative path — resolve against the site root
     const baseUrl = (typeof CONFIG !== 'undefined' && CONFIG.CLIENT_URL)
         ? CONFIG.CLIENT_URL.replace(/\/$/, '')
         : window.location.origin;
@@ -6741,9 +6749,9 @@ function displayGalleryImages(images) {
             
             <!-- Image Container -->
             <div style="position: relative; height: 220px; overflow: hidden; background: #f8f8f8;">
-                 <img src="${resolveGalleryImageUrl(img.imageUrl)}" alt="${img.description}" 
+                 <img src="${(img.imageUrl && (img.imageUrl.toLowerCase().startsWith('https://') || img.imageUrl.toLowerCase().startsWith('http://'))) ? img.imageUrl : resolveGalleryImageUrl(img.imageUrl)}" alt="${img.description}" 
                      style="width: 100%; height: 100%; object-fit: cover; pointer-events: none;" 
-                     onerror="this.src='${(typeof CONFIG !== 'undefined' && CONFIG.DEFAULT_COURSE_THUMBNAIL_URL) ? CONFIG.DEFAULT_COURSE_THUMBNAIL_URL : '../assets/images/home_nature.jpg'}'" />
+                     onerror="this.onerror=null; this.src='${(typeof CONFIG !== 'undefined' && CONFIG.DEFAULT_COURSE_THUMBNAIL_URL) ? CONFIG.DEFAULT_COURSE_THUMBNAIL_URL : '../assets/images/home_nature.jpg'}'" />
                 
                 <!-- 3-Dot Menu -->
                 <div class="gallery-menu" style="position: absolute; top: 12px; right: 12px;">
