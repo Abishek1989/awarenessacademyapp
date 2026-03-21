@@ -1,18 +1,64 @@
 const { google } = require('googleapis');
 
+const normalizePrivateKey = (value) => {
+    if (!value || typeof value !== 'string') return null;
+
+    let normalized = value.trim();
+    if (!normalized) return null;
+
+    if ((normalized.startsWith('"') && normalized.endsWith('"')) ||
+        (normalized.startsWith("'") && normalized.endsWith("'"))) {
+        normalized = normalized.slice(1, -1);
+    }
+
+    return normalized
+        .replace(/\r\n/g, '\n')
+        .replace(/\\n/g, '\n');
+};
+
+const getPrivateKeyFromBase64 = () => {
+    const encodedKey = process.env.GOOGLE_PRIVATE_KEY_B64;
+    if (!encodedKey) return null;
+
+    try {
+        const compact = encodedKey.replace(/\s/g, '');
+        const decoded = Buffer.from(compact, 'base64').toString('utf8');
+        return normalizePrivateKey(decoded);
+    } catch (error) {
+        console.warn('Invalid GOOGLE_PRIVATE_KEY_B64 value. Falling back to other key sources.');
+        return null;
+    }
+};
+
+const getPrivateKeyFromParts = () => {
+    const parts = Object.entries(process.env)
+        .filter(([key, value]) => /^GOOGLE_PRIVATE_KEY_PART\d+$/.test(key) && value)
+        .sort((a, b) => {
+            const aIdx = Number(a[0].replace('GOOGLE_PRIVATE_KEY_PART', ''));
+            const bIdx = Number(b[0].replace('GOOGLE_PRIVATE_KEY_PART', ''));
+            return aIdx - bIdx;
+        })
+        .map(([, value]) => value);
+
+    if (parts.length === 0) return null;
+    return normalizePrivateKey(parts.join(''));
+};
+
 // ── Auth ────────────────────────────────────────────────────────────────────
 const getAuthClient = () => {
     const serviceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-    const privateKeyFromBase64 = process.env.GOOGLE_PRIVATE_KEY_B64
-        ? Buffer.from(process.env.GOOGLE_PRIVATE_KEY_B64, 'base64').toString('utf8').replace(/\\n/g, '\n')
-        : null;
-    const privateKeyFromEnv = process.env.GOOGLE_PRIVATE_KEY
-        ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
-        : null;
-    const privateKey = privateKeyFromBase64 || privateKeyFromEnv;
+    const privateKeyFromBase64 = getPrivateKeyFromBase64();
+    const privateKeyFromParts = getPrivateKeyFromParts();
+    const privateKeyFromEnv = normalizePrivateKey(process.env.GOOGLE_PRIVATE_KEY);
+    const privateKey = privateKeyFromBase64 || privateKeyFromParts || privateKeyFromEnv;
 
     if (!serviceAccountEmail || !privateKey) {
         console.warn('Google Service Account credentials missing in .env. Sync disabled.');
+        return null;
+    }
+
+    if (!privateKey.includes('BEGIN PRIVATE KEY') || !privateKey.includes('END PRIVATE KEY')) {
+        console.warn('Google private key format looks invalid. Check GOOGLE_PRIVATE_KEY / GOOGLE_PRIVATE_KEY_B64 / GOOGLE_PRIVATE_KEY_PART* values.');
         return null;
     }
 
