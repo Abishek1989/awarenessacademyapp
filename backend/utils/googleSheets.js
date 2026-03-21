@@ -2,14 +2,24 @@ const { google } = require('googleapis');
 
 // ── Auth ────────────────────────────────────────────────────────────────────
 const getAuthClient = () => {
-    if (!process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL || !process.env.GOOGLE_PRIVATE_KEY) {
+    const serviceAccountEmail = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+    const privateKeyFromBase64 = process.env.GOOGLE_PRIVATE_KEY_B64
+        ? Buffer.from(process.env.GOOGLE_PRIVATE_KEY_B64, 'base64').toString('utf8').replace(/\\n/g, '\n')
+        : null;
+    const privateKeyFromEnv = process.env.GOOGLE_PRIVATE_KEY
+        ? process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n')
+        : null;
+    const privateKey = privateKeyFromBase64 || privateKeyFromEnv;
+
+    if (!serviceAccountEmail || !privateKey) {
         console.warn('Google Service Account credentials missing in .env. Sync disabled.');
         return null;
     }
+
     return new google.auth.GoogleAuth({
         credentials: {
-            client_email: process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL,
-            private_key: process.env.GOOGLE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+            client_email: serviceAccountEmail,
+            private_key: privateKey,
         },
         scopes: ['https://www.googleapis.com/auth/spreadsheets'],
     });
