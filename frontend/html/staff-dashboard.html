@@ -2530,16 +2530,22 @@
         });
 
         // Set minimum datetime for schedule (15 minutes from now)
+        function formatDateTimeLocal(dateValue) {
+            const date = new Date(dateValue);
+            const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+            return localDate.toISOString().slice(0, 16);
+        }
+
         function setMinimumScheduleTime() {
             const now = new Date();
             const minTime = new Date(now.getTime() + (15 * 60 * 1000)); // Add 15 minutes
-            const minTimeString = minTime.toISOString().slice(0, 16); // Format for datetime-local
+            const minTimeString = formatDateTimeLocal(minTime); // Format for datetime-local
             const startTimeInput = document.getElementById('scheduleStartTime');
 
             startTimeInput.min = minTimeString;
             // Set default value to 30 minutes from now for better UX
             const defaultTime = new Date(now.getTime() + (30 * 60 * 1000));
-            const defaultTimeString = defaultTime.toISOString().slice(0, 16);
+            const defaultTimeString = formatDateTimeLocal(defaultTime);
             startTimeInput.value = defaultTimeString;
         }
 
@@ -2963,7 +2969,7 @@
                 console.log('Populating form with schedule data...');
 
                 try {
-                    document.getElementById('scheduleStartTime').value = new Date(schedule.startTime).toISOString().slice(0, 16);
+                    document.getElementById('scheduleStartTime').value = formatDateTimeLocal(schedule.startTime);
                     document.querySelector('input[name="title"]').value = schedule.title || '';
                     document.querySelector('input[name="duration"]').value = schedule.expectedDuration || 60;
                     document.querySelector('input[name="meetingLink"]').value = schedule.meetingLink || '';

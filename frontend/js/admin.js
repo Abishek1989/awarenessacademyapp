@@ -3858,7 +3858,7 @@ async function editLiveClass(scheduleId) {
 
         // Format datetime for input
         const startTime = new Date(schedule.startTime);
-        const formattedStart = startTime.toISOString().slice(0, 16);
+        const formattedStart = formatDateTimeLocal(startTime);
         document.getElementById('editLiveStartTime').value = formattedStart;
 
         // Set minimum datetime to 10 minutes from now
@@ -3885,11 +3885,17 @@ function closeEditLiveClassModal() {
     document.getElementById('editLiveClassForm').reset();
 }
 
+function formatDateTimeLocal(dateValue) {
+    const date = new Date(dateValue);
+    const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+    return localDate.toISOString().slice(0, 16);
+}
+
 // Helper function to get minimum datetime (10 minutes from now)
 function getMinimumScheduleTime() {
     const now = new Date();
     now.setMinutes(now.getMinutes() + 10);
-    return now.toISOString().slice(0, 16);
+    return formatDateTimeLocal(now);
 }
 
 // Validate if selected datetime is at least 10 minutes in the future
