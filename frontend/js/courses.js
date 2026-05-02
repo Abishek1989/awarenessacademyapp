@@ -218,7 +218,7 @@ function renderCourses(courses) {
             <div style="padding: 20px; flex: 1; display: flex; flex-direction: column;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                     <span style="font-size: 0.75rem; text-transform: uppercase; color: var(--color-saffron); font-weight: 700;">${c.category}</span>
-                    <span style="font-weight: 700; color: var(--color-saffron); font-size: 1.1rem;">${(c.price === 0 || c.price === "0") ? 'Free' : '$' + c.price}</span>
+                    <span style="font-weight: 700; color: var(--color-saffron); font-size: 1.1rem;">${(c.price === 0 || c.price === "0") ? 'Free' : '₹' + c.price}</span>
                 </div>
                 <h3 style="margin-bottom: 10px; font-family: var(--font-heading); flex: 1;">${c.title}</h3>
                 <p style="font-size: 0.85rem; color: var(--color-text-secondary); margin-bottom: 15px;">By ${c.mentors && c.mentors[0] ? c.mentors[0].name : 'Mentor'}</p>
@@ -317,7 +317,7 @@ async function openCourseModal(id) {
         document.getElementById('modalTitle').textContent = course.title;
         document.getElementById('modalMentor').textContent = `By ${course.mentors && course.mentors.length > 0 ? course.mentors.map(m => m.name).join(', ') : 'Mentor'}`;
         document.getElementById('modalDesc').textContent = course.description;
-        document.getElementById('modalPrice').textContent = (course.price === 0 || course.price === "0") ? 'Free' : `$${course.price}`;
+        document.getElementById('modalPrice').textContent = (course.price === 0 || course.price === "0") ? 'Free' : `₹${course.price}`;
         document.getElementById('modalImg').src = getThumbnail(course.thumbnail);
         document.getElementById('modalImg').onerror = function () {
             this.src = 'https://images.unsplash.com/photo-1506126613408-eca07ce68773?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80';
@@ -335,7 +335,7 @@ async function openCourseModal(id) {
             enrollBtn.onclick = () => { window.location.href = `checkout.html?course=${id}`; };
             UI.info('Your previous enrollment in this path has reached its conclusion. Renew to continue.');
         } else {
-            enrollBtn.textContent = (course.price === 0 || course.price === "0") ? 'Enroll for Free' : `Enroll for $${course.price}`;
+            enrollBtn.textContent = (course.price === 0 || course.price === "0") ? 'Enroll for Free' : `Enroll for ₹${course.price}`;
             enrollBtn.disabled = false;
             enrollBtn.onclick = () => { window.location.href = `checkout.html?course=${id}`; };
         }

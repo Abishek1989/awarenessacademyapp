@@ -1540,6 +1540,16 @@
                 loadingState.style.display = 'none';
 
                 if (data.success && data.memberships.length > 0) {
+                    // Ensure memberships are displayed in a predictable order: sort by offered price (ascending)
+                    try {
+                        data.memberships.sort((a, b) => {
+                            const aPrice = Number(a.offeredPrice ?? a.originalPrice ?? 0);
+                            const bPrice = Number(b.offeredPrice ?? b.originalPrice ?? 0);
+                            return aPrice - bPrice;
+                        });
+                    } catch (sortErr) {
+                        console.warn('Membership sort failed:', sortErr);
+                    }
                     membershipGrid.style.display = 'grid';
                     membershipGrid.innerHTML = data.memberships.map((membership, index) => {
                         const themeClass = `theme-${index % 5}`;
